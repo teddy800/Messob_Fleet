@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  odoo:
+    image: odoo:18.0               # or odoo:19.0
+    depends_on:
+      - db
+    ports:
+      - "8069:8069"                # access Odoo at http://localhost:8069
+      - "8072:8072"                # longpolling (real-time features)
+    volumes:
+      - odoo-data:/var/lib/odoo
+      - ./config:/etc/odoo         # your config file
+      - ./custom-addons:/mnt/extra-addons  # your custom code
+    environment:
+      - HOST=db
+      - USER=odoo
+      - PASSWORD=mysecret123       # CHANGE THIS
+    restart: unless-stopped
+
+  db:
+    image: postgres:16             # or postgres:17
+    environment:
+      - POSTGRES_USER=odoo
+      - POSTGRES_PASSWORD=mysecret123   # same as above
+      - POSTGRES_DB=postgres
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+volumes:
+  odoo-data:
+  db-data:
