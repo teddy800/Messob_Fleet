@@ -51,6 +51,7 @@ services:
     ports:
       - "8018:8069"
     volumes:
+    # this path is all team members virtualy access folder
       - ./addons:/mnt/extra-addons
     environment:
       - HOST=db18
