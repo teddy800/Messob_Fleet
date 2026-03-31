@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <!-- 1. Dispatcher User -->
+        <record id="user_mock_dispatcher" model="res.users">
+            <field name="name">Dispatcher Admin</field>
+            <field name="login">dispatcher@messob.local</field>
+            <field name="email">dispatcher@messob.local</field>
+            <field name="password">dispatcher123</field>
+            <field name="groups_id" eval="[(4, ref('base.group_user')), (4, ref('messob_fleet.group_messob_dispatcher'))]"/>
+        </record>
+        
+        <record id="employee_mock_dispatcher" model="hr.employee">
+            <field name="name">Dispatcher Admin</field>
+            <field name="user_id" ref="user_mock_dispatcher"/>
+            <field name="work_email">dispatcher@messob.local</field>
+        </record>
+
+        <!-- 2. Staff User -->
+        <record id="user_mock_staff" model="res.users">
+            <field name="name">Staff Member 1</field>
+            <field name="login">staff1@messob.local</field>
+            <field name="email">staff1@messob.local</field>
+            <field name="password">staff123</field>
+            <field name="groups_id" eval="[(4, ref('base.group_user')), (4, ref('messob_fleet.group_messob_user'))]"/>
+        </record>
+
+        <record id="employee_mock_staff" model="hr.employee">
+            <field name="name">Staff Member 1</field>
+            <field name="user_id" ref="user_mock_staff"/>
+            <field name="work_email">staff1@messob.local</field>
+        </record>
+
+        <!-- 3. Mechanic User -->
+        <record id="user_mock_mechanic" model="res.users">
+            <field name="name">Head Mechanic</field>
+            <field name="login">mechanic@messob.local</field>
+            <field name="email">mechanic@messob.local</field>
+            <field name="password">mechanic123</field>
+            <field name="groups_id" eval="[(4, ref('base.group_user')), (4, ref('messob_fleet.group_messob_mechanic'))]"/>
+        </record>
+
+        <record id="employee_mock_mechanic" model="hr.employee">
+            <field name="name">Head Mechanic</field>
+            <field name="user_id" ref="user_mock_mechanic"/>
+            <field name="work_email">mechanic@messob.local</field>
+        </record>
+    </data>
+</odoo>

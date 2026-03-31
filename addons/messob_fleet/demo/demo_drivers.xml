@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <!-- Employee & Driver 1 -->
+        <record id="employee_mock_driver1" model="hr.employee">
+            <field name="name">Abebe Kebede</field>
+            <field name="work_phone">+251911000000</field>
+        </record>
+
+        <record id="driver_mock_1" model="messob.driver">
+            <field name="name">Abebe Kebede</field>
+            <field name="employee_id" ref="employee_mock_driver1"/>
+            <field name="license_no">LIC-ET-100</field>
+            <field name="license_expiry">2030-12-31</field>
+            <field name="is_on_duty">True</field>
+        </record>
+
+        <!-- Employee & Driver 2 -->
+        <record id="employee_mock_driver2" model="hr.employee">
+            <field name="name">Dawit Solomon</field>
+            <field name="work_phone">+251911111111</field>
+        </record>
+
+        <record id="driver_mock_2" model="messob.driver">
+            <field name="name">Dawit Solomon</field>
+            <field name="employee_id" ref="employee_mock_driver2"/>
+            <field name="license_no">LIC-ET-101</field>
+            <field name="license_expiry">2030-10-15</field>
+            <field name="is_on_duty">True</field>
+        </record>
+    </data>
+</odoo>

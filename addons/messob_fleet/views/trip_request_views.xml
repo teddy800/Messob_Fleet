@@ -1,0 +1,80 @@
+<odoo>
+    <record id="view_trip_request_tree" model="ir.ui.view">
+        <field name="name">messob.trip.request.tree</field>
+        <field name="model">messob.trip.request</field>
+        <field name="arch" type="xml">
+            <tree>
+                <field name="name"/>
+                <field name="requester_id"/>
+                <field name="priority"/>
+                <field name="vehicle_category_needed"/>
+                <field name="start_datetime"/>
+                <field name="end_datetime"/>
+                <field name="status" widget="badge" 
+                    decoration-info="status == 'draft'" 
+                    decoration-warning="status == 'pending'" 
+                    decoration-success="status == 'approved' or status == 'completed'" 
+                    decoration-danger="status == 'rejected' or status == 'canceled'"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="view_trip_request_form" model="ir.ui.view">
+        <field name="name">messob.trip.request.form</field>
+        <field name="model">messob.trip.request</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="action_submit" string="Submit Request" type="object" class="oe_highlight" invisible="status != 'draft'"/>
+                    <button name="action_approve" string="Approve" type="object" class="oe_highlight" groups="messob_fleet.group_messob_dispatcher" invisible="status != 'pending'"/>
+                    <button name="action_reject" string="Reject" type="object" groups="messob_fleet.group_messob_dispatcher" invisible="status != 'pending'"/>
+                    <button name="action_cancel" string="Cancel" type="object" invisible="status not in ['draft', 'pending']"/>
+                    <button name="action_complete" string="Complete" type="object" class="oe_highlight" groups="messob_fleet.group_messob_dispatcher,messob_fleet.group_messob_driver" invisible="status != 'in_progress'"/>
+                    <field name="status" widget="statusbar" statusbar_visible="draft,pending,approved,in_progress,completed"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1><field name="name" readonly="1"/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="requester_id"/>
+                            <field name="purpose"/>
+                            <field name="priority"/>
+                            <field name="vehicle_category_needed"/>
+                        </group>
+                        <group>
+                            <field name="start_datetime"/>
+                            <field name="end_datetime"/>
+                            <field name="pickup_location"/>
+                            <field name="dest_location"/>
+                        </group>
+                    </group>
+                    <group string="Assignment">
+                        <field name="assigned_vehicle_id"/>
+                        <field name="assigned_driver_id"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_trip_request_calendar" model="ir.ui.view">
+        <field name="name">messob.trip.request.calendar</field>
+        <field name="model">messob.trip.request</field>
+        <field name="arch" type="xml">
+            <calendar string="Trip Requests" date_start="start_datetime" date_stop="end_datetime" color="assigned_vehicle_id" mode="week" quick_create="0">
+                <field name="name"/>
+                <field name="assigned_driver_id"/>
+                <field name="status" filters="1"/>
+            </calendar>
+        </field>
+    </record>
+
+    <record id="action_trip_request" model="ir.actions.act_window">
+        <field name="name">Trip Requests</field>
+        <field name="res_model">messob.trip.request</field>
+        <field name="view_mode">tree,form,calendar</field>
+    </record>
+
+</odoo>

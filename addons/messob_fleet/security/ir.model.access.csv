@@ -1,0 +1,11 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_trip_request_user,messob.trip.request.user,model_messob_trip_request,messob_fleet.group_messob_user,1,1,1,0
+access_trip_request_manager,messob.trip.request.manager,model_messob_trip_request,messob_fleet.group_messob_dispatcher,1,1,1,1
+access_trip_log_driver,messob.trip.log.driver,model_messob_trip_log,messob_fleet.group_messob_driver,1,1,1,0
+access_trip_log_manager,messob.trip.log.manager,model_messob_trip_log,messob_fleet.group_messob_dispatcher,1,1,1,1
+access_driver_manager,messob.driver.manager,model_messob_driver,messob_fleet.group_messob_dispatcher,1,1,1,1
+access_driver_admin,messob.driver.admin,model_messob_driver,messob_fleet.group_messob_admin,1,1,1,1
+access_fuel_log_mechanic,messob.fuel.log.mechanic,model_messob_fuel_log,messob_fleet.group_messob_mechanic,1,1,1,0
+access_fuel_log_admin,messob.fuel.log.admin,model_messob_fuel_log,messob_fleet.group_messob_admin,1,1,1,1
+access_maint_log_mechanic,messob.maintenance.log.mechanic,model_messob_maintenance_log,messob_fleet.group_messob_mechanic,1,1,1,0
+access_maint_log_admin,messob.maintenance.log.admin,model_messob_maintenance_log,messob_fleet.group_messob_admin,1,1,1,1

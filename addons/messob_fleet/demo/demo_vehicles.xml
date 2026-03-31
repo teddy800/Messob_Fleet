@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <!-- Vehicle 1: Toyota Land Cruiser -->
+        <record id="vehicle_mock_suv" model="fleet.vehicle">
+            <field name="model_id" ref="fleet.model_corolla"/> <!-- Basic placeholder, real models need fleet.vehicle.model -->
+            <field name="license_plate">ET-001</field>
+            <field name="messob_id">MESSOB-SUV-001</field>
+            <field name="vehicle_status">available</field>
+        </record>
+
+        <!-- Vehicle 2: Mitsubishi Pickup -->
+        <record id="vehicle_mock_pickup" model="fleet.vehicle">
+            <field name="model_id" ref="fleet.model_corolla"/> 
+            <field name="license_plate">ET-002</field>
+            <field name="messob_id">MESSOB-PKP-002</field>
+            <field name="vehicle_status">available</field>
+        </record>
+
+        <!-- Vehicle 3: Toyota Corolla -->
+        <record id="vehicle_mock_sedan" model="fleet.vehicle">
+            <field name="model_id" ref="fleet.model_corolla"/>
+            <field name="license_plate">ET-003</field>
+            <field name="messob_id">MESSOB-SDN-003</field>
+            <field name="vehicle_status">available</field>
+        </record>
+    </data>
+</odoo>
