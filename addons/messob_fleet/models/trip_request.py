@@ -1,13 +1,12 @@
 from odoo import models, fields, api, _ # type: ignore
-from odoo.exceptions import ValidationError # type: ignore
+from odoo.exceptions import ValidationError, AccessError # type: ignore
 
 class TripRequest(models.Model):
     _name = 'messob.trip.request'
     _description = 'Vehicle Trip Request'
     _inherit = ['mail.thread', 'mail.activity.mixin']
 
-    # --- YOUR EXISTING FIELDS ---
-    name = fields.Char(string="Request ID", readonly=True, default="New")
+    name = fields.Char(string="Request ID", readonly=True, copy=False, default=lambda self: _('New'))
     requester_id = fields.Many2one('res.users', string="Staff Member", default=lambda self: self.env.user)
     purpose = fields.Text(string="Justification", required=True)
     vehicle_category_needed = fields.Selection([
@@ -33,6 +32,8 @@ class TripRequest(models.Model):
         ('2', 'High'),
         ('3', 'Urgent')
     ], string='Priority', default='1', tracking=True)
+    pickup_location = fields.Char(string="Pickup Location")
+    dest_location = fields.Char(string="Destination Location")
 
     status = fields.Selection([
         ('draft', 'Draft'), ('pending', 'Pending'), ('approved', 'Approved'),
@@ -84,15 +85,39 @@ class TripRequest(models.Model):
             if record.status == 'draft':
                 record.status = 'pending'
 
+    @api.model
+    def create(self, vals):
+        if vals.get('name', _('New')) == _('New'):
+            vals['name'] = self.env['ir.sequence'].next_by_code('messob.trip.request') or _('New')
+        return super().create(vals)
+
     def action_approve(self):
-        """Changes status to Approved"""
+        """Changes status to Approved — dispatcher/admin only (BR-1)."""
         for record in self:
+            if not self.env.user.has_group('messob_fleet.group_messob_dispatcher') and \
+                    not self.env.user.has_group('messob_fleet.group_messob_admin'):
+                raise AccessError(_("Only dispatchers can approve trip requests."))
             record.status = 'approved'
-            
+            self.env['messob.audit.log'].log_action(
+                'approve',
+                f'Approved trip request {record.name}',
+                res_model='messob.trip.request',
+                res_id=record.id,
+            )
+
     def action_reject(self):
-        """Changes status to Rejected"""
+        """Changes status to Rejected — dispatcher/admin only (BR-1)."""
         for record in self:
+            if not self.env.user.has_group('messob_fleet.group_messob_dispatcher') and \
+                    not self.env.user.has_group('messob_fleet.group_messob_admin'):
+                raise AccessError(_("Only dispatchers can reject trip requests."))
             record.status = 'rejected'
+            self.env['messob.audit.log'].log_action(
+                'reject',
+                f'Rejected trip request {record.name}',
+                res_model='messob.trip.request',
+                res_id=record.id,
+            )
 
     def action_cancel(self):
         """Changes status to Canceled"""

@@ -38,4 +38,11 @@
               parent="menu_messob_config"
               action="fleet.fleet_vehicle_action"
               sequence="10"/>
+
+    <menuitem id="menu_messob_audit_log"
+              name="Audit Logs"
+              parent="menu_messob_config"
+              action="action_messob_audit_log"
+              groups="messob_fleet.group_messob_admin"
+              sequence="20"/>
 </odoo>

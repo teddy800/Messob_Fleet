@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_messob_audit_log_list" model="ir.ui.view">
+        <field name="name">messob.audit.log.list</field>
+        <field name="model">messob.audit.log</field>
+        <field name="arch" type="xml">
+            <list default_order="timestamp desc" create="false" edit="false" delete="false">
+                <field name="timestamp"/>
+                <field name="user_id"/>
+                <field name="action_type"/>
+                <field name="res_model"/>
+                <field name="res_id"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_messob_audit_log_form" model="ir.ui.view">
+        <field name="name">messob.audit.log.form</field>
+        <field name="model">messob.audit.log</field>
+        <field name="arch" type="xml">
+            <form create="false" edit="false" delete="false">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="timestamp"/>
+                            <field name="user_id"/>
+                            <field name="action_type"/>
+                        </group>
+                        <group>
+                            <field name="res_model"/>
+                            <field name="res_id"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Details">
+                            <field name="details"/>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_messob_audit_log" model="ir.actions.act_window">
+        <field name="name">System Audit Logs</field>
+        <field name="res_model">messob.audit.log</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No Audit Logs found!
+            </p>
+        </field>
+    </record>
+</odoo>

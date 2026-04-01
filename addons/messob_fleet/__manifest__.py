@@ -1,16 +1,19 @@
 {
     'name': 'MESSOB Fleet Management',
-    'version': '1.0',
+    'version': '1.1',
     'category': 'Transportation',
     'summary': 'Digitalizing MESSOB vehicle fleet operations',
-    'depends': ['base', 'fleet', 'mail', 'hr'], # mail is for notifications, hr for staff/driver
+    'depends': ['base', 'fleet', 'mail', 'hr'],
     'data': [
         'security/security.xml',
-        'security/ir.model.access.csv',   # Always load security first!
-        'security/ir_rule.xml',           # Load Record Rules
-        'views/trip_request_views.xml',  # Load the Actions/Views
-        'views/logs_views.xml',          # Load Log views
-        'views/menu_views.xml',          # Load the Menus last
+        'security/ir.model.access.csv',
+        'security/ir_rule.xml',
+        'data/sequence_data.xml',
+        'views/trip_request_views.xml',
+        'views/logs_views.xml',
+        'views/audit_views.xml',
+        'views/vehicle_views.xml',
+        'views/menu_views.xml',
     ],
     'demo': [
         'demo/demo_users.xml',

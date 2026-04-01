@@ -1,9 +1,9 @@
 <odoo>
-    <record id="view_trip_request_tree" model="ir.ui.view">
-        <field name="name">messob.trip.request.tree</field>
+    <record id="view_trip_request_list" model="ir.ui.view">
+        <field name="name">messob.trip.request.list</field>
         <field name="model">messob.trip.request</field>
         <field name="arch" type="xml">
-            <tree>
+            <list>
                 <field name="name"/>
                 <field name="requester_id"/>
                 <field name="priority"/>
@@ -13,9 +13,9 @@
                 <field name="status" widget="badge" 
                     decoration-info="status == 'draft'" 
                     decoration-warning="status == 'pending'" 
-                    decoration-success="status == 'approved' or status == 'completed'" 
-                    decoration-danger="status == 'rejected' or status == 'canceled'"/>
-            </tree>
+                    decoration-success="status in ['approved', 'completed']" 
+                    decoration-danger="status in ['rejected', 'canceled']"/>
+            </list>
         </field>
     </record>
 
@@ -25,11 +25,27 @@
         <field name="arch" type="xml">
             <form>
                 <header>
-                    <button name="action_submit" string="Submit Request" type="object" class="oe_highlight" invisible="status != 'draft'"/>
-                    <button name="action_approve" string="Approve" type="object" class="oe_highlight" groups="messob_fleet.group_messob_dispatcher" invisible="status != 'pending'"/>
-                    <button name="action_reject" string="Reject" type="object" groups="messob_fleet.group_messob_dispatcher" invisible="status != 'pending'"/>
-                    <button name="action_cancel" string="Cancel" type="object" invisible="status not in ['draft', 'pending']"/>
-                    <button name="action_complete" string="Complete" type="object" class="oe_highlight" groups="messob_fleet.group_messob_dispatcher,messob_fleet.group_messob_driver" invisible="status != 'in_progress'"/>
+                    <button name="action_submit" string="Submit Request" type="object" 
+                            class="oe_highlight" 
+                            invisible="status != 'draft'"/>                    
+                    
+                    <button name="action_approve" string="Approve" type="object" 
+                            class="oe_highlight" 
+                            groups="messob_fleet.group_messob_dispatcher" 
+                            invisible="status != 'pending'"/>
+                    
+                    <button name="action_reject" string="Reject" type="object" 
+                            groups="messob_fleet.group_messob_dispatcher" 
+                            invisible="status != 'pending'"/>
+                    
+                    <button name="action_cancel" string="Cancel" type="object" 
+                            invisible="status not in ['draft', 'pending']"/>
+                    
+                    <button name="action_complete" string="Complete" type="object" 
+                            class="oe_highlight" 
+                            groups="messob_fleet.group_messob_dispatcher,messob_fleet.group_messob_driver" 
+                            invisible="status != 'in_progress'"/>
+                    
                     <field name="status" widget="statusbar" statusbar_visible="draft,pending,approved,in_progress,completed"/>
                 </header>
                 <sheet>
@@ -74,7 +90,6 @@
     <record id="action_trip_request" model="ir.actions.act_window">
         <field name="name">Trip Requests</field>
         <field name="res_model">messob.trip.request</field>
-        <field name="view_mode">tree,form,calendar</field>
+        <field name="view_mode">list,form,calendar</field>
     </record>
-
 </odoo>

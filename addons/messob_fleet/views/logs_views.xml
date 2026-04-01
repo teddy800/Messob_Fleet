@@ -1,17 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!-- Fuel Log Views -->
-    <record id="view_fuel_log_tree" model="ir.ui.view">
-        <field name="name">messob.fuel.log.tree</field>
+    <record id="view_fuel_log_list" model="ir.ui.view">
+        <field name="name">messob.fuel.log.list</field>
         <field name="model">messob.fuel.log</field>
         <field name="arch" type="xml">
-            <tree>
+            <list>
                 <field name="date"/>
                 <field name="vehicle_id"/>
                 <field name="driver_id"/>
                 <field name="volume"/>
                 <field name="cost"/>
-            </tree>
+            </list>
         </field>
     </record>
 
@@ -42,21 +41,20 @@
     <record id="action_fuel_log" model="ir.actions.act_window">
         <field name="name">Fuel Logs</field>
         <field name="res_model">messob.fuel.log</field>
-        <field name="view_mode">tree,form</field>
+        <field name="view_mode">list,form</field>
     </record>
 
-    <!-- Maintenance Log Views -->
-    <record id="view_maintenance_log_tree" model="ir.ui.view">
-        <field name="name">messob.maintenance.log.tree</field>
+    <record id="view_maintenance_log_list" model="ir.ui.view">
+        <field name="name">messob.maintenance.log.list</field>
         <field name="model">messob.maintenance.log</field>
         <field name="arch" type="xml">
-            <tree>
+            <list>
                 <field name="date"/>
                 <field name="vehicle_id"/>
                 <field name="type"/>
                 <field name="cost"/>
                 <field name="next_due_date"/>
-            </tree>
+            </list>
         </field>
     </record>
 
@@ -92,7 +90,7 @@
     <record id="action_maintenance_log" model="ir.actions.act_window">
         <field name="name">Maintenance Logs</field>
         <field name="res_model">messob.maintenance.log</field>
-        <field name="view_mode">tree,form</field>
+        <field name="view_mode">list,form</field>
     </record>
 
 </odoo>

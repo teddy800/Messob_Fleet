@@ -27,4 +27,6 @@ to see in the broser
 http://localhost:8018
 email and passwordd is odoo
 in odoo to search MESSOB Fleet Management
+docker fors restart
+docker compose run --rm odoo18 odoo -u messob_fleet -d odoo --stop-after-init
 
