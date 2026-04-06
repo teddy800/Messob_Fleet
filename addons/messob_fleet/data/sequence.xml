@@ -1,10 +1,9 @@
-<?xml version="1.0" encoding="utf-8"?>
 <odoo>
     <data noupdate="1">
         <record id="seq_messob_trip_request" model="ir.sequence">
             <field name="name">MESSOB Trip Request</field>
             <field name="code">messob.trip.request</field>
-            <field name="prefix">TRIP/%(year)s/</field>
+            <field name="prefix">REQ/%(year)s/</field>
             <field name="padding">4</field>
             <field name="company_id" eval="False"/>
         </record>

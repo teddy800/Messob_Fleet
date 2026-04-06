@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="0">
+        <record id="group_messob_fleet_user" model="res.groups">
+            <field name="name">Fleet User (Staff)</field>
+            <field name="category_id" ref="base.module_category_fleet"/>
+        </record>
+    </data>
+</odoo>

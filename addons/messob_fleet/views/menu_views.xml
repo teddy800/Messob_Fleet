@@ -1,48 +1,6 @@
-<?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <menuitem id="menu_messob_fleet_root"
-              name="MESSOB Fleet"
-              web_icon="messob_fleet,static/description/icon.png"
-              sequence="10"/>
-
-    <menuitem id="menu_messob_operations"
-              name="Operations"
-              parent="menu_messob_fleet_root"
-              sequence="10"/>
-
-    <menuitem id="menu_messob_trip_request"
-              name="Vehicle Requests"
-              parent="menu_messob_operations"
-              action="action_trip_request"
-              sequence="10"/>
-
-    <menuitem id="menu_messob_fuel_log"
-              name="Fuel Logs"
-              parent="menu_messob_operations"
-              action="action_fuel_log"
-              sequence="20"/>
-
-    <menuitem id="menu_messob_maintenance_log"
-              name="Maintenance Logs"
-              parent="menu_messob_operations"
-              action="action_maintenance_log"
-              sequence="30"/>
-
-    <menuitem id="menu_messob_config"
-              name="Configuration"
-              parent="menu_messob_fleet_root"
-              sequence="100"/>
-
-    <menuitem id="menu_messob_vehicle"
-              name="Vehicles"
-              parent="menu_messob_config"
-              action="fleet.fleet_vehicle_action"
-              sequence="10"/>
-
-    <menuitem id="menu_messob_audit_log"
-              name="Audit Logs"
-              parent="menu_messob_config"
-              action="action_messob_audit_log"
-              groups="messob_fleet.group_messob_admin"
-              sequence="20"/>
+    <menuitem id="menu_messob_fleet_root" name="MESSOB Fleet" sequence="10"/>
+    <menuitem id="menu_messob_request" name="Vehicle Requests" parent="menu_messob_fleet_root" sequence="10"/>
+    <menuitem id="menu_messob_new_request" name="New Request" parent="menu_messob_request" action="action_messob_trip_wizard" sequence="10"/>
+    <menuitem id="menu_messob_my_requests" name="My Requests" parent="menu_messob_request" action="action_messob_trip_request" sequence="20"/>
 </odoo>

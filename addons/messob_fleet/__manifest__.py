@@ -1,26 +1,17 @@
 {
     'name': 'MESSOB Fleet Management',
-    'version': '1.1',
-    'category': 'Transportation',
-    'summary': 'Digitalizing MESSOB vehicle fleet operations',
-    'depends': ['base', 'fleet', 'mail', 'hr'],
-    'data': [
-        'security/security.xml',
-        'security/ir.model.access.csv',
-        'security/ir_rule.xml',
-        'data/sequence_data.xml',
-        'views/trip_request_views.xml',
-        'views/logs_views.xml',
-        'views/audit_views.xml',
-        'views/vehicle_views.xml',
-        'views/menu_views.xml',
-    ],
-    'demo': [
-        'demo/demo_users.xml',
-        'demo/demo_vehicles.xml',
-        'demo/demo_drivers.xml',
-    ],
+    'version': '1.0',
+    'category': 'Fleet',
+    'summary': 'Vehicle request management (User Side)',
+    'depends': ['base', 'mail', 'fleet'],
+   'data': [
+    'security/messob_fleet_groups.xml',
+    'security/ir.model.access.csv',
+    'views/trip_wizard_views.xml',   # ← Action defined FIRST
+    'views/trip_request_views.xml',
+    'views/menu_views.xml',          # ← Then menuitem that uses it
+    'data/sequence.xml',
+],
     'installable': True,
     'application': True,
-    'license': 'LGPL-3',
 }
