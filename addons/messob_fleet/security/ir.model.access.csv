@@ -1,3 +1,4 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
-access_messob_trip_request_user,messob.trip.request.user,model_messob_trip_request,messob_fleet.group_messob_fleet_user,1,1,1,1
-access_messob_trip_wizard_user,messob.trip.wizard.user,model_messob_trip_wizard,messob_fleet.group_messob_fleet_user,1,1,1,1
+access_messob_fms_trip_user,messob.fms.trip.user,model_messob_fms_trip,messob_fleet.group_fms_user,1,1,1,0
+access_messob_fms_trip_dispatcher,messob.fms.trip.dispatcher,model_messob_fms_trip,messob_fleet.group_fms_dispatcher,1,1,1,1
+access_messob_fms_trip_admin,messob.fms.trip.admin,model_messob_fms_trip,messob_fleet.group_fms_admin,1,1,1,1

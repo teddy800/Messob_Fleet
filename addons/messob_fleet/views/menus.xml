@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Root Menu -->
+    <menuitem id="menu_fms_root" name="MESSOB FMS" sequence="10"/>
+    
+    <!-- My Requests Menu (Staff) - ONLY this one for now -->
+    <menuitem id="menu_fms_my_trips" 
+              name="My Requests" 
+              parent="menu_fms_root" 
+              action="action_my_trips" 
+              sequence="1"
+              groups="messob_fleet.group_fms_user"/>
+</odoo>

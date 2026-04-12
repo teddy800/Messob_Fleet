@@ -1,6 +1,0 @@
-<odoo>
-    <menuitem id="menu_messob_fleet_root" name="MESSOB Fleet" sequence="10"/>
-    <menuitem id="menu_messob_request" name="Vehicle Requests" parent="menu_messob_fleet_root" sequence="10"/>
-    <menuitem id="menu_messob_new_request" name="New Request" parent="menu_messob_request" action="action_messob_trip_wizard" sequence="10"/>
-    <menuitem id="menu_messob_my_requests" name="My Requests" parent="menu_messob_request" action="action_messob_trip_request" sequence="20"/>
-</odoo>
