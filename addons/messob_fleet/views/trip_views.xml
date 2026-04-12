@@ -1,48 +1,112 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!-- Minimal List View -->
+
+    <!-- ================================================================ -->
+    <!-- LIST VIEW -->
+    <!-- ================================================================ -->
     <record id="view_trip_list" model="ir.ui.view">
         <field name="name">messob.fms.trip.list</field>
         <field name="model">messob.fms.trip</field>
         <field name="arch" type="xml">
-            <list>
+            <list string="Trip Requests"
+                  decoration-info="state=='draft'"
+                  decoration-warning="state=='pending'"
+                  decoration-success="state=='approved'"
+                  decoration-danger="state=='rejected'"
+                  decoration-muted="state in ('completed','closed')">
+
                 <field name="name"/>
                 <field name="purpose"/>
+                <field name="start_dt"/>
+                <field name="end_dt"/>
                 <field name="state"/>
+
             </list>
         </field>
     </record>
 
-    <!-- Minimal Form View -->
+    <!-- ================================================================ -->
+    <!-- FORM VIEW -->
+    <!-- ================================================================ -->
     <record id="view_trip_form" model="ir.ui.view">
         <field name="name">messob.fms.trip.form</field>
         <field name="model">messob.fms.trip</field>
         <field name="arch" type="xml">
-            <form>
+            <form string="Trip Request">
+
+                <!-- HEADER BUTTONS -->
+                <header>
+
+                    <button name="action_save_draft"
+                            string="Save Draft"
+                            type="object"
+                            invisible="state != 'draft'"/>
+
+                    <button name="action_submit"
+                            string="Submit"
+                            type="object"
+                            invisible="state != 'draft'"/>
+
+                    <button name="action_approve"
+                            string="Approve"
+                            type="object"
+                            invisible="state != 'pending'"/>
+
+                    <button name="action_reject"
+                            string="Reject"
+                            type="object"
+                            invisible="state != 'pending'"/>
+
+                    <field name="state"
+                           widget="statusbar"
+                           statusbar_visible="draft,pending,approved,rejected,completed"/>
+
+                </header>
+
+                <!-- FORM BODY -->
                 <sheet>
                     <group>
-                        <field name="name"/>
+
+                        <field name="name" readonly="1"/>
+                        <field name="requester_id"/>
+
                         <field name="purpose"/>
                         <field name="vehicle_category"/>
+
                         <field name="start_dt"/>
                         <field name="end_dt"/>
+
                         <field name="pickup"/>
                         <field name="destination"/>
-                        <field name="state"/>
+
                     </group>
                 </sheet>
+
             </form>
         </field>
     </record>
 
-    <!-- Minimal Action -->
+    <!-- ================================================================ -->
+    <!-- ACTION -->
+    <!-- ================================================================ -->
     <record id="action_my_trips" model="ir.actions.act_window">
         <field name="name">My Requests</field>
         <field name="res_model">messob.fms.trip</field>
         <field name="view_mode">list,form</field>
+        <field name="domain">[('requester_id', '=', uid)]</field>
     </record>
 
-    <!-- Minimal Menu -->
-    <menuitem id="menu_fms_root" name="MESSOB FMS"/>
-    <menuitem id="menu_fms_my_trips" name="My Requests" parent="menu_fms_root" action="action_my_trips"/>
+    <!-- ================================================================ -->
+    <!-- MENU -->
+    <!-- ================================================================ -->
+    <menuitem id="menu_fms_root"
+              name="MESSOB FMS"
+              sequence="10"/>
+
+    <menuitem id="menu_fms_my_trips"
+              name="My Requests"
+              parent="menu_fms_root"
+              action="action_my_trips"
+              sequence="1"/>
+
 </odoo>

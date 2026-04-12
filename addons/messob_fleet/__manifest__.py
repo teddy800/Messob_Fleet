@@ -13,4 +13,9 @@
     'installable': True,
     'application': True,
     'license': 'LGPL-3',
+     'assets': {
+        'web.assets_backend': [
+            'messob_fleet/static/src/css/review_popup.css',
+        ],
+    },
 }
