@@ -2,111 +2,116 @@
 <odoo>
 
     <!-- ================================================================ -->
-    <!-- LIST VIEW -->
+    <!-- LIST VIEW (Odoo 18 Compliant) -->
     <!-- ================================================================ -->
     <record id="view_trip_list" model="ir.ui.view">
         <field name="name">messob.fms.trip.list</field>
         <field name="model">messob.fms.trip</field>
         <field name="arch" type="xml">
             <list string="Trip Requests"
-                  decoration-info="state=='draft'"
-                  decoration-warning="state=='pending'"
-                  decoration-success="state=='approved'"
-                  decoration-danger="state=='rejected'"
-                  decoration-muted="state in ('completed','closed')">
+      decoration-info="state=='draft'"
+      decoration-warning="state=='pending'"
+      decoration-success="state=='approved'"
+      decoration-danger="state=='rejected'"
+      decoration-muted="state in ('completed','closed')">
 
-                <field name="name"/>
-                <field name="purpose"/>
-                <field name="start_dt"/>
-                <field name="end_dt"/>
-                <field name="state"/>
+    <field name="name"/>
+    <field name="purpose"/>
+    <field name="start_dt" widget="date"/>
+    <field name="end_dt" widget="date"/>
+    <field name="state" widget="badge"/>
 
-            </list>
+</list>
         </field>
     </record>
 
     <!-- ================================================================ -->
-    <!-- FORM VIEW -->
+    <!-- FORM VIEW (Large-Screen Responsive Layout) -->
     <!-- ================================================================ -->
     <record id="view_trip_form" model="ir.ui.view">
         <field name="name">messob.fms.trip.form</field>
         <field name="model">messob.fms.trip</field>
         <field name="arch" type="xml">
             <form string="Trip Request">
-
                 <!-- HEADER BUTTONS -->
                 <header>
-
-                    <button name="action_save_draft"
-                            string="Save Draft"
-                            type="object"
-                            invisible="state != 'draft'"/>
-
-                    <button name="action_submit"
-                            string="Submit"
-                            type="object"
-                            invisible="state != 'draft'"/>
-
-                    <button name="action_approve"
-                            string="Approve"
-                            type="object"
-                            invisible="state != 'pending'"/>
-
-                    <button name="action_reject"
-                            string="Reject"
-                            type="object"
-                            invisible="state != 'pending'"/>
-
-                    <field name="state"
-                           widget="statusbar"
-                           statusbar_visible="draft,pending,approved,rejected,completed"/>
-
+                    <!-- Staff Buttons -->
+                    <button name="action_save_draft" string="💾 Save Draft" type="object" class="btn-warning" invisible="state != 'draft'"/>
+                    <button name="action_review"   string="🔍 Review"    type="object" class="btn-info"    invisible="state != 'draft'"/>
+                    <button name="action_submit"    string="✅ Submit"    type="object" class="btn-success" invisible="state != 'draft'"/>
+                    <button name="action_cancel"    string="❌ Cancel"    type="object" class="btn-danger"  invisible="state != 'pending'"/>
+                    
+                    <!-- 🔒 DISPATCHER ONLY BUTTONS (Hidden from Staff UI) -->
+                    <button name="action_approve"   string="✅ Approve"   type="object" class="btn-primary" invisible="state != 'pending'" groups="messob_fleet.group_fms_dispatcher"/>
+                    <button name="action_reject"    string="❌ Reject"    type="object" class="btn-danger"  invisible="state != 'pending'" groups="messob_fleet.group_fms_dispatcher"/>
+                    
+                    <field name="state" widget="statusbar" statusbar_visible="draft,pending,approved,rejected,in_progress,completed,closed"/>
                 </header>
 
-                <!-- FORM BODY -->
+                <!-- FORM BODY (Responsive 2-Column Layout) -->
                 <sheet>
+                    <div class="oe_title mb24">
+                        <h1><field name="name" readonly="1"/></h1>
+                        <field name="requester_id" invisible="1"/>
+                    </div>
+                    
+                    <!-- ✅ Odoo 18 Responsive Grid: Explicit nested groups -->
                     <group>
-
-                        <field name="name" readonly="1"/>
-                        <field name="requester_id"/>
-
-                        <field name="purpose"/>
-                        <field name="vehicle_category"/>
-
-                        <field name="start_dt"/>
-                        <field name="end_dt"/>
-
-                        <field name="pickup"/>
-                        <field name="destination"/>
-
+                        <group string="Request Details">
+                            <field name="purpose" 
+                                   readonly="state not in ('draft', 'pending')" 
+                                   required="state in ('draft', 'pending')" 
+                                   placeholder="Enter trip justification..."/>
+                            <field name="start_dt" 
+                                   readonly="state not in ('draft', 'pending')" 
+                                   required="state in ('draft', 'pending')" 
+                                   widget="datetime"/>
+                            <field name="pickup" 
+                                   readonly="state not in ('draft', 'pending')" 
+                                   placeholder="e.g., MESSOB HQ"/>
+                        </group>
+                        
+                        <group string="Vehicle &amp; Destination">
+                            <field name="vehicle_category" 
+                                   readonly="state not in ('draft', 'pending')" 
+                                   required="state in ('draft', 'pending')" 
+                                   widget="radio"/>
+                            <field name="end_dt" 
+                                   readonly="state not in ('draft', 'pending')" 
+                                   required="state in ('draft', 'pending')" 
+                                   widget="datetime"/>
+                            <field name="destination" 
+                                   readonly="state not in ('draft', 'pending')" 
+                                   placeholder="e.g., Bole Branch"/>
+                        </group>
                     </group>
                 </sheet>
 
+                <!-- CHATTER (Audit Trail) -->
+                <div class="oe_chatter">
+                    <field name="message_follower_ids" widget="mail_followers"/>
+                    <field name="message_ids" widget="mail_thread"/>
+                </div>
             </form>
         </field>
     </record>
 
     <!-- ================================================================ -->
-    <!-- ACTION -->
+    <!-- ACTION & MENU -->
     <!-- ================================================================ -->
     <record id="action_my_trips" model="ir.actions.act_window">
         <field name="name">My Requests</field>
         <field name="res_model">messob.fms.trip</field>
         <field name="view_mode">list,form</field>
         <field name="domain">[('requester_id', '=', uid)]</field>
+        <field name="context">{'default_requester_id': uid}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Create your first trip request</p>
+            <p>Click <b>New</b> to request a vehicle for official travel.</p>
+        </field>
     </record>
 
-    <!-- ================================================================ -->
-    <!-- MENU -->
-    <!-- ================================================================ -->
-    <menuitem id="menu_fms_root"
-              name="MESSOB FMS"
-              sequence="10"/>
-
-    <menuitem id="menu_fms_my_trips"
-              name="My Requests"
-              parent="menu_fms_root"
-              action="action_my_trips"
-              sequence="1"/>
+    <menuitem id="menu_fms_root" name="MESSOB FMS" sequence="10" web_icon="messob_fleet,static/description/icon.png"/>
+    <menuitem id="menu_fms_my_trips" name="My Requests" parent="menu_fms_root" action="action_my_trips" sequence="1" groups="messob_fleet.group_fms_user"/>
 
 </odoo>

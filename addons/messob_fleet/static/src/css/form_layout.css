@@ -1,0 +1,7 @@
+/* Force form to use 90% width on large screens */
+@media (min-width: 1400px) {
+    .o_form_view .o_form_sheet_bg {
+        max-width: 1200px !important;
+        margin: 0 auto !important;
+    }
+}
