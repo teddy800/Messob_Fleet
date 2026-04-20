@@ -1,23 +1,62 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+    MESSOB Fleet Management System — Security Groups
+
+    NO implied_ids between Staff and Dispatcher.
+    Each role is completely independent so menus are cleanly separated.
+
+    A user gets ONLY the menus for their assigned role:
+      - Staff (User)  → New Request, My Requests
+      - Dispatcher    → Current Requests, Pending Queue, All Requests
+      - Admin         → everything
+-->
 <odoo>
-    <!-- FMS User Groups -->
+
+    <record id="module_category_fms" model="ir.module.category">
+        <field name="name">MESSOB Fleet Management</field>
+        <field name="description">Roles for the MESSOB Fleet Management System</field>
+        <field name="sequence">20</field>
+    </record>
+
+    <!-- Staff: create and view own requests -->
     <record id="group_fms_user" model="res.groups">
-        <field name="name">FMS User (Staff)</field>
-        <field name="category_id" ref="base.module_category_hidden"/>
-        <field name="comment">Can create and view own trip requests</field>
+        <field name="name">Staff (User)</field>
+        <field name="category_id" ref="module_category_fms"/>
+        <field name="comment">Can create trip requests and view their own requests.</field>
     </record>
-    
+
+    <!-- Dispatcher: approve/reject, assign resources, see all requests -->
     <record id="group_fms_dispatcher" model="res.groups">
-        <field name="name">FMS Dispatcher</field>
-        <field name="category_id" ref="base.module_category_hidden"/>
-        <field name="implied_ids" eval="[(4, ref('group_fms_user'))]"/>
-        <field name="comment">Can approve requests and assign vehicles</field>
+        <field name="name">Dispatcher</field>
+        <field name="category_id" ref="module_category_fms"/>
+        <!-- Explicitly empty — no implied groups, fully independent role -->
+        <field name="implied_ids" eval="[(5, 0, 0)]"/>
+        <field name="comment">Can view all requests, approve/reject, and assign resources.</field>
     </record>
-    
+
+    <!-- Driver (Phase 2) -->
+    <record id="group_fms_driver" model="res.groups">
+        <field name="name">Driver</field>
+        <field name="category_id" ref="module_category_fms"/>
+        <field name="comment">Can view assigned trips and update trip status.</field>
+    </record>
+
+    <!-- Mechanic (Phase 3) -->
+    <record id="group_fms_mechanic" model="res.groups">
+        <field name="name">Mechanic</field>
+        <field name="category_id" ref="module_category_fms"/>
+        <field name="comment">Can log fuel transactions and maintenance records.</field>
+    </record>
+
+    <!-- Admin: full access -->
     <record id="group_fms_admin" model="res.groups">
-        <field name="name">FMS Admin</field>
-        <field name="category_id" ref="base.module_category_hidden"/>
-        <field name="implied_ids" eval="[(4, ref('group_fms_dispatcher'))]"/>
-        <field name="comment">Full system access</field>
+        <field name="name">Administrator</field>
+        <field name="category_id" ref="module_category_fms"/>
+        <field name="implied_ids" eval="[
+            (4, ref('group_fms_user')),
+            (4, ref('group_fms_dispatcher')),
+        ]"/>
+        <field name="comment">Full access to all FMS features.</field>
     </record>
+
 </odoo>

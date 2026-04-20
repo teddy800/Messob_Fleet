@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    MESSOB Fleet Management System — Record Rules
+
+    Staff    → sees only their own requests
+    Dispatcher → sees ALL requests (global rule, no group restriction)
+    Admin    → sees everything (no rule needed, implied by dispatcher)
+-->
+<odoo>
+
+    <!-- Staff: own records only -->
+    <record id="rule_trip_staff_own_only" model="ir.rule">
+        <field name="name">FMS Staff: Own Requests Only</field>
+        <field name="model_id" ref="model_messob_fms_trip"/>
+        <field name="groups" eval="[(4, ref('messob_fleet.group_fms_user'))]"/>
+        <field name="domain_force">[('requester_id.user_ids', 'in', [user.id])]</field>
+        <field name="perm_read"   eval="True"/>
+        <field name="perm_write"  eval="True"/>
+        <field name="perm_create" eval="True"/>
+        <field name="perm_unlink" eval="False"/>
+    </record>
+
+    <!-- Dispatcher: all records, no restriction -->
+    <record id="rule_trip_dispatcher_all" model="ir.rule">
+        <field name="name">FMS Dispatcher: All Requests</field>
+        <field name="model_id" ref="model_messob_fms_trip"/>
+        <field name="groups" eval="[(4, ref('messob_fleet.group_fms_dispatcher'))]"/>
+        <field name="domain_force">[(1, '=', 1)]</field>
+        <field name="perm_read"   eval="True"/>
+        <field name="perm_write"  eval="True"/>
+        <field name="perm_create" eval="True"/>
+        <field name="perm_unlink" eval="True"/>
+    </record>
+
+</odoo>

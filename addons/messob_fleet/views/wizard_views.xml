@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    MESSOB Fleet Management System
+    View: 4-Step Trip Request Wizard (Staff — FR-1.1)
+
+    Layout matches wireframe:
+      - MESSOB logo area at top
+      - Step progress indicator
+      - Step 1: Purpose + Vehicle Category
+      - Step 2: Start / End datetime
+      - Step 3: Pickup + Destination
+      - Step 4: Review summary (read-only)
+      - Footer: Back / Next / Submit / Cancel
+-->
+<odoo>
+
+    <record id="view_trip_wizard_form" model="ir.ui.view">
+        <field name="name">messob.fms.trip.wizard.form</field>
+        <field name="model">messob.fms.trip.wizard</field>
+        <field name="arch" type="xml">
+            <form string="New Vehicle Request">
+                <sheet>
+
+                    <!-- ── Brand header ── -->
+                    <div class="o_row mb-3">
+                        <h2 class="text-center w-100" style="color:#e67e22; font-weight:700; letter-spacing:1px;">
+                            MESSOB
+                        </h2>
+                    </div>
+
+                    <!-- ── Step progress bar ── -->
+                    <div class="o_row mb-4">
+                        <div class="w-100 text-center">
+                            <span class="badge rounded-pill"
+                                  style="background:#e67e22; font-size:0.95rem; padding:6px 18px;">
+                                Step
+                                <field name="step" readonly="1" nolabel="1"
+                                       style="display:inline; font-weight:700;"/>
+                                of 4
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- ══════════════════════════════════════════
+                         STEP 1 — Trip Details
+                    ══════════════════════════════════════════ -->
+                    <group string="Trip Details" invisible="step != 1">
+                        <field name="purpose"
+                               widget="text"
+                               placeholder="Describe the official reason for this trip (min. 10 characters)…"
+                               required="step == 1"/>
+                        <field name="vehicle_category"
+                               required="step == 1"/>
+                    </group>
+
+                    <!-- ══════════════════════════════════════════
+                         STEP 2 — Schedule
+                    ══════════════════════════════════════════ -->
+                    <group string="Schedule" invisible="step != 2">
+                        <field name="start_dt" widget="datetime" required="step == 2"
+                               string="Start Date / Time"/>
+                        <field name="end_dt"   widget="datetime" required="step == 2"
+                               string="End Date / Time"/>
+                    </group>
+
+                    <!-- ══════════════════════════════════════════
+                         STEP 3 — Locations
+                    ══════════════════════════════════════════ -->
+                    <group string="Locations" invisible="step != 3">
+                        <field name="pickup"
+                               placeholder="e.g., MESSOB HQ Main Gate"
+                               required="step == 3"
+                               string="Start Place"/>
+                        <field name="destination"
+                               placeholder="e.g., Bole Branch Office"
+                               required="step == 3"
+                               string="Destination Place"/>
+                    </group>
+
+                    <!-- ══════════════════════════════════════════
+                         STEP 4 — Review & Submit
+                    ══════════════════════════════════════════ -->
+                    <group string="Review Your Request" invisible="step != 4">
+                        <group string="Trip Details">
+                            <field name="purpose"          readonly="1" widget="text"/>
+                            <field name="vehicle_category" readonly="1"/>
+                        </group>
+                        <group string="Schedule">
+                            <field name="start_dt" readonly="1" widget="datetime"/>
+                            <field name="end_dt"   readonly="1" widget="datetime"/>
+                        </group>
+                        <group string="Locations">
+                            <field name="pickup"      readonly="1" string="Start Place"/>
+                            <field name="destination" readonly="1" string="Destination Place"/>
+                        </group>
+                    </group>
+
+                </sheet>
+
+                <!-- ── Footer navigation ── -->
+                <footer>
+                    <button name="action_previous"
+                            string="← Back"
+                            type="object"
+                            class="btn-secondary"
+                            invisible="step == 1"/>
+
+                    <button name="action_next"
+                            string="Next →"
+                            type="object"
+                            class="btn-primary"
+                            invisible="step == 4"/>
+
+                    <button name="action_submit"
+                            string="Submit Request"
+                            type="object"
+                            class="btn-success"
+                            invisible="step != 4"/>
+
+                    <button string="Cancel"
+                            special="cancel"
+                            class="btn-secondary"/>
+                </footer>
+
+            </form>
+        </field>
+    </record>
+
+    <!-- Window action — opens wizard as a dialog -->
+    <record id="action_new_trip_wizard" model="ir.actions.act_window">
+        <field name="name">New Vehicle Request</field>
+        <field name="res_model">messob.fms.trip.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+        <field name="view_id" ref="view_trip_wizard_form"/>
+    </record>
+
+</odoo>

@@ -1,8 +1,5 @@
 # -*- coding: utf-8 -*-
 # ---------------------------------------------------------------------------
-# MESSOB Fleet Management System
-# Root package initializer — imports all sub-packages.
+# MESSOB Fleet Management System - Wizards Package
 # ---------------------------------------------------------------------------
-from . import models
-from . import controllers
-from . import wizards
+from . import trip_request_wizard
