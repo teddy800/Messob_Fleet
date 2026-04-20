@@ -4,3 +4,5 @@ access_messob_fms_trip_dispatcher,messob.fms.trip.dispatcher,model_messob_fms_tr
 access_messob_fms_trip_admin,messob.fms.trip.admin,model_messob_fms_trip,messob_fleet.group_fms_admin,1,1,1,1
 access_messob_fms_trip_wizard_user,messob.fms.trip.wizard.user,model_messob_fms_trip_wizard,messob_fleet.group_fms_user,1,1,1,1
 access_messob_fms_trip_wizard_dispatcher,messob.fms.trip.wizard.dispatcher,model_messob_fms_trip_wizard,messob_fleet.group_fms_dispatcher,1,1,1,1
+access_fleet_vehicle_dispatcher,fleet.vehicle.dispatcher,fleet.model_fleet_vehicle,messob_fleet.group_fms_dispatcher,1,0,0,0
+access_fleet_vehicle_partner_dispatcher,fleet.vehicle.partner.dispatcher,base.model_res_partner,messob_fleet.group_fms_dispatcher,1,0,0,0

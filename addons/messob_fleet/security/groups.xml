@@ -29,7 +29,7 @@
     <record id="group_fms_dispatcher" model="res.groups">
         <field name="name">Dispatcher</field>
         <field name="category_id" ref="module_category_fms"/>
-        <!-- Explicitly empty — no implied groups, fully independent role -->
+        <!-- Explicitly empty implied_ids — no auto-inherit of Staff role -->
         <field name="implied_ids" eval="[(5, 0, 0)]"/>
         <field name="comment">Can view all requests, approve/reject, and assign resources.</field>
     </record>
