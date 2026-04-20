@@ -1,0 +1,152 @@
+import { 
+  LayoutDashboard, 
+  Car, 
+  ClipboardList, 
+  CheckSquare, 
+  Settings, 
+  User, 
+  Fuel, 
+  Gauge, 
+  LogOut,
+  ShieldCheck
+} from "lucide-react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import logo from "@/assets/logo.png";
+import { cn } from "@/lib/utils";
+import { useUserStore } from "@/store/useUserStore";
+
+// The Master Menu List with Role-Based Access Control (RBAC)
+const menuItems = [
+  { 
+    name: "Dashboard", 
+    path: "/dashboard", 
+    icon: LayoutDashboard, 
+    roles: ["Staff", "Dispatcher", "Admin", "Maintainer"] 
+  },
+  { 
+    name: "Request Vehicle", 
+    path: "/requests/new", 
+    icon: ClipboardList, 
+    roles: ["Staff", "Admin"] 
+  },
+  { 
+    name: "Approval Queue", 
+    path: "/dispatch/approvals", 
+    icon: CheckSquare, 
+    roles: ["Dispatcher", "Admin"] 
+  },
+  { 
+    name: "Manage Fleet", 
+    path: "/fleet", 
+    icon: Car, 
+    roles: ["Dispatcher", "Admin"] 
+  },
+  { 
+    name: "Fuel Logs", 
+    path: "/fuel-log", 
+    icon: Fuel, 
+    roles: ["Admin", "Dispatcher", "Maintainer"] 
+  },
+  { 
+    name: "Maintenance", 
+    path: "/maintenance", 
+    icon: Gauge, 
+    roles: ["Admin", "Maintainer"] 
+  }
+];
+
+export default function Sidebar({ setOpen }) {
+  const location = useLocation();
+  const navigate = useNavigate();
+  
+  // Get User Data and Logout Function from Zustand Store
+  const user = useUserStore((state) => state.user);
+  const logout = useUserStore((state) => state.logout);
+
+  // Filter items based on the user's role. 
+  // If no user is logged in, show an empty array to prevent errors.
+  const filteredMenu = menuItems.filter(item => 
+    user?.role ? item.roles.includes(user.role) : false
+  );
+
+  const handleLogout = () => {
+    logout();
+    navigate("/login");
+  };
+
+  return (
+    <div className="flex flex-col h-full bg-brand-blue text-white w-64 p-6 border-r border-white/10 shadow-2xl">
+      
+      {/* --- Logo & Identity Section --- */}
+      <div className="flex flex-col items-center mb-10">
+        <div className="bg-white p-2 rounded-full mb-3 shadow-lg group transition-all hover:ring-4 hover:ring-brand-gold/30">
+          <img 
+            src={logo} 
+            className="w-16 h-16 object-contain rounded-full" 
+            alt="MESSOB Logo" 
+          />
+        </div>
+        <h1 className="text-xl font-black tracking-wider text-white">MESSOB-FMS</h1>
+        
+        {/* User Role Badge */}
+        <div className="flex items-center gap-1.5 mt-2 bg-brand-gold/20 px-3 py-1 rounded-full border border-brand-gold/30">
+          <ShieldCheck className="h-3 w-3 text-brand-gold" />
+          <span className="text-[10px] text-brand-gold font-bold uppercase tracking-widest">
+            {user?.role || "Guest"}
+          </span>
+        </div>
+      </div>
+
+      {/* --- Navigation Menu --- */}
+      <nav className="flex-1 space-y-2 overflow-y-auto no-scrollbar">
+        {filteredMenu.map((item) => {
+          const isActive = location.pathname === item.path;
+          return (
+            <Link
+              key={item.path}
+              to={item.path}
+              onClick={() => setOpen?.(false)} // Closes mobile drawer
+              className={cn(
+                "flex items-center px-4 py-3 rounded-xl transition-all duration-200 group",
+                isActive 
+                  ? "bg-brand-gold text-brand-blue font-bold shadow-lg scale-[1.02]" 
+                  : "hover:bg-white/10 text-white/70 hover:text-white"
+              )}
+            >
+              <item.icon className={cn(
+                "mr-3 h-5 w-5 transition-transform group-hover:scale-110",
+                isActive ? "text-brand-blue" : "text-brand-gold"
+              )} />
+              <span className="text-sm tracking-wide">{item.name}</span>
+            </Link>
+          );
+        })}
+      </nav>
+
+      {/* --- Footer / User Account Section --- */}
+      <div className="pt-6 border-t border-white/10 mt-auto space-y-1">
+        <div className="px-4 py-3 mb-2 bg-white/5 rounded-xl border border-white/5">
+           <p className="text-[10px] text-gray-400 uppercase font-bold tracking-tighter">Current User</p>
+           <p className="text-sm font-bold truncate text-brand-gold">{user?.name || "Unauthorized"}</p>
+        </div>
+
+        <Link 
+              to="/profile" 
+              onClick={() => setOpen?.(false)}
+              className="flex items-center px-4 py-3 hover:bg-white/10 rounded-xl transition-all"
+            >
+              <User className="mr-3 h-5 w-5 text-gray-400" />
+              <span className="text-sm">Account Profile</span>
+        </Link>
+        
+        <button 
+          onClick={handleLogout}
+          className="w-full flex items-center px-4 py-3 hover:bg-red-500/20 text-red-400 rounded-xl transition-all group mt-2"
+        >
+          <LogOut className="mr-3 h-5 w-5 group-hover:-translate-x-1 transition-transform" />
+          <span className="text-sm font-bold">Sign Out</span>
+        </button>
+      </div>
+    </div>
+  );
+}
