@@ -16,6 +16,7 @@
 
 from odoo import models, fields, api, _ # type: ignore
 from odoo.exceptions import UserError # type: ignore
+from datetime import timedelta
 
 
 class MessobFmsTrip(models.Model):
@@ -212,9 +213,22 @@ class MessobFmsTrip(models.Model):
 
     @api.constrains('start_dt', 'end_dt')
     def _check_dates(self):
-        """FR-1.1 Step 2: End time must be strictly after start time."""
+        """
+        Validate trip schedule:
+          Rule 1: start_dt date must be today or future (past dates blocked).
+                  We compare DATE only — time within today is always allowed.
+          Rule 2: end_dt must be strictly after start_dt (same day = later time).
+        """
+        today = fields.Date.today()          # local date (no time component)
         for rec in self:
-            if rec.start_dt and rec.end_dt and rec.start_dt >= rec.end_dt:
+            if rec.start_dt:
+                # Convert UTC datetime → local date for comparison
+                start_date = rec.start_dt.date()
+                if start_date < today:
+                    raise UserError(
+                        _('Start date cannot be in the past. Please select today or a future date.')
+                    )
+            if rec.start_dt and rec.end_dt and rec.end_dt <= rec.start_dt:
                 raise UserError(
                     _('End Date/Time must be after Start Date/Time.')
                 )

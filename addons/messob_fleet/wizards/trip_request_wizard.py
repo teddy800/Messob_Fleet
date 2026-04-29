@@ -124,12 +124,21 @@ class MessobFmsTripWizard(models.TransientModel):
                 raise UserError(_('Please select a vehicle category.'))
 
         elif step == 2:
+            today = fields.Date.today()
             if not self.start_dt:
                 raise UserError(_('Please select a start date and time.'))
             if not self.end_dt:
                 raise UserError(_('Please select an end date and time.'))
-            if self.start_dt >= self.end_dt:
-                raise UserError(_('End Date/Time must be after Start Date/Time.'))
+            # Compare date only — today's time is always valid
+            if self.start_dt.date() < today:
+                raise UserError(
+                    _('Start date cannot be in the past. Please select today or a future date.')
+                )
+            # End must be strictly after start
+            if self.end_dt <= self.start_dt:
+                raise UserError(
+                    _('End Date/Time must be after Start Date/Time.')
+                )
 
         elif step == 3:
             if not self.pickup:
