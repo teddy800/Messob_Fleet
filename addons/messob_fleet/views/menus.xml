@@ -12,7 +12,7 @@
     <menuitem id="menu_fms_root"
               name="MESSOB FMS"
               sequence="10"
-              groups="messob_fleet.group_fms_user,messob_fleet.group_fms_dispatcher"/>
+              groups="messob_fleet.group_fms_user,messob_fleet.group_fms_dispatcher,messob_fleet.group_fms_driver"/>
 
     <!-- ================================================================
          STAFF MENUS
@@ -59,6 +59,17 @@
               action="messob_fleet.action_all_requests"
               sequence="20"
               groups="messob_fleet.group_fms_dispatcher"/>
+
+    <!-- ================================================================
+         DRIVER MENUS
+    ================================================================ -->
+
+    <menuitem id="menu_fms_driver_trips"
+              name="My Trips"
+              parent="menu_fms_root"
+              action="messob_fleet.action_driver_my_trips"
+              sequence="30"
+              groups="messob_fleet.group_fms_driver"/>
 
     <!-- ================================================================
          ADMIN MENUS (Phase 2 — uncomment when admin views are built)

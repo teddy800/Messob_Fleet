@@ -12,8 +12,8 @@
 #   4 - Review        (read-only summary before submit)
 # ---------------------------------------------------------------------------
 
-from odoo import models, fields, api, _
-from odoo.exceptions import UserError
+from odoo import models, fields, api, _ # type: ignore
+from odoo.exceptions import UserError # type: ignore
 
 
 class MessobFmsTripWizard(models.TransientModel):

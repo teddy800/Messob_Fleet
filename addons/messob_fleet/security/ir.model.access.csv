@@ -2,7 +2,12 @@ id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
 access_messob_fms_trip_user,messob.fms.trip.user,model_messob_fms_trip,messob_fleet.group_fms_user,1,1,1,0
 access_messob_fms_trip_dispatcher,messob.fms.trip.dispatcher,model_messob_fms_trip,messob_fleet.group_fms_dispatcher,1,1,1,1
 access_messob_fms_trip_admin,messob.fms.trip.admin,model_messob_fms_trip,messob_fleet.group_fms_admin,1,1,1,1
+access_messob_fms_trip_driver,messob.fms.trip.driver,model_messob_fms_trip,messob_fleet.group_fms_driver,1,1,0,0
 access_messob_fms_trip_wizard_user,messob.fms.trip.wizard.user,model_messob_fms_trip_wizard,messob_fleet.group_fms_user,1,1,1,1
 access_messob_fms_trip_wizard_dispatcher,messob.fms.trip.wizard.dispatcher,model_messob_fms_trip_wizard,messob_fleet.group_fms_dispatcher,1,1,1,1
 access_fleet_vehicle_dispatcher,fleet.vehicle.dispatcher,fleet.model_fleet_vehicle,messob_fleet.group_fms_dispatcher,1,0,0,0
 access_fleet_vehicle_partner_dispatcher,fleet.vehicle.partner.dispatcher,base.model_res_partner,messob_fleet.group_fms_dispatcher,1,0,0,0
+access_messob_fms_fuel_log_driver,messob.fms.fuel.log.driver,model_messob_fms_fuel_log,messob_fleet.group_fms_driver,1,1,1,0
+access_messob_fms_fuel_log_dispatcher,messob.fms.fuel.log.dispatcher,model_messob_fms_fuel_log,messob_fleet.group_fms_dispatcher,1,0,0,0
+access_messob_fms_fuel_log_wizard_driver,messob.fms.fuel.log.wizard.driver,model_messob_fms_fuel_log_wizard,messob_fleet.group_fms_driver,1,1,1,1
+access_fleet_vehicle_driver,fleet.vehicle.driver,fleet.model_fleet_vehicle,messob_fleet.group_fms_driver,1,0,0,0

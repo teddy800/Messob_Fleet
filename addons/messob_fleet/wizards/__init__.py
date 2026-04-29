@@ -3,3 +3,4 @@
 # MESSOB Fleet Management System - Wizards Package
 # ---------------------------------------------------------------------------
 from . import trip_request_wizard
+from . import fuel_log_wizard
