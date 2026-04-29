@@ -11,8 +11,8 @@
 #   BR-3: A driver cannot be double-booked (time overlap check).
 # ---------------------------------------------------------------------------
 
-from odoo import models, _
-from odoo.exceptions import UserError
+from odoo import models, _ # type: ignore
+from odoo.exceptions import UserError # type: ignore
 
 
 class MessobFmsTripDispatcher(models.Model):

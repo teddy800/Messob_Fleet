@@ -14,8 +14,8 @@
 #   - View their own requests on the dashboard
 # ---------------------------------------------------------------------------
 
-from odoo import models, fields, api, _
-from odoo.exceptions import UserError
+from odoo import models, fields, api, _ # type: ignore
+from odoo.exceptions import UserError # type: ignore
 
 
 class MessobFmsTrip(models.Model):
