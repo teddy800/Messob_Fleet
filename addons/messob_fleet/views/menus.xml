@@ -12,7 +12,7 @@
     <menuitem id="menu_fms_root"
               name="MESSOB FMS"
               sequence="10"
-              groups="messob_fleet.group_fms_user,messob_fleet.group_fms_dispatcher,messob_fleet.group_fms_driver"/>
+              groups="messob_fleet.group_fms_user,messob_fleet.group_fms_dispatcher,messob_fleet.group_fms_driver,messob_fleet.group_fms_mechanic"/>
 
     <!-- ================================================================
          STAFF MENUS
@@ -59,6 +59,23 @@
               action="messob_fleet.action_all_requests"
               sequence="20"
               groups="messob_fleet.group_fms_dispatcher"/>
+
+    <!-- ================================================================
+         MECHANIC MENUS
+    ================================================================ -->
+
+    <menuitem id="menu_fms_mechanic_root"
+              name="Repair &amp; Maintenance"
+              parent="menu_fms_root"
+              sequence="40"
+              groups="messob_fleet.group_fms_mechanic"/>
+
+    <menuitem id="menu_fms_maintenance_log"
+              name="Repair &amp; Maintenance Logging"
+              parent="menu_fms_mechanic_root"
+              action="messob_fleet.action_maintenance_log"
+              sequence="10"
+              groups="messob_fleet.group_fms_mechanic"/>
 
     <!-- ================================================================
          DRIVER MENUS

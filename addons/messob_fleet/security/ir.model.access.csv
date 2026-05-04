@@ -11,3 +11,8 @@ access_messob_fms_fuel_log_driver,messob.fms.fuel.log.driver,model_messob_fms_fu
 access_messob_fms_fuel_log_dispatcher,messob.fms.fuel.log.dispatcher,model_messob_fms_fuel_log,messob_fleet.group_fms_dispatcher,1,0,0,0
 access_messob_fms_fuel_log_wizard_driver,messob.fms.fuel.log.wizard.driver,model_messob_fms_fuel_log_wizard,messob_fleet.group_fms_driver,1,1,1,1
 access_fleet_vehicle_driver,fleet.vehicle.driver,fleet.model_fleet_vehicle,messob_fleet.group_fms_driver,1,0,0,0
+access_messob_fms_maintenance_mechanic,messob.fms.maintenance.mechanic,model_messob_fms_maintenance_log,messob_fleet.group_fms_mechanic,1,1,1,1
+access_messob_fms_maintenance_dispatcher,messob.fms.maintenance.dispatcher,model_messob_fms_maintenance_log,messob_fleet.group_fms_dispatcher,1,0,0,0
+access_messob_fms_maintenance_admin,messob.fms.maintenance.admin,model_messob_fms_maintenance_log,messob_fleet.group_fms_admin,1,1,1,1
+access_fleet_vehicle_mechanic,fleet.vehicle.mechanic,fleet.model_fleet_vehicle,messob_fleet.group_fms_mechanic,1,0,0,0
+access_res_partner_mechanic,res.partner.mechanic,base.model_res_partner,messob_fleet.group_fms_mechanic,1,0,0,0

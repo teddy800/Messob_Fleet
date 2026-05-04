@@ -50,6 +50,7 @@ Covers:
         'views/trip_views.xml',
         'views/dispatcher_views.xml',
         'views/driver_views.xml',
+        'views/mechanic_views.xml',
         'views/wizard_views.xml',
         'views/menus.xml',
     ],
