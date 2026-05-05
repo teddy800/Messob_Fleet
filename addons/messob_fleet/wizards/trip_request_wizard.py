@@ -59,7 +59,25 @@ class MessobFmsTripWizard(models.TransientModel):
     # Step 3: Locations
     # -------------------------------------------------------------------------
     pickup = fields.Char(string='Pickup Location')
+    pickup_location_id = fields.Many2one(
+        comodel_name='messob.fms.location',
+        string='Pickup (Select from list)',
+    )
     destination = fields.Char(string='Destination')
+    destination_location_id = fields.Many2one(
+        comodel_name='messob.fms.location',
+        string='Destination (Select from list)',
+    )
+
+    @api.onchange('pickup_location_id')
+    def _onchange_pickup(self):
+        if self.pickup_location_id:
+            self.pickup = self.pickup_location_id.display_name_custom
+
+    @api.onchange('destination_location_id')
+    def _onchange_destination(self):
+        if self.destination_location_id:
+            self.destination = self.destination_location_id.display_name_custom
 
     # =========================================================================
     # NAVIGATION ACTIONS

@@ -43,14 +43,17 @@ Covers:
         'security/ir.model.access.csv',
         'security/record_rules.xml',
 
-        # 2. Master data (sequences, etc.)
+        # 2. Master data (sequences + locations)
         'data/sequences.xml',
+        'data/locations.xml',
 
         # 3. Views: model views, then wizard, then menus last
         'views/trip_views.xml',
         'views/dispatcher_views.xml',
         'views/driver_views.xml',
         'views/mechanic_views.xml',
+        'views/admin_views.xml',
+        'views/staff_dashboard_action.xml',
         'views/wizard_views.xml',
         'views/menus.xml',
     ],
@@ -61,6 +64,8 @@ Covers:
     'assets': {
         'web.assets_backend': [
             'messob_fleet/static/src/css/fms_styles.css',
+            'messob_fleet/static/src/js/staff_dashboard.js',
+            'messob_fleet/static/src/xml/staff_dashboard.xml',
         ],
     },
 

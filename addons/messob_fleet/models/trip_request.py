@@ -109,11 +109,23 @@ class MessobFmsTrip(models.Model):
         help='Where the vehicle should pick up the passenger(s).',
     )
 
+    pickup_location_id = fields.Many2one(
+        comodel_name='messob.fms.location',
+        string='Pickup (Select)',
+        help='Select from known locations for autocomplete.',
+    )
+
     destination = fields.Char(
         string='Destination',
         required=True,
         tracking=True,
         help='Final destination of the trip.',
+    )
+
+    destination_location_id = fields.Many2one(
+        comodel_name='messob.fms.location',
+        string='Destination (Select)',
+        help='Select from known locations for autocomplete.',
     )
 
     # =========================================================================
@@ -192,6 +204,16 @@ class MessobFmsTrip(models.Model):
                 rec.duration_display = f'{hours}h {minutes}m'
             else:
                 rec.duration_display = '—'
+
+    @api.onchange('pickup_location_id')
+    def _onchange_pickup_location(self):
+        if self.pickup_location_id:
+            self.pickup = self.pickup_location_id.display_name_custom
+
+    @api.onchange('destination_location_id')
+    def _onchange_destination_location(self):
+        if self.destination_location_id:
+            self.destination = self.destination_location_id.display_name_custom
 
     # =========================================================================
     # ORM OVERRIDES

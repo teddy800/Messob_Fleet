@@ -45,7 +45,6 @@ class MessobFmsFuelLogWizard(models.TransientModel):
     station_name = fields.Char(
         string='Fuel Station Name',
         required=True,
-        placeholder='e.g., Total Bole Road',
     )
 
     liters = fields.Float(

@@ -18,20 +18,36 @@
          STAFF MENUS
     ================================================================ -->
 
+    <!-- Staff landing dashboard — first thing staff sees -->
+    <menuitem id="menu_fms_staff_home"
+              name="🏠 Dashboard"
+              parent="menu_fms_root"
+              action="messob_fleet.action_staff_dashboard"
+              sequence="1"
+              groups="messob_fleet.group_fms_user"/>
+
     <!-- Opens the 4-step wizard to create a new request (FR-1.1) -->
     <menuitem id="menu_fms_new_request"
-              name="New Request"
+              name="➕ New Request"
               parent="menu_fms_root"
               action="messob_fleet.action_new_trip_wizard"
               sequence="5"
               groups="messob_fleet.group_fms_user"/>
 
-    <!-- Personal dashboard: shows only the logged-in user's requests (FR-1.2) -->
+    <!-- Dashboard: all requests grouped by status -->
     <menuitem id="menu_fms_my_trips"
-              name="My Requests"
+              name="📋 My Requests"
               parent="menu_fms_root"
-              action="messob_fleet.action_my_trips"
+              action="messob_fleet.action_my_trips_dashboard"
               sequence="10"
+              groups="messob_fleet.group_fms_user"/>
+
+    <!-- Active only: pending + approved + in progress -->
+    <menuitem id="menu_fms_active_trips"
+              name="🚗 Active Requests"
+              parent="menu_fms_root"
+              action="messob_fleet.action_my_active_trips"
+              sequence="15"
               groups="messob_fleet.group_fms_user"/>
 
     <!-- ================================================================
@@ -89,28 +105,55 @@
               groups="messob_fleet.group_fms_driver"/>
 
     <!-- ================================================================
-         ADMIN MENUS (Phase 2 — uncomment when admin views are built)
+         ADMIN MENUS
     ================================================================ -->
-    <!--
-    <menuitem id="menu_fms_configuration"
-              name="Configuration"
-              parent="menu_fms_root"
-              sequence="50"
-              groups="messob_fleet.group_fms_admin"/>
 
-    <menuitem id="menu_fms_vehicles"
-              name="Vehicles"
-              parent="menu_fms_configuration"
-              action="messob_fleet.action_fms_vehicles"
+    <menuitem id="menu_fms_admin_root"
+              name="MESSOB FMS"
+              sequence="10"
+              groups="messob_fleet.group_fms_admin"
+              web_icon="messob_fleet,static/description/icon.png"/>
+
+    <menuitem id="menu_fms_admin_dashboard"
+              name="Dashboard"
+              parent="menu_fms_admin_root"
+              action="messob_fleet.action_admin_dashboard"
               sequence="10"
               groups="messob_fleet.group_fms_admin"/>
 
-    <menuitem id="menu_fms_drivers"
-              name="Drivers"
-              parent="menu_fms_configuration"
-              action="messob_fleet.action_fms_drivers"
+    <menuitem id="menu_fms_admin_users"
+              name="User Management"
+              parent="menu_fms_admin_root"
+              action="messob_fleet.action_admin_users"
               sequence="20"
               groups="messob_fleet.group_fms_admin"/>
-    -->
+
+    <menuitem id="menu_fms_admin_vehicles"
+              name="Vehicles"
+              parent="menu_fms_admin_root"
+              action="messob_fleet.action_admin_vehicles"
+              sequence="30"
+              groups="messob_fleet.group_fms_admin"/>
+
+    <menuitem id="menu_fms_admin_drivers"
+              name="Drivers"
+              parent="menu_fms_admin_root"
+              action="messob_fleet.action_admin_drivers"
+              sequence="40"
+              groups="messob_fleet.group_fms_admin"/>
+
+    <menuitem id="menu_fms_admin_audit"
+              name="Audit Logs"
+              parent="menu_fms_admin_root"
+              action="messob_fleet.action_admin_audit_logs"
+              sequence="50"
+              groups="messob_fleet.group_fms_admin"/>
+
+    <menuitem id="menu_fms_admin_profile"
+              name="Profile"
+              parent="menu_fms_admin_root"
+              action="messob_fleet.action_admin_profile"
+              sequence="90"
+              groups="messob_fleet.group_fms_admin"/>
 
 </odoo>

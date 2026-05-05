@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    MESSOB Fleet Management System
+    Action: Staff Dashboard client action
+    This is the landing page shown when staff opens MESSOB FMS.
+-->
+<odoo>
+
+    <record id="action_staff_dashboard" model="ir.actions.client">
+        <field name="name">Staff Dashboard</field>
+        <field name="tag">messob_fleet.staff_dashboard</field>
+    </record>
+
+</odoo>

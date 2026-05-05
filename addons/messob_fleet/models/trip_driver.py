@@ -28,7 +28,7 @@ class MessobFmsTripDriver(models.Model):
     )
 
     fuel_log_count = fields.Integer(
-        string='Fuel Logs',
+        string='Fuel Log Count',
         compute='_compute_fuel_log_count',
         store=False,
     )

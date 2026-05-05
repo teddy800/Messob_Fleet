@@ -67,14 +67,18 @@
                          STEP 3 — Locations
                     ══════════════════════════════════════════ -->
                     <group string="Locations" invisible="step != 3">
+                        <field name="pickup_location_id"
+                               string="Start Place (select)"
+                               options="{'no_create': True}"/>
                         <field name="pickup"
-                               placeholder="e.g., MESSOB HQ Main Gate"
-                               required="step == 3"
-                               string="Start Place"/>
+                               string="Start Place"
+                               placeholder="e.g., Addis Ababa / Bole-Bulbula"/>
+                        <field name="destination_location_id"
+                               string="Destination (select)"
+                               options="{'no_create': True}"/>
                         <field name="destination"
-                               placeholder="e.g., Bole Branch Office"
-                               required="step == 3"
-                               string="Destination Place"/>
+                               string="Destination Place"
+                               placeholder="e.g., Addis Ababa / Kirkos"/>
                     </group>
 
                     <!-- ══════════════════════════════════════════

@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- MESSOB Fleet Management System — Staff Dashboard OWL Template -->
+<templates xml:space="preserve">
+
+    <t t-name="messob_fleet.StaffDashboard">
+        <div class="o_action o_form_view" style="background:#f8f9fa; min-height:100vh; padding:40px 20px;">
+
+            <!-- Header -->
+            <div class="text-center mb-5">
+                <h1 style="color:#e67e22; font-weight:800; font-size:2.5rem; letter-spacing:2px;">
+                    MESSOB FMS
+                </h1>
+                <p class="text-muted" style="font-size:1.1rem;">
+                    Fleet Management System — Staff Portal
+                </p>
+            </div>
+
+            <!-- Two main buttons -->
+            <div class="d-flex justify-content-center gap-4 flex-wrap">
+
+                <!-- Button 1: New Request -->
+                <div class="card shadow-sm text-center"
+                     style="width:280px; border-radius:16px; border:2px solid #e67e22; cursor:pointer;"
+                     t-on-click="openNewRequest">
+                    <div class="card-body p-5">
+                        <div style="font-size:3rem; margin-bottom:16px;">➕</div>
+                        <h4 style="color:#e67e22; font-weight:700;">New Request</h4>
+                        <p class="text-muted" style="font-size:0.9rem;">
+                            Submit a new vehicle request for your trip
+                        </p>
+                        <button class="btn btn-warning mt-2"
+                                style="background:#e67e22; border:none; color:white; border-radius:8px; padding:8px 24px; font-weight:600;">
+                            Create Request
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Button 2: My Previous Requests -->
+                <div class="card shadow-sm text-center"
+                     style="width:280px; border-radius:16px; border:2px solid #3498db; cursor:pointer;"
+                     t-on-click="openMyRequests">
+                    <div class="card-body p-5">
+                        <div style="font-size:3rem; margin-bottom:16px;">📋</div>
+                        <h4 style="color:#3498db; font-weight:700;">My Requests</h4>
+                        <p class="text-muted" style="font-size:0.9rem;">
+                            View status of your pending, approved and in-progress requests
+                        </p>
+                        <button class="btn btn-primary mt-2"
+                                style="background:#3498db; border:none; border-radius:8px; padding:8px 24px; font-weight:600;">
+                            View Requests
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Status legend -->
+            <div class="text-center mt-5">
+                <small class="text-muted">Request Status: </small>
+                <span class="badge" style="background:#95a5a6; margin:2px;">Draft</span>
+                <span class="badge" style="background:#f39c12; margin:2px;">Pending</span>
+                <span class="badge" style="background:#27ae60; margin:2px;">Approved</span>
+                <span class="badge" style="background:#e74c3c; margin:2px;">Rejected</span>
+                <span class="badge" style="background:#2980b9; margin:2px;">In Progress</span>
+                <span class="badge" style="background:#16a085; margin:2px;">Completed</span>
+            </div>
+
+        </div>
+    </t>
+
+</templates>
