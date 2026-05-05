@@ -183,6 +183,48 @@ class MessobFmsTrip(models.Model):
         help='Fuel level of the assigned vehicle at time of dispatch.',
     )
 
+    # ── Computed: IDs of vehicles/drivers already booked in this time window ──
+    # Used as domain on the assignment dropdowns so dispatcher only sees
+    # available resources (FR-2.2, BR-2, BR-3).
+
+    unavailable_vehicle_ids = fields.Many2many(
+        comodel_name='fleet.vehicle',
+        compute='_compute_unavailable_resources',
+        store=False,
+        help='Vehicles already booked during this trip time window.',
+    )
+
+    unavailable_driver_ids = fields.Many2many(
+        comodel_name='res.partner',
+        compute='_compute_unavailable_resources',
+        store=False,
+        help='Drivers already assigned during this trip time window.',
+    )
+
+    @api.depends('start_dt', 'end_dt')
+    def _compute_unavailable_resources(self):
+        """
+        Find all vehicles and drivers already committed to approved/in-progress
+        trips that overlap with this trip's time window.
+        Result is used as exclusion domain on the assignment dropdowns.
+        """
+        active_states = ['approved', 'in_progress']
+        for rec in self:
+            if not rec.start_dt or not rec.end_dt:
+                rec.unavailable_vehicle_ids = []
+                rec.unavailable_driver_ids = []
+                continue
+
+            overlapping = self.search([
+                ('state', 'in', active_states),
+                ('id', '!=', rec.id or 0),
+                ('start_dt', '<', rec.end_dt),
+                ('end_dt', '>', rec.start_dt),
+            ])
+
+            rec.unavailable_vehicle_ids = overlapping.mapped('assigned_vehicle_id')
+            rec.unavailable_driver_ids = overlapping.mapped('assigned_driver_id')
+
     # =========================================================================
     # COMPUTED / DISPLAY FIELDS
     # =========================================================================
