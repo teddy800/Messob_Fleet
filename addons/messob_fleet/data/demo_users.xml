@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    MESSOB Fleet Management System — Demo Users
+    
+    Creates two test users for easy testing:
+      1. staff@messob.org   — Staff role (can create requests)
+      2. dispatcher@messob.org — Dispatcher role (can approve requests)
+    
+    Default password for both: "demo123"
+    
+    NOTE: This file is only loaded in demo/dev mode.
+    For production, create users manually via Settings → Users.
+-->
+<odoo>
+    <data noupdate="1">
+
+        <!-- ── Demo Staff User ── -->
+        <record id="user_demo_staff" model="res.users">
+            <field name="name">Staff Demo User</field>
+            <field name="login">staff@messob.org</field>
+            <field name="password">demo123</field>
+            <field name="groups_id" eval="[(4, ref('messob_fleet.group_fms_user'))]"/>
+        </record>
+
+        <!-- ── Demo Dispatcher User ── -->
+        <record id="user_demo_dispatcher" model="res.users">
+            <field name="name">Dispatcher Demo User</field>
+            <field name="login">dispatcher@messob.org</field>
+            <field name="password">demo123</field>
+            <field name="groups_id" eval="[(4, ref('messob_fleet.group_fms_dispatcher'))]"/>
+        </record>
+
+    </data>
+</odoo>

@@ -1,0 +1,223 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    MESSOB Fleet Management System
+    View: Admin Panel (FR-5.1, FR-5.2, FR-5.3)
+
+    Screens (from wireframes):
+      1. Dashboard    — stats cards + quick actions
+      2. User Mgmt    — res.users list
+      3. Vehicles     — fleet.vehicle list
+      4. Drivers      — messob.fms.driver list
+      5. Audit Logs   — messob.fms.audit.log list
+      6. Reports      — links to report actions
+      7. Profile      — current user's partner form
+-->
+<odoo>
+
+    <!-- ================================================================
+         1. ADMIN DASHBOARD — kanban-style stat cards + quick actions
+    ================================================================ -->
+    <record id="view_admin_dashboard" model="ir.ui.view">
+        <field name="name">messob.fms.admin.dashboard</field>
+        <field name="model">messob.fms.trip</field>
+        <field name="arch" type="xml">
+            <list string="Admin Dashboard" create="false" delete="false"
+                  decoration-warning="state=='pending'"
+                  decoration-success="state=='approved'"
+                  decoration-danger="state=='rejected'">
+                <field name="name"         string="Request ID"/>
+                <field name="requester_id" string="Requester"/>
+                <field name="state"        string="Status"  widget="badge"/>
+                <field name="start_dt"     string="Start"   widget="datetime"/>
+                <field name="pickup"       string="From"/>
+                <field name="destination"  string="To"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_admin_dashboard" model="ir.actions.act_window">
+        <field name="name">Dashboard — All Requests</field>
+        <field name="res_model">messob.fms.trip</field>
+        <field name="view_mode">list,form</field>
+        <field name="view_ids" eval="[
+            (5, 0, 0),
+            (0, 0, {'view_mode': 'list', 'view_id': ref('view_admin_dashboard')}),
+        ]"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">No trip requests yet.</p>
+        </field>
+    </record>
+
+    <!-- ================================================================
+         2. USER MANAGEMENT — res.users list (FR-5.1)
+         Columns: ID | Name | Email | Role | Status
+    ================================================================ -->
+    <record id="view_admin_user_list" model="ir.ui.view">
+        <field name="name">messob.fms.admin.user.list</field>
+        <field name="model">res.users</field>
+        <field name="arch" type="xml">
+            <list string="User Management"
+                  decoration-muted="not active">
+                <field name="id"     string="ID"         readonly="1"/>
+                <field name="name"   string="Name"/>
+                <field name="login"  string="Email"/>
+                <field name="active" string="Status"     widget="boolean_toggle"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_admin_users" model="ir.actions.act_window">
+        <field name="name">User Management</field>
+        <field name="res_model">res.users</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[('share', '=', False)]</field>
+        <field name="view_ids" eval="[
+            (5, 0, 0),
+            (0, 0, {'view_mode': 'list', 'view_id': ref('view_admin_user_list')}),
+        ]"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">No users found.</p>
+            <p>Click <b>New</b> to add a user.</p>
+        </field>
+    </record>
+
+    <!-- ================================================================
+         3. VEHICLE MANAGEMENT — fleet.vehicle list (FR-5.2)
+         Columns: ID | Plate No | Model | Make | Year | Status | Actions
+    ================================================================ -->
+    <record id="view_admin_vehicle_list" model="ir.ui.view">
+        <field name="name">messob.fms.admin.vehicle.list</field>
+        <field name="model">fleet.vehicle</field>
+        <field name="arch" type="xml">
+            <list string="Vehicle Management"
+                  decoration-success="state_id.name == 'New'"
+                  decoration-muted="active == False">
+                <field name="id"              string="ID"       readonly="1"/>
+                <field name="license_plate"   string="Plate No"/>
+                <field name="model_id"        string="Model"/>
+                <field name="driver_id"       string="Driver"   optional="show"/>
+                <field name="model_year"      string="Year"/>
+                <field name="state_id"        string="Status"   widget="badge"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_admin_vehicles" model="ir.actions.act_window">
+        <field name="name">Vehicle Management</field>
+        <field name="res_model">fleet.vehicle</field>
+        <field name="view_mode">list,form</field>
+        <field name="view_ids" eval="[
+            (5, 0, 0),
+            (0, 0, {'view_mode': 'list', 'view_id': ref('view_admin_vehicle_list')}),
+        ]"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">No vehicles found.</p>
+            <p>Click <b>New</b> to add a vehicle.</p>
+        </field>
+    </record>
+
+    <!-- ================================================================
+         4. DRIVER MANAGEMENT — messob.fms.driver list (FR-5.2)
+         Columns: ID | Name | License No | Phone | Status | Actions
+    ================================================================ -->
+    <record id="view_admin_driver_list" model="ir.ui.view">
+        <field name="name">messob.fms.admin.driver.list</field>
+        <field name="model">messob.fms.driver</field>
+        <field name="arch" type="xml">
+            <list string="Driver Management"
+                  decoration-success="is_active == True"
+                  decoration-muted="is_active == False">
+                <field name="id"             string="ID"          readonly="1"/>
+                <field name="name"           string="Name"/>
+                <field name="license_no"     string="License No"/>
+                <field name="phone"          string="Phone"/>
+                <field name="license_expiry" string="Expiry"      optional="show"/>
+                <field name="status"         string="Status"      widget="badge"/>
+                <field name="is_active"      string="Active"      widget="boolean_toggle"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_admin_driver_form" model="ir.ui.view">
+        <field name="name">messob.fms.admin.driver.form</field>
+        <field name="model">messob.fms.driver</field>
+        <field name="arch" type="xml">
+            <form string="Driver">
+                <sheet>
+                    <group col="2">
+                        <field name="name"           string="Full Name"/>
+                        <field name="license_no"     string="License No"/>
+                        <field name="license_expiry" string="License Expiry"/>
+                        <field name="phone"          string="Phone"/>
+                        <field name="partner_id"     string="Linked Contact"
+                               options="{'no_create': True}"/>
+                        <field name="is_active"      string="Active"/>
+                    </group>
+                    <group string="Notes">
+                        <field name="notes" widget="text" nolabel="1"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_admin_drivers" model="ir.actions.act_window">
+        <field name="name">Driver Management</field>
+        <field name="res_model">messob.fms.driver</field>
+        <field name="view_mode">list,form</field>
+        <field name="view_ids" eval="[
+            (5, 0, 0),
+            (0, 0, {'view_mode': 'list', 'view_id': ref('view_admin_driver_list')}),
+            (0, 0, {'view_mode': 'form', 'view_id': ref('view_admin_driver_form')}),
+        ]"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">No drivers found.</p>
+            <p>Click <b>New</b> to add a driver.</p>
+        </field>
+    </record>
+
+    <!-- ================================================================
+         5. AUDIT LOGS — messob.fms.audit.log list (FR-5.3)
+         Columns: Timestamp | User | Action | Resource | Details
+    ================================================================ -->
+    <record id="view_admin_audit_list" model="ir.ui.view">
+        <field name="name">messob.fms.audit.log.list</field>
+        <field name="model">messob.fms.audit.log</field>
+        <field name="arch" type="xml">
+            <list string="Audit Logs" create="false" delete="false">
+                <field name="timestamp" string="Timestamp" widget="datetime"/>
+                <field name="user_id"   string="User"/>
+                <field name="action"    string="Action"   widget="badge"/>
+                <field name="resource"  string="Resource"/>
+                <field name="details"   string="Details"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_admin_audit_logs" model="ir.actions.act_window">
+        <field name="name">Audit Logs</field>
+        <field name="res_model">messob.fms.audit.log</field>
+        <field name="view_mode">list</field>
+        <field name="view_ids" eval="[
+            (5, 0, 0),
+            (0, 0, {'view_mode': 'list', 'view_id': ref('view_admin_audit_list')}),
+        ]"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">No audit logs yet.</p>
+            <p>System actions will be recorded here automatically.</p>
+        </field>
+    </record>
+
+    <!-- ================================================================
+         6. PROFILE — opens current user's own partner form
+    ================================================================ -->
+    <record id="action_admin_profile" model="ir.actions.act_window">
+        <field name="name">My Profile</field>
+        <field name="res_model">res.users</field>
+        <field name="view_mode">form</field>
+        <field name="res_id" eval="False"/>
+        <field name="context">{'uid': uid}</field>
+        <field name="target">current</field>
+    </record>
+
+</odoo>

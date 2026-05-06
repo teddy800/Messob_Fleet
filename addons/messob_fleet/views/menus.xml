@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    MESSOB Fleet Management System
+    Menus: All navigation menu items
+    Load order: after all view/action XML files
+-->
+<odoo>
+
+    <!-- ================================================================
+         ROOT MENU — visible to all FMS users
+    ================================================================ -->
+    <menuitem id="menu_fms_root"
+              name="MESSOB FMS"
+              sequence="10"
+              groups="messob_fleet.group_fms_user,messob_fleet.group_fms_dispatcher,messob_fleet.group_fms_driver,messob_fleet.group_fms_mechanic"/>
+
+    <!-- ================================================================
+         STAFF MENUS
+    ================================================================ -->
+
+    <!-- Staff landing dashboard — first thing staff sees -->
+    <menuitem id="menu_fms_staff_home"
+              name="🏠 Dashboard"
+              parent="menu_fms_root"
+              action="messob_fleet.action_staff_dashboard"
+              sequence="1"
+              groups="messob_fleet.group_fms_user"/>
+
+    <!-- Opens the 4-step wizard to create a new request (FR-1.1) -->
+    <menuitem id="menu_fms_new_request"
+              name="➕ New Request"
+              parent="menu_fms_root"
+              action="messob_fleet.action_new_trip_wizard"
+              sequence="5"
+              groups="messob_fleet.group_fms_user"/>
+
+    <!-- Dashboard: all requests grouped by status -->
+    <menuitem id="menu_fms_my_trips"
+              name="📋 My Requests"
+              parent="menu_fms_root"
+              action="messob_fleet.action_my_trips_dashboard"
+              sequence="10"
+              groups="messob_fleet.group_fms_user"/>
+
+    <!-- Active only: pending + approved + in progress -->
+    <menuitem id="menu_fms_active_trips"
+              name="🚗 Active Requests"
+              parent="menu_fms_root"
+              action="messob_fleet.action_my_active_trips"
+              sequence="15"
+              groups="messob_fleet.group_fms_user"/>
+
+    <!-- ================================================================
+         DISPATCHER MENUS
+    ================================================================ -->
+
+    <menuitem id="menu_fms_current_requests"
+              name="Current Requests"
+              parent="menu_fms_root"
+              sequence="20"
+              groups="messob_fleet.group_fms_dispatcher"/>
+
+    <!-- Pending queue: oldest first (FR-2.1) -->
+    <menuitem id="menu_fms_pending_queue"
+              name="Pending Queue"
+              parent="menu_fms_current_requests"
+              action="messob_fleet.action_pending_requests"
+              sequence="10"
+              groups="messob_fleet.group_fms_dispatcher"/>
+
+    <!-- All requests regardless of state -->
+    <menuitem id="menu_fms_all_requests"
+              name="All Requests"
+              parent="menu_fms_current_requests"
+              action="messob_fleet.action_all_requests"
+              sequence="20"
+              groups="messob_fleet.group_fms_dispatcher"/>
+
+    <!-- ================================================================
+         MECHANIC MENUS
+    ================================================================ -->
+
+    <menuitem id="menu_fms_mechanic_root"
+              name="Repair &amp; Maintenance"
+              parent="menu_fms_root"
+              sequence="40"
+              groups="messob_fleet.group_fms_mechanic"/>
+
+    <menuitem id="menu_fms_maintenance_log"
+              name="Repair &amp; Maintenance Logging"
+              parent="menu_fms_mechanic_root"
+              action="messob_fleet.action_maintenance_log"
+              sequence="10"
+              groups="messob_fleet.group_fms_mechanic"/>
+
+    <!-- ================================================================
+         DRIVER MENUS
+    ================================================================ -->
+
+    <menuitem id="menu_fms_driver_trips"
+              name="My Trips"
+              parent="menu_fms_root"
+              action="messob_fleet.action_driver_my_trips"
+              sequence="30"
+              groups="messob_fleet.group_fms_driver"/>
+
+    <!-- ================================================================
+         ADMIN MENUS
+    ================================================================ -->
+
+    <menuitem id="menu_fms_admin_root"
+              name="MESSOB FMS"
+              sequence="10"
+              groups="messob_fleet.group_fms_admin"
+              web_icon="messob_fleet,static/description/icon.png"/>
+
+    <menuitem id="menu_fms_admin_dashboard"
+              name="Dashboard"
+              parent="menu_fms_admin_root"
+              action="messob_fleet.action_admin_dashboard"
+              sequence="10"
+              groups="messob_fleet.group_fms_admin"/>
+
+    <menuitem id="menu_fms_admin_users"
+              name="User Management"
+              parent="menu_fms_admin_root"
+              action="messob_fleet.action_admin_users"
+              sequence="20"
+              groups="messob_fleet.group_fms_admin"/>
+
+    <menuitem id="menu_fms_admin_vehicles"
+              name="Vehicles"
+              parent="menu_fms_admin_root"
+              action="messob_fleet.action_admin_vehicles"
+              sequence="30"
+              groups="messob_fleet.group_fms_admin"/>
+
+    <menuitem id="menu_fms_admin_drivers"
+              name="Drivers"
+              parent="menu_fms_admin_root"
+              action="messob_fleet.action_admin_drivers"
+              sequence="40"
+              groups="messob_fleet.group_fms_admin"/>
+
+    <menuitem id="menu_fms_admin_audit"
+              name="Audit Logs"
+              parent="menu_fms_admin_root"
+              action="messob_fleet.action_admin_audit_logs"
+              sequence="50"
+              groups="messob_fleet.group_fms_admin"/>
+
+    <menuitem id="menu_fms_admin_profile"
+              name="Profile"
+              parent="menu_fms_admin_root"
+              action="messob_fleet.action_admin_profile"
+              sequence="90"
+              groups="messob_fleet.group_fms_admin"/>
+
+</odoo>

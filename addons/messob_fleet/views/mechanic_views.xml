@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    MESSOB Fleet Management System
+    View: Mechanic — Repair & Maintenance Logging (FR-4.4)
+
+    List view columns (wireframe image 1):
+      Date | Vehicle | Service Type | Mechanic | Cost | State | Actions
+
+    Form view sections (wireframe image 2):
+      Date section   → Service Date | Next Service Date | Next Service Odometer
+      Cost section   → Cost | Parts Cost | Labor Cost
+      Mechanic section → Mechanic | Odometer | Invoice Ref
+-->
+<odoo>
+
+    <!-- ================================================================
+         MECHANIC: Maintenance Log — List View
+         Matches wireframe: date, vehicle, service type, mechanic,
+         cost, state badge, view/delete action buttons.
+    ================================================================ -->
+    <record id="view_maintenance_list" model="ir.ui.view">
+        <field name="name">messob.fms.maintenance.log.list</field>
+        <field name="model">messob.fms.maintenance.log</field>
+        <field name="arch" type="xml">
+            <list string="Repair &amp; Maintenance Log"
+                  decoration-success="vehicle_state == 'active'"
+                  decoration-warning="vehicle_state == 'inactive'"
+                  decoration-danger="vehicle_state == 'disposed'">
+
+                <field name="date"             string="Date"/>
+                <field name="vehicle_id"       string="Vehicle"/>
+                <field name="service_type"     string="Service Type"  widget="badge"/>
+                <field name="mechanic_id"      string="Mechanics"/>
+                <field name="cost"             string="Cost"/>
+                <field name="vehicle_state"    string="States"        widget="badge"/>
+
+            </list>
+        </field>
+    </record>
+
+    <!-- ================================================================
+         MECHANIC: Maintenance Log — Form View
+         Three sections matching wireframe image 2:
+           1. Date section
+           2. Cost section
+           3. Mechanics section
+    ================================================================ -->
+    <record id="view_maintenance_form" model="ir.ui.view">
+        <field name="name">messob.fms.maintenance.log.form</field>
+        <field name="model">messob.fms.maintenance.log</field>
+        <field name="arch" type="xml">
+            <form string="Repair &amp; Maintenance Log">
+
+                <header>
+                    <field name="vehicle_state"
+                           widget="statusbar"
+                           statusbar_visible="active,inactive,disposed"/>
+                </header>
+
+                <sheet>
+
+                    <div class="oe_title">
+                        <h1><field name="service_type"/></h1>
+                    </div>
+
+                    <!-- ── Section 1: Date row (3 fields) ── -->
+                    <group string="Date" col="3">
+                        <field name="date"                  string="Service Date"/>
+                        <field name="vehicle_id"            string="Vehicle"
+                                                            options="{'no_create': True}"/>
+                        <field name="service_provider"      string="Service Provider"/>
+                    </group>
+
+                    <!-- ── Section 2: Cost row (3 fields) ── -->
+                    <group string="Cost" col="3">
+                        <field name="cost"              string="Cost"/>
+                        <field name="parts_cost"        string="Parts Cost"/>
+                        <field name="labor_cost"        string="Labor Cost"/>
+                    </group>
+
+                    <!-- ── Section 3: Mechanics row (3 fields) ── -->
+                    <group string="Mechanics" col="3">
+                        <field name="mechanic_id"           string="Mechanic"
+                                                            options="{'no_create': True}"/>
+                        <field name="odometer"              string="Odometer (km)"/>
+                        <field name="next_service_date"     string="Next Service Date"/>
+                    </group>
+
+                    <!-- ── States + extra ── -->
+                    <group col="2">
+                        <field name="vehicle_state"         string="States"
+                                                            widget="radio"/>
+                        <field name="total_cost"            string="Total Cost"
+                                                            readonly="1"/>
+                    </group>
+
+                </sheet>
+
+                <chatter/>
+
+            </form>
+        </field>
+    </record>
+
+    <!-- ================================================================
+         MECHANIC: Window Action — Repair & Maintenance Logging
+    ================================================================ -->
+    <record id="action_maintenance_log" model="ir.actions.act_window">
+        <field name="name">Repair &amp; Maintenance Logging</field>
+        <field name="res_model">messob.fms.maintenance.log</field>
+        <field name="view_mode">list,form</field>
+        <field name="view_ids" eval="[
+            (5, 0, 0),
+            (0, 0, {'view_mode': 'list', 'view_id': ref('view_maintenance_list')}),
+            (0, 0, {'view_mode': 'form', 'view_id': ref('view_maintenance_form')}),
+        ]"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">No maintenance records yet.</p>
+            <p>Click <b>New</b> to log a repair or maintenance activity.</p>
+        </field>
+    </record>
+
+</odoo>

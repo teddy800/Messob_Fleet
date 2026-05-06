@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    MESSOB Fleet Management System
+    Data: Pre-loaded Addis Ababa locations for pickup/destination autocomplete.
+    Admin can add more via Configuration → Locations.
+-->
+<odoo>
+    <data noupdate="1">
+
+        <!-- Bole Sub-city -->
+        <record id="loc_bole_bulbula" model="messob.fms.location">
+            <field name="name">Bole-Bulbula</field>
+            <field name="area">Bole</field>
+            <field name="city">Addis Ababa</field>
+            <field name="latitude">8.9806</field>
+            <field name="longitude">38.7578</field>
+        </record>
+
+        <record id="loc_bole_arabsa" model="messob.fms.location">
+            <field name="name">Bole Arabsa</field>
+            <field name="area">Bole</field>
+            <field name="city">Addis Ababa</field>
+            <field name="latitude">8.9950</field>
+            <field name="longitude">38.8100</field>
+        </record>
+
+        <record id="loc_bole_airport" model="messob.fms.location">
+            <field name="name">Bole International Airport</field>
+            <field name="area">Bole</field>
+            <field name="city">Addis Ababa</field>
+            <field name="latitude">8.9779</field>
+            <field name="longitude">38.7993</field>
+        </record>
+
+        <record id="loc_bole_medhanialem" model="messob.fms.location">
+            <field name="name">Bole Medhane Alem</field>
+            <field name="area">Bole</field>
+            <field name="city">Addis Ababa</field>
+            <field name="latitude">9.0050</field>
+            <field name="longitude">38.7850</field>
+        </record>
+
+        <!-- Kirkos Sub-city -->
+        <record id="loc_meskel_square" model="messob.fms.location">
+            <field name="name">Meskel Square</field>
+            <field name="area">Kirkos</field>
+            <field name="city">Addis Ababa</field>
+            <field name="latitude">9.0105</field>
+            <field name="longitude">38.7614</field>
+        </record>
+
+        <record id="loc_mexico" model="messob.fms.location">
+            <field name="name">Mexico Square</field>
+            <field name="area">Kirkos</field>
+            <field name="city">Addis Ababa</field>
+            <field name="latitude">9.0192</field>
+            <field name="longitude">38.7525</field>
+        </record>
+
+        <!-- Arada Sub-city -->
+        <record id="loc_piazza" model="messob.fms.location">
+            <field name="name">Piazza</field>
+            <field name="area">Arada</field>
+            <field name="city">Addis Ababa</field>
+            <field name="latitude">9.0350</field>
+            <field name="longitude">38.7500</field>
+        </record>
+
+        <record id="loc_arat_kilo" model="messob.fms.location">
+            <field name="name">Arat Kilo</field>
+            <field name="area">Arada</field>
+            <field name="city">Addis Ababa</field>
+            <field name="latitude">9.0400</field>
+            <field name="longitude">38.7600</field>
+        </record>
+
+        <!-- Yeka Sub-city -->
+        <record id="loc_summit" model="messob.fms.location">
+            <field name="name">Summit</field>
+            <field name="area">Yeka</field>
+            <field name="city">Addis Ababa</field>
+            <field name="latitude">9.0200</field>
+            <field name="longitude">38.8100</field>
+        </record>
+
+        <record id="loc_ayat" model="messob.fms.location">
+            <field name="name">Ayat</field>
+            <field name="area">Yeka</field>
+            <field name="city">Addis Ababa</field>
+            <field name="latitude">9.0450</field>
+            <field name="longitude">38.8300</field>
+        </record>
+
+        <!-- Lideta Sub-city -->
+        <record id="loc_merkato" model="messob.fms.location">
+            <field name="name">Merkato</field>
+            <field name="area">Lideta</field>
+            <field name="city">Addis Ababa</field>
+            <field name="latitude">9.0300</field>
+            <field name="longitude">38.7350</field>
+        </record>
+
+        <!-- Nifas Silk-Lafto -->
+        <record id="loc_megenagna" model="messob.fms.location">
+            <field name="name">Megenagna</field>
+            <field name="area">Yeka</field>
+            <field name="city">Addis Ababa</field>
+            <field name="latitude">9.0250</field>
+            <field name="longitude">38.7950</field>
+        </record>
+
+        <record id="loc_gerji" model="messob.fms.location">
+            <field name="name">Gerji</field>
+            <field name="area">Bole</field>
+            <field name="city">Addis Ababa</field>
+            <field name="latitude">9.0100</field>
+            <field name="longitude">38.8050</field>
+        </record>
+
+        <!-- MESSOB HQ -->
+        <record id="loc_messob_hq" model="messob.fms.location">
+            <field name="name">MESSOB HQ</field>
+            <field name="area">Bole</field>
+            <field name="city">Addis Ababa</field>
+            <field name="latitude">9.0000</field>
+            <field name="longitude">38.7800</field>
+        </record>
+
+    </data>
+</odoo>

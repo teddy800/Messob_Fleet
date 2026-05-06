@@ -1,0 +1,291 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    MESSOB Fleet Management System
+    View: Staff Trip Request Views (Module 1 — FR-1.1, FR-1.2, FR-1.3)
+-->
+<odoo>
+
+    <!-- ================================================================
+         STAFF: My Requests — List View
+         Shows ALL requests (new, pending, approved, in progress, etc.)
+         Staff sees status at a glance from this list.
+    ================================================================ -->
+    <record id="view_trip_list_staff" model="ir.ui.view">
+        <field name="name">messob.fms.trip.list.staff</field>
+        <field name="model">messob.fms.trip</field>
+        <field name="arch" type="xml">
+            <list string="My Trip Requests"
+                  decoration-muted="state == 'draft'"
+                  decoration-warning="state == 'pending'"
+                  decoration-success="state == 'approved'"
+                  decoration-danger="state == 'rejected'"
+                  decoration-info="state == 'in_progress'"
+                  create="true">
+
+                <field name="name"             string="Request ID"/>
+                <field name="vehicle_category" string="Vehicle"    widget="badge"/>
+                <field name="start_dt"         string="Start Date" widget="datetime"/>
+                <field name="pickup"           string="From"/>
+                <field name="destination"      string="To"/>
+                <!-- Status column — most important, shown with color badge -->
+                <field name="state"            string="Status"     widget="badge"/>
+                <!-- Show assigned vehicle/driver after approval -->
+                <field name="assigned_vehicle_id" string="Vehicle Assigned"
+                       optional="show"
+                       readonly="1"/>
+                <field name="assigned_driver_id"  string="Driver Assigned"
+                       optional="show"
+                       readonly="1"/>
+
+            </list>
+        </field>
+    </record>
+
+    <!-- ================================================================
+         STAFF: Trip Request — Form View
+         Clear status banner + full details + assignment info after approval
+    ================================================================ -->
+    <record id="view_trip_form_staff" model="ir.ui.view">
+        <field name="name">messob.fms.trip.form.staff</field>
+        <field name="model">messob.fms.trip</field>
+        <field name="arch" type="xml">
+            <form string="Trip Request">
+
+                <header>
+                    <button name="action_submit"
+                            string="Submit Request"
+                            type="object"
+                            class="btn-primary"
+                            invisible="state != 'draft'"
+                            confirm="Submit this request to the dispatcher?"/>
+
+                    <button name="action_cancel"
+                            string="Cancel Request"
+                            type="object"
+                            class="btn-warning"
+                            invisible="state != 'pending'"
+                            confirm="Cancel this pending request?"/>
+
+                    <field name="state"
+                           widget="statusbar"
+                           statusbar_visible="draft,pending,approved,rejected,in_progress,completed"/>
+                </header>
+
+                <sheet>
+
+                    <div class="oe_title">
+                        <label for="name"/>
+                        <h1><field name="name" readonly="1"/></h1>
+                    </div>
+
+                    <!-- ── STATUS BANNER ── -->
+                    <div class="alert alert-secondary text-center"
+                         invisible="state != 'draft'">
+                        <strong>📝 Draft</strong> — Not submitted yet.
+                        Click <b>Submit Request</b> to send to dispatcher.
+                    </div>
+
+                    <div class="alert alert-warning text-center"
+                         invisible="state != 'pending'">
+                        <strong>⏳ Pending</strong> — Waiting for dispatcher approval.
+                    </div>
+
+                    <div class="alert alert-success text-center"
+                         invisible="state != 'approved'">
+                        <strong>✅ Approved</strong> — Your request is approved.
+                        Vehicle and driver assigned. See details below.
+                    </div>
+
+                    <div class="alert alert-danger text-center"
+                         invisible="state != 'rejected'">
+                        <strong>❌ Rejected</strong> — Your request was rejected by the dispatcher.
+                    </div>
+
+                    <div class="alert alert-info text-center"
+                         invisible="state != 'in_progress'">
+                        <strong>🚗 In Progress</strong> — Your trip is currently underway.
+                    </div>
+
+                    <div class="alert alert-success text-center"
+                         invisible="state != 'completed'">
+                        <strong>🏁 Completed</strong> — Trip completed successfully.
+                    </div>
+
+                    <!-- ── Trip Details ── -->
+                    <group string="Trip Details" col="2">
+                        <group>
+                            <field name="requester_id"     readonly="1"/>
+                            <field name="vehicle_category" readonly="state != 'draft'"/>
+                            <field name="purpose"          widget="text"
+                                   readonly="state != 'draft'"
+                                   placeholder="Describe the official purpose (min. 10 chars)…"/>
+                        </group>
+                        <group>
+                            <field name="start_dt"         widget="datetime"
+                                   string="Starting Date"
+                                   readonly="state != 'draft'"/>
+                            <field name="end_dt"           widget="datetime"
+                                   string="End Date"
+                                   readonly="state != 'draft'"/>
+                            <field name="duration_display" readonly="1" string="Duration"/>
+                        </group>
+                    </group>
+
+                    <!-- ── Route ── -->
+                    <group string="Route" col="2">
+                        <field name="pickup_location_id"
+                               string="Start Place (select)"
+                               options="{'no_create': True}"
+                               readonly="state != 'draft'"/>
+                        <field name="pickup"
+                               string="Start Place"
+                               readonly="state != 'draft'"/>
+                        <field name="destination_location_id"
+                               string="Destination (select)"
+                               options="{'no_create': True}"
+                               readonly="state != 'draft'"/>
+                        <field name="destination"
+                               string="Destination Place"
+                               readonly="state != 'draft'"/>
+                    </group>
+
+                    <!-- ── Dispatcher Assignment — shown after approval ── -->
+                    <group string="✅ Dispatcher Assignment"
+                           invisible="state not in ('approved','in_progress','completed','closed')">
+                        <group>
+                            <field name="assigned_vehicle_id" readonly="1"
+                                   string="Assigned Vehicle"/>
+                            <field name="assigned_driver_id"  readonly="1"
+                                   string="Assigned Driver"/>
+                        </group>
+                        <group>
+                            <field name="fuel_status" readonly="1" string="Fuel Status"/>
+                        </group>
+                    </group>
+
+                </sheet>
+
+                <!-- Chatter shows every status change with timestamp and who did it -->
+                <chatter/>
+
+            </form>
+        </field>
+    </record>
+
+    <!-- ================================================================
+         STAFF: My Requests — Window Action
+         Opens directly to the list showing ALL requests with status.
+         Staff can click any row to see full details.
+    ================================================================ -->
+    <record id="action_my_trips" model="ir.actions.act_window">
+        <field name="name">My Requests</field>
+        <field name="res_model">messob.fms.trip</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[('requester_id.user_ids', 'in', [uid])]</field>
+        <field name="context">{
+            'search_default_my_requests': 1
+        }</field>
+        <field name="view_ids" eval="[
+            (5, 0, 0),
+            (0, 0, {'view_mode': 'list', 'view_id': ref('view_trip_list_staff')}),
+            (0, 0, {'view_mode': 'form', 'view_id': ref('view_trip_form_staff')}),
+        ]"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">No trip requests yet.</p>
+            <p>Click <b>New</b> to submit your first vehicle request.</p>
+        </field>
+    </record>
+
+    <!-- Active/In-progress requests only -->
+    <record id="action_my_active_trips" model="ir.actions.act_window">
+        <field name="name">Active Requests</field>
+        <field name="res_model">messob.fms.trip</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[
+            ('requester_id.user_ids', 'in', [uid]),
+            ('state', 'in', ['pending','approved','in_progress'])
+        ]</field>
+        <field name="view_ids" eval="[
+            (5, 0, 0),
+            (0, 0, {'view_mode': 'list', 'view_id': ref('view_trip_list_staff')}),
+            (0, 0, {'view_mode': 'form', 'view_id': ref('view_trip_form_staff')}),
+        ]"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">No active requests.</p>
+        </field>
+    </record>
+
+    <!-- ================================================================
+         STAFF: Dashboard Form View
+         Two buttons at top: New Request + View Active Requests
+         Below: grouped list of all requests by state
+    ================================================================ -->
+    <record id="view_trip_staff_dashboard" model="ir.ui.view">
+        <field name="name">messob.fms.trip.staff.dashboard</field>
+        <field name="model">messob.fms.trip</field>
+        <field name="arch" type="xml">
+            <list string="My Requests"
+                  decoration-muted="state == 'draft'"
+                  decoration-warning="state == 'pending'"
+                  decoration-success="state == 'approved'"
+                  decoration-danger="state == 'rejected'"
+                  decoration-info="state == 'in_progress'"
+                  create="false"
+                  default_group_by="state">
+
+                <field name="name"                string="Request ID"/>
+                <field name="vehicle_category"    string="Vehicle"   widget="badge"/>
+                <field name="start_dt"            string="Start"     widget="datetime"/>
+                <field name="pickup"              string="From"/>
+                <field name="destination"         string="To"/>
+                <field name="state"               string="Status"    widget="badge"
+                                                  column_invisible="1"/>
+                <field name="assigned_vehicle_id" string="Vehicle Assigned"
+                       optional="show" readonly="1"/>
+                <field name="assigned_driver_id"  string="Driver Assigned"
+                       optional="show" readonly="1"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Dashboard action — grouped by state so all statuses visible at once -->
+    <record id="action_my_trips_dashboard" model="ir.actions.act_window">
+        <field name="name">My Requests</field>
+        <field name="res_model">messob.fms.trip</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[('requester_id.user_ids', 'in', [uid])]</field>
+        <field name="context">{'group_by': 'state'}</field>
+        <field name="view_ids" eval="[
+            (5, 0, 0),
+            (0, 0, {'view_mode': 'list', 'view_id': ref('view_trip_staff_dashboard')}),
+            (0, 0, {'view_mode': 'form', 'view_id': ref('view_trip_form_staff')}),
+        ]"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">No trip requests yet.</p>
+            <p>Click <b>New Request</b> in the menu to submit your first vehicle request.</p>
+        </field>
+    </record>
+    <record id="view_trip_search_staff" model="ir.ui.view">
+        <field name="name">messob.fms.trip.search.staff</field>
+        <field name="model">messob.fms.trip</field>
+        <field name="arch" type="xml">
+            <search string="Search Requests">
+                <field name="name" string="Request ID"/>
+                <field name="pickup" string="From"/>
+                <field name="destination" string="To"/>
+                <separator/>
+                <filter name="draft"       string="Draft"       domain="[('state','=','draft')]"/>
+                <filter name="pending"     string="Pending"     domain="[('state','=','pending')]"/>
+                <filter name="approved"    string="Approved"    domain="[('state','=','approved')]"/>
+                <filter name="rejected"    string="Rejected"    domain="[('state','=','rejected')]"/>
+                <filter name="in_progress" string="In Progress" domain="[('state','=','in_progress')]"/>
+                <filter name="completed"   string="Completed"   domain="[('state','=','completed')]"/>
+                <group expand="0" string="Group By">
+                    <filter name="group_state" string="Status"
+                            context="{'group_by': 'state'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+</odoo>
