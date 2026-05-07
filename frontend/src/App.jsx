@@ -9,26 +9,17 @@ import Profile from "./features/profile/profile";
 import ManageFleet from "./features/fleet/ManageFleet";
 import FuelLog from "./features/fleet/FuelLog";
 import Maintenance from "./features/fleet/Maintenance";
-import { useUserStore } from "./store/useUserStore";
-import { getRedirectPathByRole } from "./lib/authRedirect";
-
 export default function App() {
-  const userRole = useUserStore((state) => state.user?.role);
-
   return (
     <Routes>
-      {/* 1. Public Route */}
+      {/* 1. Public Login Routes */}
+      <Route path="/" element={<Login />} />
       <Route path="/login" element={<Login />} />
 
-      {/* 2. Protected Routes */}
-      <Route path="/" element={<ProtectedRoute />}>
-        <Route path="/" element={<DashboardLayout />}>
-          
-          {/* Redirect base URL to dashboard */}
-          <Route index element={<Navigate to={getRedirectPathByRole(userRole)} replace />} />
-
-          {/* These children will appear inside the <Outlet /> */}
-          <Route path="dashboard" element={<DashboardHome />} />
+      {/* 2. Protected Dashboard Routes */}
+      <Route element={<ProtectedRoute />}>
+        <Route path="/dashboard" element={<DashboardLayout />}>
+          <Route index element={<DashboardHome />} />
           <Route path="requests/new" element={<RequestWizard />} />
           <Route path="dispatch/approvals" element={<ApprovalQueue />} />
           <Route path="profile" element={<Profile />} />
@@ -38,8 +29,8 @@ export default function App() {
         </Route>
       </Route>
 
-      {/* 3. Catch-all: Redirect unknown paths to login */}
-      <Route path="*" element={<Navigate to="/login" replace />} />
+      {/* 3. Catch-all: Redirect unknown paths to landing page */}
+      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
 }

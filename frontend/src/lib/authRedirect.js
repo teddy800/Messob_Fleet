@@ -1,6 +1,6 @@
 const roleRoutes = {
   Admin: "/dashboard",
-  Dispatcher: "/dispatch/approvals",
+  Dispatcher: "/dashboard/dispatch/approvals",
   Staff: "/dashboard",
   Maintainer: "/dashboard"
 };
