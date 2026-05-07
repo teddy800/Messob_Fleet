@@ -11,8 +11,8 @@
 # Driver can also log fuel fills during an active trip.
 # ---------------------------------------------------------------------------
 
-from odoo import models, fields, _
-from odoo.exceptions import UserError
+from odoo import models, fields, _ # type: ignore
+from odoo.exceptions import UserError # type: ignore
 
 
 class MessobFmsTripDriver(models.Model):
