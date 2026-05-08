@@ -17,18 +17,31 @@ import { useUserStore } from "@/store/useUserStore";
 
 // The Master Menu List with Role-Based Access Control (RBAC)
 const menuItems = [
-  // Staff / Driver: request-focused menu
+  // Staff: request-focused menu
   {
     name: "Request Status",
     path: "/dashboard/requests/status",
     icon: ClipboardList,
-    roles: ["Staff", "Driver"],
+    roles: ["Staff"],
   },
   {
     name: "New Request",
     path: "/dashboard/requests/new",
     icon: Car,
-    roles: ["Staff", "Driver"],
+    roles: ["Staff"],
+  },
+  // Driver: trips + fuel
+  {
+    name: "Requests",
+    path: "/dashboard/driver/requests",
+    icon: ClipboardList,
+    roles: ["Driver"],
+  },
+  {
+    name: "Fuel Change",
+    path: "/dashboard/driver/fuel",
+    icon: Fuel,
+    roles: ["Driver"],
   },
   // Dispatcher: current requests only
   {
@@ -37,37 +50,37 @@ const menuItems = [
     icon: CheckSquare,
     roles: ["Dispatcher"],
   },
-  // Admin: full operations menu
-  { 
-    name: "Dashboard", 
-    path: "/dashboard", 
-    icon: LayoutDashboard, 
-    roles: ["Admin", "Maintainer"] 
+  // Admin / Maintainer: full operations menu
+  {
+    name: "Dashboard",
+    path: "/dashboard",
+    icon: LayoutDashboard,
+    roles: ["Admin", "Maintainer"],
   },
-  { 
-    name: "Approval Queue", 
-    path: "/dashboard/dispatch/approvals", 
-    icon: CheckSquare, 
-    roles: ["Admin"] 
+  {
+    name: "Approval Queue",
+    path: "/dashboard/dispatch/approvals",
+    icon: CheckSquare,
+    roles: ["Admin"],
   },
-  { 
-    name: "Manage Fleet", 
-    path: "/dashboard/fleet", 
-    icon: Car, 
-    roles: ["Admin"] 
+  {
+    name: "Manage Fleet",
+    path: "/dashboard/fleet",
+    icon: Car,
+    roles: ["Admin"],
   },
-  { 
-    name: "Fuel Logs", 
-    path: "/dashboard/fuel-log", 
-    icon: Fuel, 
-    roles: ["Admin", "Maintainer"] 
+  {
+    name: "Fuel Logs",
+    path: "/dashboard/fuel-log",
+    icon: Fuel,
+    roles: ["Admin", "Maintainer"],
   },
-  { 
-    name: "Maintenance", 
-    path: "/dashboard/maintenance", 
-    icon: Gauge, 
-    roles: ["Admin", "Maintainer"] 
-  }
+  {
+    name: "Maintenance",
+    path: "/dashboard/maintenance",
+    icon: Gauge,
+    roles: ["Admin", "Maintainer"],
+  },
 ];
 
 export default function Sidebar({ setOpen }) {

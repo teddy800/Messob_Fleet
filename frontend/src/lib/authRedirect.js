@@ -2,7 +2,7 @@ const roleRoutes = {
   Admin: "/dashboard",
   Dispatcher: "/dashboard/dispatch/approvals",
   Staff: "/dashboard/requests/status",
-  Driver: "/dashboard/requests/status",
+  Driver: "/dashboard/driver/requests",
   Maintainer: "/dashboard",
 };
 

@@ -11,6 +11,8 @@ import Profile from "./features/profile/profile";
 import ManageFleet from "./features/fleet/ManageFleet";
 import FuelLog from "./features/fleet/FuelLog";
 import Maintenance from "./features/fleet/Maintenance";
+import DriverRequests from "./features/driver/DriverRequests";
+import DriverFuelChange from "./features/driver/DriverFuelChange";
 
 export default function App() {
   return (
@@ -23,10 +25,16 @@ export default function App() {
       <Route element={<ProtectedRoute />}>
         <Route path="/dashboard" element={<DashboardLayout />}>
           <Route index element={<DashboardHome />} />
+          {/* Staff */}
           <Route path="requests/new" element={<RequestWizard />} />
           <Route path="requests/status" element={<RequestStatus />} />
           <Route path="requests/status/:status" element={<RequestList />} />
+          {/* Driver */}
+          <Route path="driver/requests" element={<DriverRequests />} />
+          <Route path="driver/fuel" element={<DriverFuelChange />} />
+          {/* Dispatcher / Admin */}
           <Route path="dispatch/approvals" element={<ApprovalQueue />} />
+          {/* Shared */}
           <Route path="profile" element={<Profile />} />
           <Route path="fleet" element={<ManageFleet />} />
           <Route path="fuel-log" element={<FuelLog />} />
@@ -34,7 +42,7 @@ export default function App() {
         </Route>
       </Route>
 
-      {/* 3. Catch-all: Redirect unknown paths to landing page */}
+      {/* 3. Catch-all */}
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
