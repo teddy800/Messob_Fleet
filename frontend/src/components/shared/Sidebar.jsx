@@ -30,30 +30,37 @@ const menuItems = [
     icon: Car,
     roles: ["Staff", "Driver"],
   },
-  // Dispatcher / Admin / Maintainer: operations menu
+  // Dispatcher: current requests only
+  {
+    name: "Current Requests",
+    path: "/dashboard/dispatch/approvals",
+    icon: CheckSquare,
+    roles: ["Dispatcher"],
+  },
+  // Admin: full operations menu
   { 
     name: "Dashboard", 
     path: "/dashboard", 
     icon: LayoutDashboard, 
-    roles: ["Dispatcher", "Admin", "Maintainer"] 
+    roles: ["Admin", "Maintainer"] 
   },
   { 
     name: "Approval Queue", 
     path: "/dashboard/dispatch/approvals", 
     icon: CheckSquare, 
-    roles: ["Dispatcher", "Admin"] 
+    roles: ["Admin"] 
   },
   { 
     name: "Manage Fleet", 
     path: "/dashboard/fleet", 
     icon: Car, 
-    roles: ["Dispatcher", "Admin"] 
+    roles: ["Admin"] 
   },
   { 
     name: "Fuel Logs", 
     path: "/dashboard/fuel-log", 
     icon: Fuel, 
-    roles: ["Admin", "Dispatcher", "Maintainer"] 
+    roles: ["Admin", "Maintainer"] 
   },
   { 
     name: "Maintenance", 
