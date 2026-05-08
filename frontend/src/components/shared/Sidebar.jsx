@@ -17,39 +17,47 @@ import { useUserStore } from "@/store/useUserStore";
 
 // The Master Menu List with Role-Based Access Control (RBAC)
 const menuItems = [
+  // Staff / Driver: request-focused menu
+  {
+    name: "Request Status",
+    path: "/dashboard/requests/status",
+    icon: ClipboardList,
+    roles: ["Staff", "Driver"],
+  },
+  {
+    name: "New Request",
+    path: "/dashboard/requests/new",
+    icon: Car,
+    roles: ["Staff", "Driver"],
+  },
+  // Dispatcher / Admin / Maintainer: operations menu
   { 
     name: "Dashboard", 
     path: "/dashboard", 
     icon: LayoutDashboard, 
-    roles: ["Staff", "Dispatcher", "Admin", "Maintainer"] 
-  },
-  { 
-    name: "Request Vehicle", 
-    path: "/requests/new", 
-    icon: ClipboardList, 
-    roles: ["Staff", "Admin"] 
+    roles: ["Dispatcher", "Admin", "Maintainer"] 
   },
   { 
     name: "Approval Queue", 
-    path: "/dispatch/approvals", 
+    path: "/dashboard/dispatch/approvals", 
     icon: CheckSquare, 
     roles: ["Dispatcher", "Admin"] 
   },
   { 
     name: "Manage Fleet", 
-    path: "/fleet", 
+    path: "/dashboard/fleet", 
     icon: Car, 
     roles: ["Dispatcher", "Admin"] 
   },
   { 
     name: "Fuel Logs", 
-    path: "/fuel-log", 
+    path: "/dashboard/fuel-log", 
     icon: Fuel, 
     roles: ["Admin", "Dispatcher", "Maintainer"] 
   },
   { 
     name: "Maintenance", 
-    path: "/maintenance", 
+    path: "/dashboard/maintenance", 
     icon: Gauge, 
     roles: ["Admin", "Maintainer"] 
   }
@@ -100,7 +108,9 @@ export default function Sidebar({ setOpen }) {
       {/* --- Navigation Menu --- */}
       <nav className="flex-1 space-y-2 overflow-y-auto no-scrollbar">
         {filteredMenu.map((item) => {
-          const isActive = location.pathname === item.path;
+          const isActive =
+            location.pathname === item.path ||
+            location.pathname.startsWith(item.path + "/");
           return (
             <Link
               key={item.path}
@@ -131,7 +141,7 @@ export default function Sidebar({ setOpen }) {
         </div>
 
         <Link 
-              to="/profile" 
+              to="/dashboard/profile" 
               onClick={() => setOpen?.(false)}
               className="flex items-center px-4 py-3 hover:bg-white/10 rounded-xl transition-all"
             >

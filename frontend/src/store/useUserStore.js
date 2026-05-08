@@ -15,7 +15,9 @@ export const useUserStore = create((set, get) => ({
       const mockUsers = {
         Staff: { name: "Sumeya (Staff)", role: "Staff", email: "staff@mesobcenter.et" },
         Dispatcher: { name: "Abebe (Dispatcher)", role: "Dispatcher", email: "dispatcher@mesobcenter.et" },
-        Admin: { name: "Admin User", role: "Admin", email: "admin@mesobcenter.et" }
+        Admin: { name: "Admin User", role: "Admin", email: "admin@mesobcenter.et" },
+        Maintainer: { name: "Mike (Maintainer)", role: "Maintainer", email: "maintainer@mesobcenter.et" },
+        Driver: { name: "Dawit (Driver)", role: "Driver", email: "driver@mesobcenter.et" },
       };
       
       set({ 
@@ -51,7 +53,8 @@ export const useUserStore = create((set, get) => ({
       Staff: { name: "Sumeya (Staff)", role: "Staff", email: "staff@mesobcenter.et" },
       Dispatcher: { name: "Abebe (Dispatcher)", role: "Dispatcher", email: "dispatcher@mesobcenter.et" },
       Admin: { name: "Admin User", role: "Admin", email: "admin@mesobcenter.et" },
-      Maintainer: {name: "Mike(Maintainer)", role:"Maintainer", email:"maintainer@mesobcenter.et"}
+      Maintainer: { name: "Mike (Maintainer)", role: "Maintainer", email: "maintainer@mesobcenter.et" },
+      Driver: { name: "Dawit (Driver)", role: "Driver", email: "driver@mesobcenter.et" },
     };
 
     const selectedUser = mockUsers[role] || mockUsers.Staff;

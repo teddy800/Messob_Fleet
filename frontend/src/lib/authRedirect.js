@@ -1,8 +1,9 @@
 const roleRoutes = {
   Admin: "/dashboard",
   Dispatcher: "/dashboard/dispatch/approvals",
-  Staff: "/dashboard",
-  Maintainer: "/dashboard"
+  Staff: "/dashboard/requests/status",
+  Driver: "/dashboard/requests/status",
+  Maintainer: "/dashboard",
 };
 
 export function getRedirectPathByRole(role) {

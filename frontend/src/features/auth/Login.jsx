@@ -21,7 +21,8 @@ const users = {
   "admin@mesobcenter.et": { name: "Admin User", role: "Admin", password: "admin123", email: "admin@mesobcenter.et" },
   "dispatcher@mesobcenter.et": { name: "Abebe (Dispatcher)", role: "Dispatcher", password: "dispatch123", email: "dispatcher@mesobcenter.et" },
   "staff@mesobcenter.et": { name: "Sumeya (Staff)", role: "Staff", password: "password123", email: "staff@mesobcenter.et" },
-  "maintainer@mesobcenter.et": { name: "Mike(Maintainer)", role:"Maintainer", password: "maintain123", email: "maintainer@mesobcenter.et"}
+  "maintainer@mesobcenter.et": { name: "Mike (Maintainer)", role: "Maintainer", password: "maintain123", email: "maintainer@mesobcenter.et" },
+  "driver@mesobcenter.et": { name: "Dawit (Driver)", role: "Driver", password: "driver123", email: "driver@mesobcenter.et" },
 };
 
 const loginSchema = z.object({
