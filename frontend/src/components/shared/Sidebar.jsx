@@ -57,7 +57,7 @@ const menuItems = [
     name: "Dashboard",
     path: "/dashboard",
     icon: LayoutDashboard,
-    roles: ["Admin", "Maintainer"],
+    roles: ["Admin"],
   },
   {
     name: "User Management",
@@ -83,6 +83,19 @@ const menuItems = [
     icon: FileText,
     roles: ["Admin"],
   },
+  // Maintainer (Mechanic)
+  {
+    name: "Dashboard",
+    path: "/dashboard/mechanic",
+    icon: LayoutDashboard,
+    roles: ["Maintainer"],
+  },
+  {
+    name: "Repair & Maintenance Log",
+    path: "/dashboard/mechanic/repair-log",
+    icon: Gauge,
+    roles: ["Maintainer"],
+  },
   {
     name: "Fuel Logs",
     path: "/dashboard/fuel-log",
@@ -93,7 +106,7 @@ const menuItems = [
     name: "Maintenance",
     path: "/dashboard/maintenance",
     icon: Gauge,
-    roles: ["Admin", "Maintainer"],
+    roles: ["Admin"],
   },
 ];
 
