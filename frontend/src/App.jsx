@@ -13,6 +13,11 @@ import FuelLog from "./features/fleet/FuelLog";
 import Maintenance from "./features/fleet/Maintenance";
 import DriverRequests from "./features/driver/DriverRequests";
 import DriverFuelChange from "./features/driver/DriverFuelChange";
+import AdminDashboard from "./features/admin/AdminDashboard";
+import UserManagement from "./features/admin/UserManagement";
+import VehicleManagement from "./features/admin/VehicleManagement";
+import DriverManagement from "./features/admin/DriverManagement";
+import Reports from "./features/admin/Reports";
 
 export default function App() {
   return (
@@ -24,7 +29,7 @@ export default function App() {
       {/* 2. Protected Dashboard Routes */}
       <Route element={<ProtectedRoute />}>
         <Route path="/dashboard" element={<DashboardLayout />}>
-          <Route index element={<DashboardHome />} />
+          <Route index element={<AdminDashboard />} />
           {/* Staff */}
           <Route path="requests/new" element={<RequestWizard />} />
           <Route path="requests/status" element={<RequestStatus />} />
@@ -32,8 +37,13 @@ export default function App() {
           {/* Driver */}
           <Route path="driver/requests" element={<DriverRequests />} />
           <Route path="driver/fuel" element={<DriverFuelChange />} />
-          {/* Dispatcher / Admin */}
+          {/* Dispatcher */}
           <Route path="dispatch/approvals" element={<ApprovalQueue />} />
+          {/* Admin */}
+          <Route path="admin/users" element={<UserManagement />} />
+          <Route path="admin/vehicles" element={<VehicleManagement />} />
+          <Route path="admin/drivers" element={<DriverManagement />} />
+          <Route path="admin/reports" element={<Reports />} />
           {/* Shared */}
           <Route path="profile" element={<Profile />} />
           <Route path="fleet" element={<ManageFleet />} />

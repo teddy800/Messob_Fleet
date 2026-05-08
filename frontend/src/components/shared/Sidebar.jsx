@@ -3,12 +3,14 @@ import {
   Car, 
   ClipboardList, 
   CheckSquare, 
-  Settings, 
   User, 
   Fuel, 
   Gauge, 
   LogOut,
-  ShieldCheck
+  ShieldCheck,
+  Users,
+  UserCheck,
+  FileText,
 } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import logo from "@/assets/logo.png";
@@ -50,7 +52,7 @@ const menuItems = [
     icon: CheckSquare,
     roles: ["Dispatcher"],
   },
-  // Admin / Maintainer: full operations menu
+  // Admin: full operations menu
   {
     name: "Dashboard",
     path: "/dashboard",
@@ -58,22 +60,34 @@ const menuItems = [
     roles: ["Admin", "Maintainer"],
   },
   {
-    name: "Approval Queue",
-    path: "/dashboard/dispatch/approvals",
-    icon: CheckSquare,
+    name: "User Management",
+    path: "/dashboard/admin/users",
+    icon: Users,
     roles: ["Admin"],
   },
   {
-    name: "Manage Fleet",
-    path: "/dashboard/fleet",
+    name: "Vehicles",
+    path: "/dashboard/admin/vehicles",
     icon: Car,
+    roles: ["Admin"],
+  },
+  {
+    name: "Drivers",
+    path: "/dashboard/admin/drivers",
+    icon: UserCheck,
+    roles: ["Admin"],
+  },
+  {
+    name: "Reports",
+    path: "/dashboard/admin/reports",
+    icon: FileText,
     roles: ["Admin"],
   },
   {
     name: "Fuel Logs",
     path: "/dashboard/fuel-log",
     icon: Fuel,
-    roles: ["Admin", "Maintainer"],
+    roles: ["Maintainer"],
   },
   {
     name: "Maintenance",
