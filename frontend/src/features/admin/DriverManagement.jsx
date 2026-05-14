@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { UserCheck, Pencil, Trash2, X, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,55 +7,59 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-
-const initialDrivers = [
-  { id: "DRV-001", name: "Dawit Bekele",  licenseNo: "ETH-DL-001234", phone: "+251 91 234 5678", status: "Available" },
-  { id: "DRV-002", name: "Yonas Tesfaye", licenseNo: "ETH-DL-005678", phone: "+251 92 345 6789", status: "On Trip" },
-  { id: "DRV-003", name: "Mekdes Alemu",  licenseNo: "ETH-DL-009012", phone: "+251 93 456 7890", status: "Available" },
-  { id: "DRV-004", name: "Biruk Haile",   licenseNo: "ETH-DL-003456", phone: "+251 94 567 8901", status: "Off Duty" },
-];
+import { searchRead, createRecord, writeRecord } from "@/lib/odooApi";
 
 const statusBadge = {
-  Available: "bg-green-100 text-green-700 border-green-200",
-  "On Trip": "bg-blue-100 text-blue-700 border-blue-200",
-  "Off Duty":"bg-gray-100 text-gray-500 border-gray-200",
-  Suspended: "bg-red-100 text-red-600 border-red-200",
+  active:   "bg-green-100 text-green-700 border-green-200",
+  inactive: "bg-gray-100 text-gray-500 border-gray-200",
 };
 
-const emptyForm = { name: "", licenseNo: "", phone: "", status: "Available" };
-
 export default function DriverManagement() {
-  const [drivers, setDrivers]   = useState(initialDrivers);
+  const [drivers, setDrivers]   = useState([]);
+  const [loading, setLoading]   = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing]   = useState(null);
-  const [form, setForm]         = useState(emptyForm);
-  const [statusVal, setStatusVal] = useState("Available");
+  const [form, setForm]         = useState({ name: "", license_no: "", phone: "" });
+  const [isActive, setIsActive] = useState("active");
+  const [error, setError]       = useState(null);
+
+  const fetchDrivers = async () => {
+    setLoading(true);
+    try {
+      const data = await searchRead("messob.fms.driver", [], ["id", "name", "license_no", "phone", "status", "is_active"], 200);
+      setDrivers(data);
+    } catch (e) { setError(e.message); }
+    finally { setLoading(false); }
+  };
+
+  useEffect(() => { fetchDrivers(); }, []);
 
   const openAdd = () => {
-    setEditing(null); setForm(emptyForm); setStatusVal("Available");
-    setDialogOpen(true);
+    setEditing(null); setForm({ name: "", license_no: "", phone: "" }); setIsActive("active"); setError(null); setDialogOpen(true);
   };
 
   const openEdit = (d) => {
-    setEditing(d);
-    setForm({ name: d.name, licenseNo: d.licenseNo, phone: d.phone, status: d.status });
-    setStatusVal(d.status);
-    setDialogOpen(true);
+    setEditing(d); setForm({ name: d.name, license_no: d.license_no || "", phone: d.phone || "" });
+    setIsActive(d.is_active ? "active" : "inactive"); setError(null); setDialogOpen(true);
   };
 
-  const handleDelete = (id) => setDrivers((prev) => prev.filter((d) => d.id !== id));
+  const handleSave = async () => {
+    setError(null);
+    if (!form.name || !form.license_no) { setError("Name and license number are required."); return; }
+    try {
+      const vals = { name: form.name, license_no: form.license_no, phone: form.phone, is_active: isActive === "active" };
+      if (editing) {
+        await writeRecord("messob.fms.driver", [editing.id], vals);
+      } else {
+        await createRecord("messob.fms.driver", vals);
+      }
+      setDialogOpen(false); fetchDrivers();
+    } catch (e) { setError(e.message); }
+  };
 
-  const handleSave = () => {
-    const data = { ...form, status: statusVal };
-    if (!data.name || !data.licenseNo || !data.phone) return;
-
-    if (editing) {
-      setDrivers((prev) => prev.map((d) => d.id === editing.id ? { ...d, ...data } : d));
-    } else {
-      const newId = `DRV-${String(drivers.length + 1).padStart(3, "0")}`;
-      setDrivers((prev) => [...prev, { id: newId, ...data }]);
-    }
-    setDialogOpen(false);
+  const handleDelete = async (id) => {
+    try { await writeRecord("messob.fms.driver", [id], { is_active: false }); fetchDrivers(); }
+    catch (e) { setError(e.message); }
   };
 
   return (
@@ -67,49 +71,50 @@ export default function DriverManagement() {
         </Button>
       </div>
 
-      <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
-        <Table>
-          <TableHeader className="bg-gray-50">
-            <TableRow>
-              {["ID", "Name", "License No.", "Phone No.", "Status", "Action"].map((h) => (
-                <TableHead key={h} className={`font-bold text-xs uppercase tracking-widest ${h === "Action" ? "text-right" : ""}`}>{h}</TableHead>
-              ))}
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {drivers.map((d) => (
-              <TableRow key={d.id} className="hover:bg-gray-50 transition-colors">
-                <TableCell className="text-xs text-gray-400 font-mono">{d.id}</TableCell>
-                <TableCell className="font-bold text-sm">{d.name}</TableCell>
-                <TableCell className="text-sm text-gray-600 font-mono">{d.licenseNo}</TableCell>
-                <TableCell className="text-sm text-gray-600">{d.phone}</TableCell>
-                <TableCell>
-                  <Badge className={`text-[10px] font-black uppercase tracking-widest border ${statusBadge[d.status] || "bg-gray-100 text-gray-500"}`}>
-                    {d.status}
-                  </Badge>
-                </TableCell>
-                <TableCell className="text-right space-x-2">
-                  <Button variant="outline" size="sm" onClick={() => openEdit(d)} className="rounded-lg border-brand-blue/30 text-brand-blue hover:bg-brand-blue hover:text-white">
-                    <Pencil className="h-3.5 w-3.5" />
-                  </Button>
-                  <Button variant="outline" size="sm" onClick={() => handleDelete(d.id)} className="rounded-lg border-red-200 text-red-500 hover:bg-red-500 hover:text-white">
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </Button>
-                </TableCell>
+      {loading ? <p className="text-sm text-gray-400">Loading...</p> : (
+        <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+          <Table>
+            <TableHeader className="bg-gray-50">
+              <TableRow>
+                {["Name", "License No.", "Phone No.", "Status", "Action"].map((h) => (
+                  <TableHead key={h} className={`font-bold text-xs uppercase tracking-widest ${h === "Action" ? "text-right" : ""}`}>{h}</TableHead>
+                ))}
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-      </div>
+            </TableHeader>
+            <TableBody>
+              {drivers.map((d) => (
+                <TableRow key={d.id} className="hover:bg-gray-50 transition-colors">
+                  <TableCell className="font-bold text-sm">{d.name}</TableCell>
+                  <TableCell className="text-sm text-gray-600 font-mono">{d.license_no || "—"}</TableCell>
+                  <TableCell className="text-sm text-gray-600">{d.phone || "—"}</TableCell>
+                  <TableCell>
+                    <Badge className={`text-[10px] font-black uppercase tracking-widest border ${statusBadge[d.status] || statusBadge.active}`}>
+                      {d.status || "active"}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className="text-right space-x-2">
+                    <Button variant="outline" size="sm" onClick={() => openEdit(d)} className="rounded-lg border-brand-blue/30 text-brand-blue hover:bg-brand-blue hover:text-white">
+                      <Pencil className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={() => handleDelete(d.id)} className="rounded-lg border-red-200 text-red-500 hover:bg-red-500 hover:text-white">
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+              {drivers.length === 0 && (
+                <TableRow><TableCell colSpan={5} className="text-center text-gray-400 py-8">No drivers found.</TableCell></TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </div>
+      )}
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-md p-6">
           <DialogHeader>
-            <DialogTitle className="text-brand-blue font-black">
-              {editing ? "Edit Driver" : "Add New Driver"}
-            </DialogTitle>
+            <DialogTitle className="text-brand-blue font-black">{editing ? "Edit Driver" : "Add New Driver"}</DialogTitle>
           </DialogHeader>
-
           <div className="space-y-4 py-2">
             <div className="space-y-1.5">
               <Label className="text-xs font-bold uppercase tracking-widest text-gray-500">Full Name</Label>
@@ -119,7 +124,7 @@ export default function DriverManagement() {
             <div className="space-y-1.5">
               <Label className="text-xs font-bold uppercase tracking-widest text-gray-500">License Number</Label>
               <Input className="h-11 border-2 rounded-xl" placeholder="e.g. ETH-DL-001234"
-                value={form.licenseNo} onChange={(e) => setForm({ ...form, licenseNo: e.target.value })} />
+                value={form.license_no} onChange={(e) => setForm({ ...form, license_no: e.target.value })} />
             </div>
             <div className="space-y-1.5">
               <Label className="text-xs font-bold uppercase tracking-widest text-gray-500">Phone Number</Label>
@@ -128,17 +133,16 @@ export default function DriverManagement() {
             </div>
             <div className="space-y-1.5">
               <Label className="text-xs font-bold uppercase tracking-widest text-gray-500">Status</Label>
-              <Select value={statusVal} onValueChange={setStatusVal}>
+              <Select value={isActive} onValueChange={setIsActive}>
                 <SelectTrigger className="h-11 border-2 rounded-xl w-full"><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  {["Available", "On Trip", "Off Duty", "Suspended"].map((s) => (
-                    <SelectItem key={s} value={s}>{s}</SelectItem>
-                  ))}
+                  <SelectItem value="active">Active</SelectItem>
+                  <SelectItem value="inactive">Inactive</SelectItem>
                 </SelectContent>
               </Select>
             </div>
+            {error && <p className="text-sm text-red-500 font-semibold">{error}</p>}
           </div>
-
           <DialogFooter className="gap-2">
             <Button variant="ghost" onClick={() => setDialogOpen(false)}><X className="h-4 w-4 mr-1" /> Cancel</Button>
             <Button onClick={handleSave} className="bg-brand-blue hover:bg-blue-900 text-white font-bold">

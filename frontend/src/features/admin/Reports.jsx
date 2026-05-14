@@ -1,45 +1,100 @@
-import { FileText } from "lucide-react";
+import { useEffect, useState } from "react";
+import { FileText, Car, CheckCircle, Clock, XCircle } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
-
-const logins = [
-  { user: "Admin User",         role: "Admin",      time: "2026-05-08 08:02", ip: "192.168.1.10" },
-  { user: "Abebe (Dispatcher)", role: "Dispatcher", time: "2026-05-08 08:15", ip: "192.168.1.12" },
-  { user: "Sumeya (Staff)",     role: "Staff",      time: "2026-05-08 08:30", ip: "192.168.1.14" },
-  { user: "Dawit (Driver)",     role: "Driver",     time: "2026-05-08 09:00", ip: "192.168.1.16" },
-  { user: "Mike (Maintainer)",  role: "Maintainer", time: "2026-05-07 17:45", ip: "192.168.1.18" },
-];
+import { searchRead } from "@/lib/odooApi";
 
 export default function Reports() {
+  const [trips, setTrips] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    searchRead(
+      "messob.fms.trip",
+      [],
+      ["name", "state", "purpose", "pickup", "destination", "start_dt", "requester_id", "assigned_vehicle_id", "assigned_driver_id"],
+      100
+    ).then(setTrips).catch(() => {}).finally(() => setLoading(false));
+  }, []);
+
+  const stateBadge = {
+    draft:       "bg-gray-100 text-gray-500",
+    pending:     "bg-yellow-100 text-yellow-700",
+    approved:    "bg-green-100 text-green-700",
+    rejected:    "bg-red-100 text-red-600",
+    in_progress: "bg-blue-100 text-blue-700",
+    completed:   "bg-purple-100 text-purple-700",
+    closed:      "bg-gray-200 text-gray-600",
+  };
+
+  const counts = {
+    total:    trips.length,
+    pending:  trips.filter(t => t.state === "pending").length,
+    approved: trips.filter(t => ["approved","in_progress"].includes(t.state)).length,
+    completed:trips.filter(t => t.state === "completed").length,
+    rejected: trips.filter(t => t.state === "rejected").length,
+  };
+
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-black text-brand-blue">Reports</h1>
 
+      {/* Summary cards */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        {[
+          { label: "Total Trips",  value: counts.total,     icon: Car,         color: "text-brand-blue" },
+          { label: "Pending",      value: counts.pending,   icon: Clock,       color: "text-yellow-600" },
+          { label: "Approved",     value: counts.approved,  icon: CheckCircle, color: "text-green-600" },
+          { label: "Rejected",     value: counts.rejected,  icon: XCircle,     color: "text-red-500" },
+        ].map((s) => (
+          <Card key={s.label} className="border border-gray-100 shadow-sm">
+            <CardContent className="p-4 flex items-center gap-3">
+              <s.icon className={`h-6 w-6 ${s.color}`} />
+              <div>
+                <p className="text-xs font-bold uppercase tracking-widest text-gray-400">{s.label}</p>
+                <p className={`text-2xl font-black ${s.color}`}>{s.value}</p>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      {/* Trip log table */}
       <Card className="border border-gray-100 shadow-sm">
         <CardContent className="p-6">
           <h2 className="font-bold text-brand-blue mb-4 flex items-center gap-2">
-            <FileText className="h-5 w-5 text-brand-gold" /> Recent Login Activity
+            <FileText className="h-5 w-5 text-brand-gold" /> All Trip Requests
           </h2>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-gray-100">
-                  {["User", "Role", "Login Time", "IP Address"].map((h) => (
-                    <th key={h} className="text-left py-2 px-3 text-xs font-bold uppercase tracking-widest text-gray-400">{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {logins.map((l, i) => (
-                  <tr key={i} className="border-b border-gray-50 hover:bg-gray-50 transition-colors">
-                    <td className="py-3 px-3 font-bold text-gray-800">{l.user}</td>
-                    <td className="py-3 px-3 text-gray-500">{l.role}</td>
-                    <td className="py-3 px-3 text-gray-500 font-mono text-xs">{l.time}</td>
-                    <td className="py-3 px-3 text-gray-400 font-mono text-xs">{l.ip}</td>
+          {loading ? <p className="text-sm text-gray-400">Loading...</p> : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-gray-100">
+                    {["Request ID", "Requester", "Route", "Start Date", "Status"].map((h) => (
+                      <th key={h} className="text-left py-2 px-3 text-xs font-bold uppercase tracking-widest text-gray-400">{h}</th>
+                    ))}
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {trips.map((t) => (
+                    <tr key={t.id} className="border-b border-gray-50 hover:bg-gray-50 transition-colors">
+                      <td className="py-3 px-3 font-bold text-brand-blue">{t.name}</td>
+                      <td className="py-3 px-3 text-gray-700">{Array.isArray(t.requester_id) ? t.requester_id[1] : "—"}</td>
+                      <td className="py-3 px-3 text-gray-600">{t.pickup} → {t.destination}</td>
+                      <td className="py-3 px-3 text-gray-500 text-xs">{t.start_dt ? new Date(t.start_dt).toLocaleDateString() : "—"}</td>
+                      <td className="py-3 px-3">
+                        <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded-full ${stateBadge[t.state] || "bg-gray-100 text-gray-500"}`}>
+                          {t.state}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                  {trips.length === 0 && (
+                    <tr><td colSpan={5} className="text-center text-gray-400 py-8">No trip records found.</td></tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

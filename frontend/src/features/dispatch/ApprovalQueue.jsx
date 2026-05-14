@@ -1,109 +1,18 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Eye, CheckCircle, XCircle, Clock, MapPin, Calendar,
-  Users, Car, ChevronRight, User, FileText,
+  Car, ChevronRight, User, FileText,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
-import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-
-// ─── Mock Data ────────────────────────────────────────────────────────────────
-const mockDrivers = [
-  { id: "D1", name: "Dawit Bekele" },
-  { id: "D2", name: "Yonas Tesfaye" },
-  { id: "D3", name: "Mekdes Alemu" },
-  { id: "D4", name: "Biruk Haile" },
-];
-
-const vehicleTypes = [
-  "Toyota Land Cruiser",
-  "Toyota Corolla",
-  "Nissan Patrol",
-  "Isuzu Truck",
-  "Hyundai H1 Van",
-  "Toyota Hilux",
-];
-
-const initialRequests = [
-  {
-    id: "REQ-001",
-    status: "Pending",
-    submittedAt: "2026-05-08T07:15:00",
-    requester: { name: "Sumeya Hassen", email: "staff@mesobcenter.et", department: "Programs" },
-    purpose: "Field Work",
-    startPoint: "MESSOB Center HQ",
-    destination: "Adama",
-    date: "2026-05-10",
-    time: "08:00 AM",
-    passengers: 3,
-    tripType: "Round Trip",
-  },
-  {
-    id: "REQ-002",
-    status: "Pending",
-    submittedAt: "2026-05-08T09:40:00",
-    requester: { name: "Kebede Girma", email: "kebede@mesobcenter.et", department: "Logistics" },
-    purpose: "Cargo Delivery",
-    startPoint: "MESSOB Center HQ",
-    destination: "Hawassa",
-    date: "2026-05-11",
-    time: "07:00 AM",
-    passengers: 1,
-    tripType: "One-Way",
-  },
-  {
-    id: "REQ-003",
-    status: "Pending",
-    submittedAt: "2026-05-08T11:05:00",
-    requester: { name: "Tigist Worku", email: "tigist@mesobcenter.et", department: "Finance" },
-    purpose: "Official Meeting",
-    startPoint: "MESSOB Center HQ",
-    destination: "Dire Dawa",
-    date: "2026-05-12",
-    time: "10:00 AM",
-    passengers: 4,
-    tripType: "Round Trip",
-  },
-  {
-    id: "REQ-004",
-    status: "Approved",
-    submittedAt: "2026-05-07T08:00:00",
-    requester: { name: "Abebe Tadesse", email: "abebe@mesobcenter.et", department: "IT" },
-    purpose: "Official Meeting",
-    startPoint: "MESSOB Center HQ",
-    destination: "Bahir Dar",
-    date: "2026-05-08",
-    time: "09:30 AM",
-    passengers: 2,
-    tripType: "One-Way",
-    assignedVehicle: "Toyota Corolla",
-    assignedDriver: "Dawit Bekele",
-  },
-  {
-    id: "REQ-005",
-    status: "Rejected",
-    submittedAt: "2026-05-06T14:20:00",
-    requester: { name: "Meron Alemu", email: "meron@mesobcenter.et", department: "HR" },
-    purpose: "Field Work",
-    startPoint: "MESSOB Center HQ",
-    destination: "Jimma",
-    date: "2026-05-09",
-    time: "06:30 AM",
-    passengers: 5,
-    tripType: "One-Way",
-    rejectNote: "No vehicles available on this date.",
-  },
-];
-
-// ─── Status helpers ───────────────────────────────────────────────────────────
-const statusOrder = { Pending: 0, Approved: 1, Rejected: 2 };
+import { useTripRequests, fetchVehicles, fetchDrivers, approveTrip, rejectTrip } from "@/lib/useTripRequests";
 
 const statusBadge = {
   Pending:  "bg-yellow-100 text-yellow-700 border-yellow-200",
@@ -117,7 +26,6 @@ const statusIcon = {
   Rejected: <XCircle className="h-3.5 w-3.5" />,
 };
 
-// ─── Detail row helper ────────────────────────────────────────────────────────
 function DetailRow({ icon: Icon, label, value }) {
   return (
     <div className="flex items-start gap-3">
@@ -130,62 +38,71 @@ function DetailRow({ icon: Icon, label, value }) {
   );
 }
 
-// ─── Main Component ───────────────────────────────────────────────────────────
 export default function ApprovalQueue() {
-  const [requests, setRequests] = useState(
-    [...initialRequests].sort((a, b) => statusOrder[a.status] - statusOrder[b.status])
-  );
-
-  const [selected, setSelected]     = useState(null);
+  const { trips, loading, refetch } = useTripRequests(["pending", "approved", "rejected"]);
+  const [vehicles, setVehicles] = useState([]);
+  const [drivers, setDrivers]   = useState([]);
+  const [selected, setSelected] = useState(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [approving, setApproving]   = useState(false);
+  const [vehicleId, setVehicleId]   = useState("");
+  const [driverId, setDriverId]     = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError]           = useState(null);
 
-  // approval sub-step state
-  const [approving, setApproving]       = useState(false);
-  const [vehicleType, setVehicleType]   = useState("");
-  const [driverId, setDriverId]         = useState("");
-
-  // rejection state
-  const [rejecting, setRejecting]       = useState(false);
-  const [rejectNote, setRejectNote]     = useState("");
+  useEffect(() => {
+    fetchVehicles().then(setVehicles).catch(() => {});
+    fetchDrivers().then(setDrivers).catch(() => {});
+  }, []);
 
   const openDialog = (req) => {
     setSelected(req);
     setApproving(false);
-    setRejecting(false);
-    setVehicleType("");
+    setVehicleId("");
     setDriverId("");
-    setRejectNote("");
+    setError(null);
     setDialogOpen(true);
   };
 
-  const handleReject = () => {
-    setRequests((prev) =>
-      prev
-        .map((r) => r.id === selected.id ? { ...r, status: "Rejected", rejectNote } : r)
-        .sort((a, b) => statusOrder[a.status] - statusOrder[b.status])
-    );
-    setDialogOpen(false);
+  const handleReject = async () => {
+    setSubmitting(true);
+    setError(null);
+    try {
+      await rejectTrip(selected.id);
+      setDialogOpen(false);
+      refetch();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
-  const handleApprove = () => {
-    const driver = mockDrivers.find((d) => d.id === driverId);
-    setRequests((prev) =>
-      prev
-        .map((r) =>
-          r.id === selected.id
-            ? { ...r, status: "Approved", assignedVehicle: vehicleType, assignedDriver: driver?.name }
-            : r
-        )
-        .sort((a, b) => statusOrder[a.status] - statusOrder[b.status])
-    );
-    setDialogOpen(false);
+  const handleApprove = async () => {
+    setSubmitting(true);
+    setError(null);
+    try {
+      await approveTrip(selected.id, parseInt(vehicleId), parseInt(driverId));
+      setDialogOpen(false);
+      refetch();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
-  const pendingCount = requests.filter((r) => r.status === "Pending").length;
+  const sorted = [...trips].sort((a, b) => {
+    const order = { pending: 0, approved: 1, rejected: 2 };
+    return (order[a.state] ?? 3) - (order[b.state] ?? 3);
+  });
+
+  const pendingCount = trips.filter((r) => r.state === "pending").length;
+
+  const stateLabel = (state) => state.charAt(0).toUpperCase() + state.slice(1);
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-black text-brand-blue">Current Requests</h1>
         <Badge className="bg-yellow-100 text-yellow-700 border border-yellow-200 px-3 py-1 font-bold">
@@ -194,52 +111,56 @@ export default function ApprovalQueue() {
         </Badge>
       </div>
 
-      {/* Request List */}
-      <div className="space-y-3">
-        {requests.map((req) => (
-          <div
-            key={req.id}
-            className="bg-white border border-gray-100 rounded-xl px-5 py-4 flex items-center justify-between hover:shadow-md transition-shadow"
-          >
-            <div className="flex items-center gap-4 min-w-0">
-              <div className="hidden sm:flex flex-col items-center justify-center bg-brand-blue/5 rounded-lg px-3 py-2 shrink-0">
-                <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400">
-                  {new Date(req.submittedAt).toLocaleDateString("en-US", { month: "short" })}
-                </span>
-                <span className="text-xl font-black text-brand-blue leading-none">
-                  {new Date(req.submittedAt).getDate()}
-                </span>
-              </div>
-
-              <div className="min-w-0">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className="font-black text-sm text-brand-blue">{req.id}</span>
-                  <Badge className={`text-[10px] font-black uppercase tracking-widest border flex items-center gap-1 ${statusBadge[req.status]}`}>
-                    {statusIcon[req.status]} {req.status}
-                  </Badge>
-                </div>
-                <p className="text-sm text-gray-600 font-medium mt-0.5 truncate">
-                  <span className="font-bold text-gray-800">{req.requester.name}</span>
-                  {" · "}
-                  {req.startPoint} <ChevronRight className="inline h-3 w-3" /> {req.destination}
-                </p>
-                <p className="text-xs text-gray-400 mt-0.5">{req.date} at {req.time} · {req.purpose}</p>
-              </div>
-            </div>
-
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => openDialog(req)}
-              className="shrink-0 ml-4 rounded-lg border-brand-blue/30 text-brand-blue hover:bg-brand-blue hover:text-white transition-colors"
+      {loading ? (
+        <p className="text-sm text-gray-400">Loading...</p>
+      ) : (
+        <div className="space-y-3">
+          {sorted.map((req) => (
+            <div
+              key={req.id}
+              className="bg-white border border-gray-100 rounded-xl px-5 py-4 flex items-center justify-between hover:shadow-md transition-shadow"
             >
-              <Eye className="h-4 w-4 mr-1.5" /> View
-            </Button>
-          </div>
-        ))}
-      </div>
+              <div className="flex items-center gap-4 min-w-0">
+                <div className="hidden sm:flex flex-col items-center justify-center bg-brand-blue/5 rounded-lg px-3 py-2 shrink-0">
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400">
+                    {new Date(req.create_date).toLocaleDateString("en-US", { month: "short" })}
+                  </span>
+                  <span className="text-xl font-black text-brand-blue leading-none">
+                    {new Date(req.create_date).getDate()}
+                  </span>
+                </div>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="font-black text-sm text-brand-blue">{req.name}</span>
+                    <Badge className={`text-[10px] font-black uppercase tracking-widest border flex items-center gap-1 ${statusBadge[stateLabel(req.state)] || statusBadge.Pending}`}>
+                      {statusIcon[stateLabel(req.state)] || statusIcon.Pending} {stateLabel(req.state)}
+                    </Badge>
+                  </div>
+                  <p className="text-sm text-gray-600 font-medium mt-0.5 truncate">
+                    <span className="font-bold text-gray-800">
+                      {Array.isArray(req.requester_id) ? req.requester_id[1] : "—"}
+                    </span>
+                    {" · "}
+                    {req.pickup} <ChevronRight className="inline h-3 w-3" /> {req.destination}
+                  </p>
+                  <p className="text-xs text-gray-400 mt-0.5">
+                    {req.start_dt ? new Date(req.start_dt).toLocaleString() : "—"} · {req.purpose}
+                  </p>
+                </div>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => openDialog(req)}
+                className="shrink-0 ml-4 rounded-lg border-brand-blue/30 text-brand-blue hover:bg-brand-blue hover:text-white transition-colors"
+              >
+                <Eye className="h-4 w-4 mr-1.5" /> View
+              </Button>
+            </div>
+          ))}
+        </div>
+      )}
 
-      {/* ── Dialog ── */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-lg p-6">
           {selected && (
@@ -247,57 +168,53 @@ export default function ApprovalQueue() {
               <DialogHeader>
                 <DialogTitle className="text-brand-blue font-black flex items-center gap-2">
                   <FileText className="h-5 w-5 text-brand-gold" />
-                  Request {selected.id}
+                  Request {selected.name}
                 </DialogTitle>
               </DialogHeader>
 
-              {/* ── Step 1: View details ── */}
-              {!approving && !rejecting && (
+              {!approving && (
                 <div className="space-y-5 py-2">
-                  {/* Requester info */}
                   <div className="flex items-center gap-3 bg-brand-blue/5 rounded-xl p-4 border border-brand-blue/10">
                     <div className="bg-brand-blue rounded-full p-2">
                       <User className="h-5 w-5 text-white" />
                     </div>
                     <div>
-                      <p className="font-black text-brand-blue text-sm">{selected.requester.name}</p>
-                      <p className="text-xs text-gray-500">{selected.requester.email}</p>
-                      <p className="text-xs text-gray-400">{selected.requester.department} Department</p>
+                      <p className="font-black text-brand-blue text-sm">
+                        {Array.isArray(selected.requester_id) ? selected.requester_id[1] : "—"}
+                      </p>
                     </div>
-                    <Badge className={`ml-auto text-[10px] font-black uppercase tracking-widest border flex items-center gap-1 ${statusBadge[selected.status]}`}>
-                      {statusIcon[selected.status]} {selected.status}
+                    <Badge className={`ml-auto text-[10px] font-black uppercase tracking-widest border ${statusBadge[stateLabel(selected.state)] || statusBadge.Pending}`}>
+                      {stateLabel(selected.state)}
                     </Badge>
                   </div>
 
-                  {/* Trip details */}
                   <div className="grid grid-cols-2 gap-4">
-                    <DetailRow icon={MapPin}   label="Route"       value={`${selected.startPoint} → ${selected.destination}`} />
-                    <DetailRow icon={Calendar} label="Date & Time" value={`${selected.date} at ${selected.time}`} />
-                    <DetailRow icon={Users}    label="Passengers"  value={`${selected.passengers} pax · ${selected.tripType}`} />
-                    <DetailRow icon={Car}      label="Purpose"     value={selected.purpose} />
+                    <DetailRow icon={MapPin}   label="Route"       value={`${selected.pickup} → ${selected.destination}`} />
+                    <DetailRow icon={Calendar} label="Start"       value={selected.start_dt ? new Date(selected.start_dt).toLocaleString() : "—"} />
+                    <DetailRow icon={Car}      label="Vehicle Cat" value={selected.vehicle_category || "—"} />
+                    <DetailRow icon={FileText} label="Purpose"     value={selected.purpose} />
                   </div>
 
-                  {/* Already assigned info */}
-                  {selected.status === "Approved" && (
+                  {selected.state === "approved" && (
                     <div className="bg-green-50 border border-green-200 rounded-xl p-4 text-sm space-y-1">
-                      <p className="font-bold text-green-700">Assigned Vehicle: {selected.assignedVehicle}</p>
-                      <p className="font-bold text-green-700">Driver: {selected.assignedDriver}</p>
-                    </div>
-                  )}
-                  {selected.status === "Rejected" && selected.rejectNote && (
-                    <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-sm">
-                      <p className="font-bold text-red-600">Rejection note:</p>
-                      <p className="text-red-500 mt-1">{selected.rejectNote}</p>
+                      <p className="font-bold text-green-700">
+                        Vehicle: {Array.isArray(selected.assigned_vehicle_id) ? selected.assigned_vehicle_id[1] : "—"}
+                      </p>
+                      <p className="font-bold text-green-700">
+                        Driver: {Array.isArray(selected.assigned_driver_id) ? selected.assigned_driver_id[1] : "—"}
+                      </p>
                     </div>
                   )}
 
-                  {/* Action buttons — only for pending */}
-                  {selected.status === "Pending" && (
+                  {error && <p className="text-sm text-red-500 font-semibold">{error}</p>}
+
+                  {selected.state === "pending" && (
                     <DialogFooter className="gap-2 pt-2">
                       <Button
                         variant="outline"
                         className="flex-1 border-red-300 text-red-600 hover:bg-red-50"
-                        onClick={() => setRejecting(true)}
+                        onClick={handleReject}
+                        disabled={submitting}
                       >
                         <XCircle className="h-4 w-4 mr-2" /> Reject
                       </Button>
@@ -312,84 +229,55 @@ export default function ApprovalQueue() {
                 </div>
               )}
 
-              {/* ── Step 2a: Approve — assign vehicle & driver ── */}
               {approving && (
                 <div className="space-y-5 py-2">
                   <p className="text-sm text-gray-500">
-                    Assign a vehicle and driver for <span className="font-bold text-brand-blue">{selected.requester.name}</span>'s trip to <span className="font-bold">{selected.destination}</span>.
+                    Assign a vehicle and driver for this trip to <span className="font-bold">{selected.destination}</span>.
                   </p>
 
                   <div className="space-y-3">
-                    <Label className="text-xs font-bold uppercase tracking-widest text-gray-500">Vehicle Type</Label>
-                    <Select onValueChange={setVehicleType} value={vehicleType}>
+                    <Label className="text-xs font-bold uppercase tracking-widest text-gray-500">Vehicle</Label>
+                    <Select onValueChange={setVehicleId} value={vehicleId}>
                       <SelectTrigger className="h-12 border-2 rounded-xl">
                         <SelectValue placeholder="Select a vehicle..." />
                       </SelectTrigger>
                       <SelectContent>
-                        {vehicleTypes.map((v) => (
-                          <SelectItem key={v} value={v}>{v}</SelectItem>
+                        {vehicles.map((v) => (
+                          <SelectItem key={v.id} value={String(v.id)}>
+                            {v.name} {v.license_plate ? `(${v.license_plate})` : ""}
+                          </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
                   </div>
 
                   <div className="space-y-3">
-                    <Label className="text-xs font-bold uppercase tracking-widest text-gray-500">Assign Driver</Label>
+                    <Label className="text-xs font-bold uppercase tracking-widest text-gray-500">Driver</Label>
                     <Select onValueChange={setDriverId} value={driverId}>
                       <SelectTrigger className="h-12 border-2 rounded-xl">
                         <SelectValue placeholder="Select a driver..." />
                       </SelectTrigger>
                       <SelectContent>
-                        {mockDrivers.map((d) => (
-                          <SelectItem key={d.id} value={d.id}>{d.name}</SelectItem>
+                        {drivers.map((d) => (
+                          <SelectItem key={d.id} value={String(d.id)}>{d.name}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
                   </div>
 
+                  {error && <p className="text-sm text-red-500 font-semibold">{error}</p>}
+
                   <DialogFooter className="gap-2 pt-2">
-                    <Button variant="ghost" onClick={() => setApproving(false)}>
+                    <Button variant="ghost" onClick={() => setApproving(false)} disabled={submitting}>
                       Back
                     </Button>
                     <Button
                       className="flex-1 bg-green-600 hover:bg-green-700 text-white"
-                      disabled={!vehicleType || !driverId}
+                      disabled={!vehicleId || !driverId || submitting}
                       onClick={handleApprove}
                     >
-                      <CheckCircle className="h-4 w-4 mr-2" /> Confirm Approval
-                    </Button>
-                  </DialogFooter>
-                </div>
-              )}
-
-              {/* ── Step 2b: Reject — add note ── */}
-              {rejecting && (
-                <div className="space-y-5 py-2">
-                  <p className="text-sm text-gray-500">
-                    Provide a reason for rejecting <span className="font-bold text-brand-blue">{selected.requester.name}</span>'s request.
-                  </p>
-
-                  <div className="space-y-2">
-                    <Label className="text-xs font-bold uppercase tracking-widest text-gray-500">Rejection Reason</Label>
-                    <Textarea
-                      placeholder="e.g. No vehicles available on this date..."
-                      value={rejectNote}
-                      onChange={(e) => setRejectNote(e.target.value)}
-                      className="resize-none border-2 rounded-xl"
-                      rows={4}
-                    />
-                  </div>
-
-                  <DialogFooter className="gap-2 pt-2">
-                    <Button variant="ghost" onClick={() => setRejecting(false)}>
-                      Back
-                    </Button>
-                    <Button
-                      className="flex-1 bg-red-600 hover:bg-red-700 text-white"
-                      disabled={!rejectNote.trim()}
-                      onClick={handleReject}
-                    >
-                      <XCircle className="h-4 w-4 mr-2" /> Confirm Rejection
+                      <CheckCircle className="h-4 w-4 mr-2" />
+                      {submitting ? "Saving..." : "Confirm Approval"}
                     </Button>
                   </DialogFooter>
                 </div>

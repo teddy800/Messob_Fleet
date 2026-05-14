@@ -1,54 +1,52 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { Fuel, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-
-const fuelStatuses = ["Full", "Half", "Quarter", "Low", "Empty"];
+import { searchRead, createRecord } from "@/lib/odooApi";
 
 export default function DriverFuelChange() {
   const [submitted, setSubmitted] = useState(false);
-  const [fuelStatus, setFuelStatus] = useState("");
+  const [tripId, setTripId]       = useState("");
+  const [trips, setTrips]         = useState([]);
+  const [error, setError]         = useState(null);
 
-  const {
-    register,
-    handleSubmit,
-    reset,
-    formState: { errors },
-  } = useForm({
-    defaultValues: {
-      stationName: "",
-      liters: "",
-      price: "",
-      odometer: "",
-      date: "",
-    },
+  const { register, handleSubmit, reset, formState: { errors } } = useForm({
+    defaultValues: { station_name: "", liters: "", price: "", odometer: "", date: "" },
   });
 
-  const onSubmit = (data) => {
-    console.log("Fuel log submitted:", { ...data, fuelStatus });
-    setSubmitted(true);
-    setTimeout(() => {
-      setSubmitted(false);
-      setFuelStatus("");
-      reset();
-    }, 3000);
+  useEffect(() => {
+    // Load active trips for the driver to link fuel log to
+    searchRead("messob.fms.trip", [["state", "in", ["approved", "in_progress"]]], ["id", "name", "destination"], 50)
+      .then(setTrips).catch(() => {});
+  }, []);
+
+  const onSubmit = async (data) => {
+    setError(null);
+    if (!tripId) { setError("Please select a trip."); return; }
+    try {
+      await createRecord("messob.fms.fuel.log", {
+        trip_id:      parseInt(tripId),
+        station_name: data.station_name,
+        liters:       parseFloat(data.liters),
+        price:        parseFloat(data.price),
+        odometer:     parseInt(data.odometer),
+        date:         data.date,
+      });
+      setSubmitted(true);
+      setTimeout(() => { setSubmitted(false); setTripId(""); reset(); }, 3000);
+    } catch (e) { setError(e.message); }
   };
 
   return (
     <div className="space-y-6 max-w-lg">
-      {/* Header */}
       <div>
         <h1 className="text-2xl font-black text-brand-blue">Fuel Change Log</h1>
-        <p className="text-sm text-gray-500 mt-1">
-          Fill in the details every time you refuel the vehicle.
-        </p>
+        <p className="text-sm text-gray-500 mt-1">Fill in the details every time you refuel the vehicle.</p>
       </div>
 
       <Card className="border border-gray-100 shadow-sm">
@@ -61,119 +59,60 @@ export default function DriverFuelChange() {
             </div>
           ) : (
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-
-              {/* Fuel Status */}
               <div className="space-y-2">
-                <Label className="text-xs font-bold uppercase tracking-widest text-gray-500">
-                  Fuel Status
-                </Label>
-                <Select onValueChange={setFuelStatus} value={fuelStatus}>
-                  <SelectTrigger className={cn("h-12 border-2 rounded-xl", !fuelStatus && "text-gray-400")}>
-                    <SelectValue placeholder="Select fuel level..." />
-                  </SelectTrigger>
+                <Label className="text-xs font-bold uppercase tracking-widest text-gray-500">Trip</Label>
+                <Select onValueChange={setTripId} value={tripId}>
+                  <SelectTrigger className="h-12 border-2 rounded-xl"><SelectValue placeholder="Select active trip..." /></SelectTrigger>
                   <SelectContent>
-                    {fuelStatuses.map((s) => (
-                      <SelectItem key={s} value={s}>{s}</SelectItem>
-                    ))}
+                    {trips.map((t) => <SelectItem key={t.id} value={String(t.id)}>{t.name} — {t.destination}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
 
-              {/* Station Name */}
               <div className="space-y-2">
-                <Label className="text-xs font-bold uppercase tracking-widest text-gray-500">
-                  Fuel Station Name
-                </Label>
-                <Input
-                  placeholder="e.g. NOC Bole Station"
-                  className={cn("h-12 border-2 rounded-xl", errors.stationName && "border-red-400")}
-                  {...register("stationName", { required: "Station name is required" })}
-                />
-                {errors.stationName && (
-                  <p className="text-xs text-red-500 font-semibold">{errors.stationName.message}</p>
-                )}
+                <Label className="text-xs font-bold uppercase tracking-widest text-gray-500">Fuel Station Name</Label>
+                <Input placeholder="e.g. NOC Bole Station"
+                  className={cn("h-12 border-2 rounded-xl", errors.station_name && "border-red-400")}
+                  {...register("station_name", { required: "Station name is required" })} />
+                {errors.station_name && <p className="text-xs text-red-500 font-semibold">{errors.station_name.message}</p>}
               </div>
 
-              {/* Liters + Price side by side */}
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label className="text-xs font-bold uppercase tracking-widest text-gray-500">
-                    Liters
-                  </Label>
-                  <Input
-                    type="number"
-                    placeholder="e.g. 40"
+                  <Label className="text-xs font-bold uppercase tracking-widest text-gray-500">Liters</Label>
+                  <Input type="number" placeholder="e.g. 40"
                     className={cn("h-12 border-2 rounded-xl", errors.liters && "border-red-400")}
-                    {...register("liters", {
-                      required: "Required",
-                      min: { value: 1, message: "Must be > 0" },
-                    })}
-                  />
-                  {errors.liters && (
-                    <p className="text-xs text-red-500 font-semibold">{errors.liters.message}</p>
-                  )}
+                    {...register("liters", { required: "Required", min: { value: 1, message: "Must be > 0" } })} />
+                  {errors.liters && <p className="text-xs text-red-500 font-semibold">{errors.liters.message}</p>}
                 </div>
-
                 <div className="space-y-2">
-                  <Label className="text-xs font-bold uppercase tracking-widest text-gray-500">
-                    Price (ETB)
-                  </Label>
-                  <Input
-                    type="number"
-                    placeholder="e.g. 2800"
+                  <Label className="text-xs font-bold uppercase tracking-widest text-gray-500">Price (ETB)</Label>
+                  <Input type="number" placeholder="e.g. 2800"
                     className={cn("h-12 border-2 rounded-xl", errors.price && "border-red-400")}
-                    {...register("price", {
-                      required: "Required",
-                      min: { value: 1, message: "Must be > 0" },
-                    })}
-                  />
-                  {errors.price && (
-                    <p className="text-xs text-red-500 font-semibold">{errors.price.message}</p>
-                  )}
+                    {...register("price", { required: "Required", min: { value: 1, message: "Must be > 0" } })} />
+                  {errors.price && <p className="text-xs text-red-500 font-semibold">{errors.price.message}</p>}
                 </div>
               </div>
 
-              {/* Odometer */}
               <div className="space-y-2">
-                <Label className="text-xs font-bold uppercase tracking-widest text-gray-500">
-                  Odometer Reading (km)
-                </Label>
-                <Input
-                  type="number"
-                  placeholder="e.g. 54320"
+                <Label className="text-xs font-bold uppercase tracking-widest text-gray-500">Odometer Reading (km)</Label>
+                <Input type="number" placeholder="e.g. 54320"
                   className={cn("h-12 border-2 rounded-xl", errors.odometer && "border-red-400")}
-                  {...register("odometer", {
-                    required: "Odometer reading is required",
-                    min: { value: 0, message: "Must be 0 or more" },
-                  })}
-                />
-                {errors.odometer && (
-                  <p className="text-xs text-red-500 font-semibold">{errors.odometer.message}</p>
-                )}
+                  {...register("odometer", { required: "Required", min: { value: 0, message: "Must be 0 or more" } })} />
+                {errors.odometer && <p className="text-xs text-red-500 font-semibold">{errors.odometer.message}</p>}
               </div>
 
-              {/* Date */}
               <div className="space-y-2">
-                <Label className="text-xs font-bold uppercase tracking-widest text-gray-500">
-                  Date
-                </Label>
-                <Input
-                  type="date"
-                  className={cn("h-12 border-2 rounded-xl", errors.date && "border-red-400")}
-                  {...register("date", { required: "Date is required" })}
-                />
-                {errors.date && (
-                  <p className="text-xs text-red-500 font-semibold">{errors.date.message}</p>
-                )}
+                <Label className="text-xs font-bold uppercase tracking-widest text-gray-500">Date</Label>
+                <Input type="date" className={cn("h-12 border-2 rounded-xl", errors.date && "border-red-400")}
+                  {...register("date", { required: "Date is required" })} />
+                {errors.date && <p className="text-xs text-red-500 font-semibold">{errors.date.message}</p>}
               </div>
 
-              <Button
-                type="submit"
-                disabled={!fuelStatus}
-                className="w-full h-12 bg-brand-blue hover:bg-blue-900 text-white font-black rounded-xl gap-2"
-              >
-                <Fuel className="h-4 w-4" />
-                Submit Fuel Log
+              {error && <p className="text-sm text-red-500 font-semibold">{error}</p>}
+
+              <Button type="submit" className="w-full h-12 bg-brand-blue hover:bg-blue-900 text-white font-black rounded-xl gap-2">
+                <Fuel className="h-4 w-4" /> Submit Fuel Log
               </Button>
             </form>
           )}

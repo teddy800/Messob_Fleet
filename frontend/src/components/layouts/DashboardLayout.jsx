@@ -1,13 +1,16 @@
 import { useEffect, useState } from "react";
 import { Outlet } from "react-router-dom";
+import {useUserStore} from "@/store/useUserStore"
 import { Bell, Menu, Moon, Sun } from "lucide-react";
 import Sidebar from "../shared/Sidebar";
+import UserAvatar from "../shared/UserAvatar";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Toaster } from "@/components/ui/sonner"; // For the "Check" notifications
 
 export default function DashboardLayout() {
   const [open, setOpen] = useState(false);
+  const user = useUserStore((s) => s.user);
   const [isDarkMode, setIsDarkMode] = useState(() => {
     const storedTheme = localStorage.getItem("theme");
     if (storedTheme) return storedTheme === "dark";
@@ -75,13 +78,9 @@ export default function DashboardLayout() {
             </Button>
 
             <div className="flex items-center gap-2 rounded-full bg-gray-100 dark:bg-gray-800 px-2 py-1">
-              <img
-                src="https://i.pravatar.cc/100?img=12"
-                alt="User profile"
-                className="h-8 w-8 rounded-full object-cover"
-              />
+              <UserAvatar size={8} textSize="text-sm" />
               <span className="hidden sm:block text-sm font-medium text-gray-800 dark:text-gray-100">
-                Eden User
+                {user.name}
               </span>
             </div>
           </div>

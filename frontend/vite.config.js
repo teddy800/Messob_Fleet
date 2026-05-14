@@ -10,4 +10,13 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
     },
   },
+  server: {
+    proxy: {
+      '/odoo': {
+        target: 'http://localhost:8018',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/odoo/, ''),
+      },
+    },
+  },
 })

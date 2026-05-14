@@ -4,6 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Navigate, useNavigate } from "react-router-dom";
 import { useUserStore } from "@/store/useUserStore";
+import { odooLogin, searchRead } from "@/lib/odooApi";
 
 // UI Components
 import { Button } from "@/components/ui/button";
@@ -17,13 +18,14 @@ import { cn } from "@/lib/utils";
 import { getRedirectPathByRole } from "@/lib/authRedirect";
 import logo from "@/assets/logo.png";
 
-const users = {
-  "admin@mesobcenter.et": { name: "Admin User", role: "Admin", password: "admin123", email: "admin@mesobcenter.et" },
-  "dispatcher@mesobcenter.et": { name: "Abebe (Dispatcher)", role: "Dispatcher", password: "dispatch123", email: "dispatcher@mesobcenter.et" },
-  "staff@mesobcenter.et": { name: "Sumeya (Staff)", role: "Staff", password: "password123", email: "staff@mesobcenter.et" },
-  "maintainer@mesobcenter.et": { name: "Mike (Maintainer)", role: "Maintainer", password: "maintain123", email: "maintainer@mesobcenter.et" },
-  "driver@mesobcenter.et": { name: "Dawit (Driver)", role: "Driver", password: "driver123", email: "driver@mesobcenter.et" },
-};
+// Role mapping based on Odoo group full names
+const ODOO_GROUP_ROLE_MAP = [
+  { name: "Administrator", role: "Admin"      },
+  { name: "Dispatcher",    role: "Dispatcher" },
+  { name: "Driver",        role: "Driver"     },
+  { name: "Mechanic",      role: "Maintainer" },
+  { name: "Staff (User)",  role: "Staff"      },
+];
 
 const loginSchema = z.object({
   email: z.string().email("Please enter a valid MESSOB email"),
@@ -31,6 +33,7 @@ const loginSchema = z.object({
 });
 
 export default function Login() {
+  const [loginError, setLoginError] = useState(null);
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
   
@@ -42,24 +45,58 @@ export default function Login() {
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      email: "staff@mesobcenter.et", // Pre-filled for easier testing
-      password: "password123"
+      email: "",
+      password: ""
     }
   });
 
   const onSubmit = async (data) => {
-    // Simulate authentication with role-based access
-    const { email, password } = data;
-    const user = users[email];
-    
-    if (!user || user.password !== password) {
-      alert("Invalid email or password");
-      return;
-    }
+    setLoginError(null);
+    try {
+      const session = await odooLogin(data.email, data.password);
 
-    // Login with the correct role and persist the user details
-    loginUser(user, "mock-jwt-token");
-    navigate(getRedirectPathByRole(user.role));
+      // Fetch the user's groups from Odoo after login
+      let role = "Staff"; // default fallback
+
+      const userGroups = await searchRead(
+        "res.groups",
+        [["users", "in", [session.uid]]],
+        ["name", "full_name"]
+      );
+
+      console.log("groups:", userGroups.map(g => g.full_name));
+
+      // Check FMS-specific groups first (priority order matters)
+      for (const mapping of ODOO_GROUP_ROLE_MAP) {
+        const found = userGroups.some(
+          (g) => g.full_name === `MESSOB Fleet Management / ${mapping.name}`
+        );
+        if (found) {
+          role = mapping.role;
+          break;
+        }
+      }
+
+      // Fallback: if no FMS group matched but user is Odoo admin, treat as Admin
+      if (role === "Staff") {
+        const isOdooAdmin = userGroups.some(
+          (g) => g.full_name === "Administration / Settings" || g.full_name === "Administration / Access Rights"
+        );
+        if (isOdooAdmin) role = "Admin";
+      }
+
+      const userData = {
+        name: session.name,
+        email: data.email,
+        role,
+        uid: session.uid,
+      };
+
+      loginUser(userData, session.session_id);
+      navigate(getRedirectPathByRole(role));
+    } catch (err) {
+      setLoginError(err.message || "Login failed. Check your credentials.");
+    }
   };
 
   if (isAuthenticated) {
@@ -139,6 +176,9 @@ export default function Login() {
           </CardContent>
 
           <CardFooter className="flex flex-col gap-4 pt-4">
+            {loginError && (
+              <p className="text-sm font-semibold text-red-500 text-center w-full">{loginError}</p>
+            )}
             <Button 
               type="submit" 
               className="w-full bg-brand-blue hover:bg-blue-800 text-white h-14 text-lg font-bold shadow-lg transition-transform active:scale-95 rounded-xl"
