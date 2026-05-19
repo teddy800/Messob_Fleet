@@ -1,0 +1,49 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+@import "@fontsource-variable/geist";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+    /* ... existing font and sidebar variables ... */
+    
+    /* ADD BRAND COLORS HERE so they work everywhere */
+    --color-brand-blue: oklch(0.448 0.145 253.35); /* #1E40AF Equivalent */
+    --color-brand-gold: oklch(0.795 0.184 81.11);  /* #FBBF24 Equivalent */
+
+    /* Override Shadcn Primary/Accent to use MESSOB Colors */
+    --color-primary: var(--brand-blue);
+    --color-accent: var(--brand-gold);
+    
+    /* Keep your existing radius and chart logic below */
+    --radius-md: calc(var(--radius) * 0.8);
+    --radius-lg: var(--radius);
+}
+
+:root {
+    /* MESSOB BRAND OVERRIDES */
+    --brand-blue: oklch(0.448 0.145 253.35);
+    --brand-gold: oklch(0.795 0.184 81.11);
+
+    --background: oklch(1 0 0);
+    --foreground: oklch(0.145 0 0);
+    
+    /* Set Primary to MESSOB Blue */
+    --primary: var(--brand-blue);
+    --primary-foreground: oklch(0.985 0 0);
+    
+    /* Set Accent to MESSOB Gold */
+    --accent: var(--brand-gold);
+    --accent-foreground: oklch(0.145 0 0);
+
+    /* ... rest of your :root variables ... */
+}
+
+.dark {
+    /* Set Primary to a slightly lighter blue for dark mode readability */
+    --primary: oklch(0.55 0.12 253.35);
+    --primary-foreground: oklch(0.145 0 0);
+    
+    /* ... rest of your .dark variables ... */
+}
