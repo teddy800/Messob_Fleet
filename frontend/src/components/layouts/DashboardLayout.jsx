@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Outlet } from "react-router-dom";
 import {useUserStore} from "@/store/useUserStore"
-import { Bell, Menu, Moon, Sun } from "lucide-react";
+import { Menu, Moon, Sun } from "lucide-react";
 import Sidebar from "../shared/Sidebar";
 import UserAvatar from "../shared/UserAvatar";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
@@ -67,16 +67,7 @@ export default function DashboardLayout() {
               {isDarkMode ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
             </Button>
 
-            <Button
-              variant="ghost"
-              size="icon"
-              className="relative text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800"
-              aria-label="Notifications"
-            >
-              <Bell className="h-5 w-5" />
-              <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-red-500" />
-            </Button>
-              <UserAvatar size={10} textSize="text-sm" />            
+            <UserAvatar size={10} textSize="text-sm" />
           </div>
         </header>
 
