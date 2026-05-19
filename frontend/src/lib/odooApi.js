@@ -39,7 +39,7 @@ async function rpc(url, params = {}) {
  */
 export async function odooLogin(email, password) {
   const result = await rpc("/web/session/authenticate", {
-    db: "back_mesob",       // your database name
+    db: "fleet_management",       // your database name
     login: email,
     password,
   });

@@ -1,2 +1,2 @@
 # -*- coding: utf-8 -*-
-from . import api
+from . import hr_api_hooks

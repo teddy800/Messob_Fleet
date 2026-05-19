@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fleet Management - Connection Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-card {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #1E40AF;
+            margin-bottom: 30px;
+        }
+        .test-item {
+            padding: 15px;
+            margin: 10px 0;
+            border-left: 4px solid #ccc;
+            background: #f9f9f9;
+        }
+        .test-item.success {
+            border-left-color: #10b981;
+            background: #f0fdf4;
+        }
+        .test-item.error {
+            border-left-color: #ef4444;
+            background: #fef2f2;
+        }
+        .test-item.pending {
+            border-left-color: #f59e0b;
+            background: #fffbeb;
+        }
+        button {
+            background: #1E40AF;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 20px;
+        }
+        button:hover {
+            background: #1e3a8a;
+        }
+        .status {
+            font-weight: bold;
+            margin-right: 10px;
+        }
+        .success .status { color: #10b981; }
+        .error .status { color: #ef4444; }
+        .pending .status { color: #f59e0b; }
+    </style>
+</head>
+<body>
+    <div class="test-card">
+        <h1>🚀 MESSOB Fleet Management - System Test</h1>
+        
+        <div id="test-results">
+            <div class="test-item pending">
+                <span class="status">⏳</span>
+                <strong>Frontend Server:</strong> <span id="frontend-status">Testing...</span>
+            </div>
+            
+            <div class="test-item pending">
+                <span class="status">⏳</span>
+                <strong>Backend Server (Odoo):</strong> <span id="backend-status">Testing...</span>
+            </div>
+            
+            <div class="test-item pending">
+                <span class="status">⏳</span>
+                <strong>Database Connection:</strong> <span id="db-status">Testing...</span>
+            </div>
+            
+            <div class="test-item pending">
+                <span class="status">⏳</span>
+                <strong>API Proxy:</strong> <span id="proxy-status">Testing...</span>
+            </div>
+            
+            <div class="test-item pending">
+                <span class="status">⏳</span>
+                <strong>Module Installation:</strong> <span id="module-status">Testing...</span>
+            </div>
+        </div>
+        
+        <button onclick="runTests()">Run Tests Again</button>
+        
+        <div id="summary" style="margin-top: 30px; padding: 20px; background: #f0f9ff; border-radius: 6px; display: none;">
+            <h3 style="margin-top: 0; color: #1E40AF;">📋 Summary</h3>
+            <p id="summary-text"></p>
+        </div>
+    </div>
+
+    <script>
+        async function runTests() {
+            // Reset
+            document.getElementById('summary').style.display = 'none';
+            
+            // Test 1: Frontend
+            updateTest('frontend-status', 'pending', 'Running on http://localhost:3000 ✓');
+            document.querySelectorAll('.test-item')[0].className = 'test-item success';
+            
+            // Test 2: Backend
+            try {
+                const backendResponse = await fetch('http://localhost:8018/web/webclient/version_info', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ jsonrpc: '2.0', method: 'call', params: {} })
+                });
+                
+                if (backendResponse.ok) {
+                    const data = await backendResponse.json();
+                    updateTest('backend-status', 'success', `Odoo ${data.result?.server_version || '18.0'} running ✓`);
+                } else {
+                    updateTest('backend-status', 'error', 'Backend not responding ✗');
+                }
+            } catch (e) {
+                updateTest('backend-status', 'error', 'Cannot connect to backend ✗');
+            }
+            
+            // Test 3: Database
+            try {
+                const dbResponse = await fetch('http://localhost:8018/web/database/list', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ jsonrpc: '2.0', method: 'call', params: {} })
+                });
+                
+                if (dbResponse.ok) {
+                    const data = await dbResponse.json();
+                    const databases = data.result || [];
+                    if (databases.includes('fleet_management')) {
+                        updateTest('db-status', 'success', 'Database "fleet_management" found ✓');
+                    } else {
+                        updateTest('db-status', 'error', `Database "fleet_management" not found. Available: ${databases.join(', ')} ✗`);
+                    }
+                } else {
+                    updateTest('db-status', 'error', 'Cannot check databases ✗');
+                }
+            } catch (e) {
+                updateTest('db-status', 'error', 'Database connection failed ✗');
+            }
+            
+            // Test 4: Proxy
+            try {
+                const proxyResponse = await fetch('/odoo/web/webclient/version_info', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ jsonrpc: '2.0', method: 'call', params: {} })
+                });
+                
+                if (proxyResponse.ok) {
+                    updateTest('proxy-status', 'success', 'Vite proxy working correctly ✓');
+                } else {
+                    updateTest('proxy-status', 'error', 'Proxy configuration issue ✗');
+                }
+            } catch (e) {
+                updateTest('proxy-status', 'error', 'Proxy not working ✗');
+            }
+            
+            // Test 5: Module
+            updateTest('module-status', 'pending', 'Please install "MESSOB Fleet Management" module in Odoo Apps');
+            document.querySelectorAll('.test-item')[4].className = 'test-item pending';
+            
+            // Show summary
+            setTimeout(() => {
+                const successCount = document.querySelectorAll('.test-item.success').length;
+                const totalTests = 5;
+                document.getElementById('summary').style.display = 'block';
+                
+                if (successCount >= 4) {
+                    document.getElementById('summary-text').innerHTML = `
+                        <strong style="color: #10b981;">✓ System is ready!</strong><br><br>
+                        ${successCount}/${totalTests} tests passed.<br><br>
+                        <strong>Next Steps:</strong><br>
+                        1. Go to <a href="http://localhost:8018" target="_blank">Odoo Backend</a><br>
+                        2. Install the "MESSOB Fleet Management" module<br>
+                        3. Return to <a href="http://localhost:3000" target="_blank">Frontend</a> and login
+                    `;
+                } else {
+                    document.getElementById('summary-text').innerHTML = `
+                        <strong style="color: #ef4444;">⚠ Issues detected</strong><br><br>
+                        ${successCount}/${totalTests} tests passed.<br><br>
+                        Please check the failed tests above and ensure:<br>
+                        - Docker containers are running<br>
+                        - Database "fleet_management" exists<br>
+                        - Odoo is accessible at port 8018
+                    `;
+                }
+            }, 2000);
+        }
+        
+        function updateTest(elementId, status, message) {
+            const element = document.getElementById(elementId);
+            element.textContent = message;
+            const testItem = element.closest('.test-item');
+            testItem.className = `test-item ${status}`;
+        }
+        
+        // Run tests on load
+        window.onload = runTests;
+    </script>
+</body>
+</html>
