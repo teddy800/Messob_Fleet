@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -16,31 +16,50 @@ import { Eye, EyeOff, Lock, Mail } from "lucide-react";
 // Utilities
 import { cn } from "@/lib/utils";
 import { getRedirectPathByRole } from "@/lib/authRedirect";
+import { isFmsGroup, resolveUserRole } from "@/lib/resolveUserRole";
 import logo from "@/assets/logo.png";
-
-// Role mapping based on Odoo group full names
-const ODOO_GROUP_ROLE_MAP = [
-  { name: "Administrator", role: "Admin"      },
-  { name: "Dispatcher",    role: "Dispatcher" },
-  { name: "Driver",        role: "Driver"     },
-  { name: "Mechanic",      role: "Maintainer" },
-  { name: "Staff (User)",  role: "Staff"      },
-];
 
 const loginSchema = z.object({
   email: z.string().email("Please enter a valid MESSOB email"),
   password: z.string().min(6, "Password must be at least 6 characters"),
 });
 
+async function fetchFmsGroupsForUser(uid) {
+  const groupFields = ["name", "full_name", "category_id"];
+
+  let userGroups = await searchRead(
+    "res.groups",
+    [
+      ["users", "in", [uid]],
+      ["category_id.name", "=", "MESSOB Fleet Management"],
+    ],
+    groupFields
+  );
+
+  if (userGroups.length === 0) {
+    const allUserGroups = await searchRead(
+      "res.groups",
+      [["users", "in", [uid]]],
+      groupFields
+    );
+    userGroups = allUserGroups.filter(isFmsGroup);
+  }
+
+  return userGroups;
+}
+
 export default function Login() {
   const [loginError, setLoginError] = useState(null);
   const [showPassword, setShowPassword] = useState(false);
+  const [sessionChecked, setSessionChecked] = useState(false);
+  const [resolvedRole, setResolvedRole] = useState(null);
   const navigate = useNavigate();
   
   // Get functions from your Zustand store
   const loginUser = useUserStore((state) => state.login);
   const isAuthenticated = useUserStore((state) => state.isAuthenticated);
-  const currentUserRole = useUserStore((state) => state.user?.role);
+  const user = useUserStore((state) => state.user);
+  const currentUserRole = user?.role;
 
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm({
     resolver: zodResolver(loginSchema),
@@ -55,35 +74,8 @@ export default function Login() {
     try {
       const session = await odooLogin(data.email, data.password);
 
-      // Fetch the user's groups from Odoo after login
-      let role = "Staff"; // default fallback
-
-      const userGroups = await searchRead(
-        "res.groups",
-        [["users", "in", [session.uid]]],
-        ["name", "full_name"]
-      );
-
-      console.log("groups:", userGroups.map(g => g.full_name));
-
-      // Check FMS-specific groups first (priority order matters)
-      for (const mapping of ODOO_GROUP_ROLE_MAP) {
-        const found = userGroups.some(
-          (g) => g.full_name === `MESSOB Fleet Management / ${mapping.name}`
-        );
-        if (found) {
-          role = mapping.role;
-          break;
-        }
-      }
-
-      // Fallback: if no FMS group matched but user is Odoo admin, treat as Admin
-      if (role === "Staff") {
-        const isOdooAdmin = userGroups.some(
-          (g) => g.full_name === "Administration / Settings" || g.full_name === "Administration / Access Rights"
-        );
-        if (isOdooAdmin) role = "Admin";
-      }
+      const userGroups = await fetchFmsGroupsForUser(session.uid);
+      const role = resolveUserRole(userGroups);
 
       const userData = {
         name: session.name,
@@ -99,8 +91,48 @@ export default function Login() {
     }
   };
 
+  useEffect(() => {
+    if (!isAuthenticated || !user?.uid) {
+      setSessionChecked(true);
+      return;
+    }
+
+    let cancelled = false;
+
+    (async () => {
+      try {
+        const userGroups = await fetchFmsGroupsForUser(user.uid);
+        const role = resolveUserRole(userGroups);
+        const token = localStorage.getItem("messob_token");
+
+        if (!cancelled) {
+          if (role !== user.role) {
+            loginUser({ ...user, role }, token);
+          }
+          setResolvedRole(role);
+        }
+      } catch {
+        if (!cancelled) setResolvedRole(user.role);
+      } finally {
+        if (!cancelled) setSessionChecked(true);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isAuthenticated, user?.uid, loginUser]);
+
   if (isAuthenticated) {
-    return <Navigate to={getRedirectPathByRole(currentUserRole)} replace />;
+    if (!sessionChecked) {
+      return (
+        <div className="min-h-screen flex items-center justify-center bg-gray-50">
+          <p className="text-sm font-medium text-gray-500">Loading your workspace…</p>
+        </div>
+      );
+    }
+    const redirectRole = resolvedRole ?? currentUserRole;
+    return <Navigate to={getRedirectPathByRole(redirectRole)} replace />;
   }
 
   return (

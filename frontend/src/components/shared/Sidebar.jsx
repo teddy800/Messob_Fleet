@@ -45,20 +45,20 @@ const menuItems = [
     icon: Fuel,
     roles: ["Driver"],
   },
+  {
+    name: "Dashboard",
+    path: "/dashboard/admin",
+    icon: LayoutDashboard,
+    roles: ["Admin"],
+  },
   // Dispatcher: current requests only
   {
     name: "Current Requests",
     path: "/dashboard/dispatch/approvals",
     icon: CheckSquare,
-    roles: ["Dispatcher"],
+    roles: ["Dispatcher", "Admin"],
   },
   // Admin: full operations menu
-  {
-    name: "Dashboard",
-    path: "/dashboard",
-    icon: LayoutDashboard,
-    roles: ["Admin"],
-  },
   {
     name: "User Management",
     path: "/dashboard/admin/users",
@@ -110,6 +110,15 @@ const menuItems = [
   },
 ];
 
+/** Highlight only the most specific menu path that matches the current URL. */
+function getActiveMenuPath(pathname, paths) {
+  const matches = paths.filter(
+    (path) => pathname === path || pathname.startsWith(`${path}/`)
+  );
+  if (matches.length === 0) return null;
+  return matches.reduce((best, path) => (path.length > best.length ? path : best));
+}
+
 export default function Sidebar({ setOpen }) {
   const location = useLocation();
   const navigate = useNavigate();
@@ -122,6 +131,11 @@ export default function Sidebar({ setOpen }) {
   // If no user is logged in, show an empty array to prevent errors.
   const filteredMenu = menuItems.filter(item => 
     user?.role ? item.roles.includes(user.role) : false
+  );
+
+  const activePath = getActiveMenuPath(
+    location.pathname,
+    filteredMenu.map((item) => item.path)
   );
 
   const handleLogout = () => {
@@ -155,9 +169,7 @@ export default function Sidebar({ setOpen }) {
       {/* --- Navigation Menu --- */}
       <nav className="flex-1 space-y-2 overflow-y-auto no-scrollbar">
         {filteredMenu.map((item) => {
-          const isActive =
-            location.pathname === item.path ||
-            location.pathname.startsWith(item.path + "/");
+          const isActive = item.path === activePath;
           return (
             <Link
               key={item.path}

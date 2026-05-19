@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { FileText, Car, CheckCircle, Clock, XCircle } from "lucide-react";
+import { FileText, Car, CheckCircle, Clock, XCircle, BadgeCheck } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { searchRead } from "@/lib/odooApi";
 
@@ -44,6 +44,7 @@ export default function Reports() {
           { label: "Total Trips",  value: counts.total,     icon: Car,         color: "text-brand-blue" },
           { label: "Pending",      value: counts.pending,   icon: Clock,       color: "text-yellow-600" },
           { label: "Approved",     value: counts.approved,  icon: CheckCircle, color: "text-green-600" },
+          { label: "Completed",    value: counts.completed, icon: BadgeCheck, color: "text-purple-600" },
           { label: "Rejected",     value: counts.rejected,  icon: XCircle,     color: "text-red-500" },
         ].map((s) => (
           <Card key={s.label} className="border border-gray-100 shadow-sm">

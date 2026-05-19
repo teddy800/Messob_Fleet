@@ -2,7 +2,27 @@
 // React hook for fetching trip requests from Odoo
 
 import { useState, useEffect, useCallback } from "react";
-import { searchRead, callMethod, writeRecord } from "./odooApi";
+import { searchRead, callMethod, writeRecord, createRecord } from "./odooApi";
+
+/** Map frontend select values → Odoo selection keys on messob.fms.trip */
+const VEHICLE_CATEGORY_TO_ODOO = {
+  sedan: "sedan",
+  suv: "suv",
+  bus: "bus",
+  minibus: "minibus",
+  pickup: "pickup",
+  "mini-bus": "minibus",
+  "pick-up": "pickup",
+};
+
+function toOdooDatetime(date, hour, minute = 0) {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, "0");
+  const d = String(date.getDate()).padStart(2, "0");
+  const h = String(hour).padStart(2, "0");
+  const min = String(minute).padStart(2, "0");
+  return `${y}-${m}-${d} ${h}:${min}:00`;
+}
 
 const TRIP_FIELDS = [
   "name", "state", "purpose", "vehicle_category",
@@ -52,6 +72,32 @@ export function useTripRequests(filterState = null) {
 }
 
 /**
+ * Create a trip request in Odoo (staff new-request wizard).
+ * Matches messob.fms.trip fields and the backend wizard submit flow (state: pending).
+ */
+export async function createTripRequest(formData) {
+  const vehicle_category =
+    VEHICLE_CATEGORY_TO_ODOO[formData.vehicleCategory] || formData.vehicleCategory;
+
+  const start_dt = toOdooDatetime(formData.departureDate, 8, 0);
+  let end_dt = toOdooDatetime(formData.arrivalDate, 17, 0);
+
+  if (new Date(end_dt.replace(" ", "T")) <= new Date(start_dt.replace(" ", "T"))) {
+    end_dt = toOdooDatetime(formData.arrivalDate, 18, 0);
+  }
+
+  return createRecord("messob.fms.trip", {
+    purpose: formData.purpose.trim(),
+    vehicle_category,
+    start_dt,
+    end_dt,
+    pickup: formData.startPoint.trim(),
+    destination: formData.destination.trim(),
+    state: "pending",
+  });
+}
+
+/**
  * Fetch available fleet vehicles from Odoo
  */
 export async function fetchVehicles() {
@@ -62,7 +108,12 @@ export async function fetchVehicles() {
  * Fetch drivers from the FMS driver model
  */
 export async function fetchDrivers() {
-  return searchRead("messob.fms.driver", [["is_active", "=", true]], ["id", "name", "phone"], 100);
+  return searchRead(
+    "messob.fms.driver",
+    [["is_active", "=", true]],
+    ["id", "name", "phone", "partner_id"],
+    100
+  );
 }
 
 /**

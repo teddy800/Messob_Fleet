@@ -1,4 +1,5 @@
-import { useNavigate } from "react-router-dom";
+import { useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Clock, CheckCircle, XCircle, ChevronRight } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { useUserStore } from "@/store/useUserStore";
@@ -24,8 +25,22 @@ const statusConfig = {
 
 export default function RequestStatus() {
   const navigate = useNavigate();
+  const location = useLocation();
   const user = useUserStore((state) => state.user);
-  const { trips, loading } = useTripRequests(["pending", "approved", "rejected", "in_progress", "completed"]);
+  const { trips, loading, refetch } = useTripRequests([
+    "pending",
+    "approved",
+    "rejected",
+    "in_progress",
+    "completed",
+    "draft",
+  ]);
+
+  useEffect(() => {
+    if (location.state?.newTripId) {
+      refetch();
+    }
+  }, [location.state?.newTripId, refetch]);
 
   const counts = {
     pending:  trips.filter((r) => r.state === "pending").length,

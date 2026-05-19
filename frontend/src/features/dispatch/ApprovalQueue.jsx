@@ -13,17 +13,22 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { useTripRequests, fetchVehicles, fetchDrivers, approveTrip, rejectTrip } from "@/lib/useTripRequests";
+import { searchRead } from "@/lib/odooApi";
 
 const statusBadge = {
   Pending:  "bg-yellow-100 text-yellow-700 border-yellow-200",
   Approved: "bg-green-100 text-green-700 border-green-200",
   Rejected: "bg-red-100 text-red-700 border-red-200",
+  "In Progress": "bg-blue-100 text-blue-700 border-blue-200",
+  Completed: "bg-green-100 text-green-700 border-green-200",
 };
 
 const statusIcon = {
   Pending:  <Clock className="h-3.5 w-3.5" />,
   Approved: <CheckCircle className="h-3.5 w-3.5" />,
   Rejected: <XCircle className="h-3.5 w-3.5" />,
+  "In Progress": <Clock className="h-3.5 w-3.5" />,
+  Completed: <CheckCircle className="h-3.5 w-3.5" />,
 };
 
 function DetailRow({ icon: Icon, label, value }) {
@@ -39,7 +44,7 @@ function DetailRow({ icon: Icon, label, value }) {
 }
 
 export default function ApprovalQueue() {
-  const { trips, loading, refetch } = useTripRequests(["pending", "approved", "rejected"]);
+  const { trips, loading, refetch } = useTripRequests(["pending", "approved", "rejected", "in_progress", "completed"]);
   const [vehicles, setVehicles] = useState([]);
   const [drivers, setDrivers]   = useState([]);
   const [selected, setSelected] = useState(null);
@@ -82,7 +87,26 @@ export default function ApprovalQueue() {
     setSubmitting(true);
     setError(null);
     try {
-      await approveTrip(selected.id, parseInt(vehicleId), parseInt(driverId));
+      const selectedDriver = drivers.find((d) => String(d.id) === String(driverId));
+      let driverPartnerId = Array.isArray(selectedDriver?.partner_id)
+        ? selectedDriver.partner_id[0]
+        : selectedDriver?.partner_id;
+
+      if (!driverPartnerId && selectedDriver?.name) {
+        const [partner] = await searchRead(
+          "res.partner",
+          [["name", "ilike", selectedDriver.name]],
+          ["id"],
+          1
+        );
+        driverPartnerId = partner?.id;
+      }
+
+      if (!driverPartnerId) {
+        throw new Error("Unable to resolve partner for selected driver.");
+      }
+
+      await approveTrip(selected.id, parseInt(vehicleId), driverPartnerId);
       setDialogOpen(false);
       refetch();
     } catch (err) {
@@ -93,13 +117,22 @@ export default function ApprovalQueue() {
   };
 
   const sorted = [...trips].sort((a, b) => {
-    const order = { pending: 0, approved: 1, rejected: 2 };
-    return (order[a.state] ?? 3) - (order[b.state] ?? 3);
+    const order = { pending: 0, approved: 1, in_progress: 2, completed: 3, rejected: 4 };
+    return (order[a.state] ?? 5) - (order[b.state] ?? 5);
   });
 
   const pendingCount = trips.filter((r) => r.state === "pending").length;
 
-  const stateLabel = (state) => state.charAt(0).toUpperCase() + state.slice(1);
+  const stateLabel = (state) => {
+    const labels = {
+      pending: "Pending",
+      approved: "Approved",
+      rejected: "Rejected",
+      in_progress: "In Progress",
+      completed: "Completed",
+    };
+    return labels[state] || state.charAt(0).toUpperCase() + state.slice(1);
+  };
 
   return (
     <div className="space-y-6">
@@ -118,10 +151,10 @@ export default function ApprovalQueue() {
           {sorted.map((req) => (
             <div
               key={req.id}
-              className="bg-white border border-gray-100 rounded-xl px-5 py-4 flex items-center justify-between hover:shadow-md transition-shadow"
+              className="bg-white dark:bg-gray-600 border border-gray-100 dark:border-gray-600 rounded-xl px-5 py-4 flex items-center justify-between hover:shadow-md transition-shadow"
             >
               <div className="flex items-center gap-4 min-w-0">
-                <div className="hidden sm:flex flex-col items-center justify-center bg-brand-blue/5 rounded-lg px-3 py-2 shrink-0">
+                <div className="hidden sm:flex flex-col items-center justify-center bg-brand-blue/5 rounded-lg px-3 py-2 shrink-0 dark:bg-gray-800">
                   <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400">
                     {new Date(req.create_date).toLocaleDateString("en-US", { month: "short" })}
                   </span>
@@ -152,7 +185,7 @@ export default function ApprovalQueue() {
                 variant="outline"
                 size="sm"
                 onClick={() => openDialog(req)}
-                className="shrink-0 ml-4 rounded-lg border-brand-blue/30 text-brand-blue hover:bg-brand-blue hover:text-white transition-colors"
+                className="shrink-0 ml-4 rounded-lg cursor-pointer border-brand-blue/30 text-brand-blue hover:bg-brand-blue hover:text-white transition-colors dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-900 dark:bg-gray-800 dark:hover:text-white"
               >
                 <Eye className="h-4 w-4 mr-1.5" /> View
               </Button>
@@ -259,7 +292,9 @@ export default function ApprovalQueue() {
                       </SelectTrigger>
                       <SelectContent>
                         {drivers.map((d) => (
-                          <SelectItem key={d.id} value={String(d.id)}>{d.name}</SelectItem>
+                          <SelectItem key={d.id} value={String(d.id)}>
+                            {d.name}
+                          </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>

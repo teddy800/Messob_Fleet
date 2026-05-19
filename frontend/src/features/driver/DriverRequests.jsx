@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
-import { MapPin, Clock, Calendar, User, Play, CheckCircle } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { MapPin, Clock, Calendar, User, Play, Check, CheckCircle } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useUserStore } from "@/store/useUserStore";
-import { searchRead, callMethod } from "@/lib/odooApi";
+import { searchRead, writeRecord } from "@/lib/odooApi";
 
 const statusStyle = {
   approved:    { label: "Assigned",    cls: "bg-blue-100 text-blue-700 border-blue-200" },
@@ -14,30 +15,92 @@ const statusStyle = {
 
 export default function DriverRequests() {
   const user = useUserStore((s) => s.user);
-  const [trips, setTrips]     = useState([]);
+  const [partnerId, setPartnerId] = useState(null);
+  const [trips, setTrips] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [driverLookupLoading, setDriverLookupLoading] = useState(true);
+
+  const fetchPartnerId = async () => {
+    if (!user?.uid) {
+      setDriverLookupLoading(false);
+      return;
+    }
+
+    try {
+      const [userRecord] = await searchRead(
+        "res.users",
+        [["id", "=", user.uid]],
+        ["partner_id"],
+        1
+      );
+
+      const partner = userRecord?.partner_id;
+      if (Array.isArray(partner)) {
+        setPartnerId(partner[0]);
+      }
+    } catch (e) {
+      console.error("Driver partner lookup failed:", e);
+    } finally {
+      setDriverLookupLoading(false);
+    }
+  };
 
   const fetchTrips = async () => {
     setLoading(true);
     try {
+      const domain = [["state", "in", ["approved", "in_progress", "completed"]]];
+      if (partnerId) {
+        domain.unshift(["assigned_driver_id", "=", partnerId]);
+      }
+
       const data = await searchRead(
         "messob.fms.trip",
-        [["state", "in", ["approved", "in_progress", "completed"]]],
+        domain,
         ["id", "name", "state", "pickup", "destination", "start_dt", "end_dt", "requester_id", "assigned_vehicle_id", "purpose"],
         100
       );
       setTrips(data);
-    } catch (e) { console.error(e); }
-    finally { setLoading(false); }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  useEffect(() => { fetchTrips(); }, []);
+  useEffect(() => { fetchPartnerId(); }, [user?.uid]);
+
+  useEffect(() => {
+    if (!driverLookupLoading) {
+      fetchTrips();
+    }
+  }, [driverLookupLoading, partnerId]);
+
+  const navigate = useNavigate();
 
   const handleStart = async (id) => {
+    setLoading(true);
     try {
-      await callMethod("messob.fms.trip", "write", [id], { state: "in_progress" });
+      await writeRecord("messob.fms.trip", [id], { state: "in_progress" });
       fetchTrips();
-    } catch (e) { console.error(e); }
+    } catch (e) {
+      console.error(e);
+      setLoading(false);
+    }
+  };
+
+  const handleComplete = async (id) => {
+    setLoading(true);
+    try {
+      await writeRecord("messob.fms.trip", [id], { state: "completed" });
+      fetchTrips();
+    } catch (e) {
+      console.error(e);
+      setLoading(false);
+    }
+  };
+
+  const handleFuelChange = (id) => {
+    navigate(`/dashboard/driver/fuel?tripId=${id}`);
   };
 
   return (
@@ -98,16 +161,30 @@ export default function DriverRequests() {
                     </div>
                   </div>
 
-                  <div className="pt-2 border-t border-gray-100">
+                  <div className="pt-2 border-t border-gray-100 space-y-2">
                     {trip.state === "approved" && (
-                      <Button onClick={() => handleStart(trip.id)}
-                        className="w-full bg-brand-blue hover:bg-blue-900 text-white font-black h-12 rounded-xl gap-2">
+                      <Button
+                        onClick={() => handleStart(trip.id)}
+                        className="w-full bg-brand-blue hover:bg-blue-900 text-white font-black h-12 rounded-xl gap-2"
+                      >
                         <Play className="h-4 w-4 fill-white" /> Start Trip
                       </Button>
                     )}
                     {trip.state === "in_progress" && (
-                      <div className="flex items-center justify-center gap-2 py-2 text-yellow-600 font-bold text-sm">
-                        <span className="h-2 w-2 rounded-full bg-yellow-500 animate-pulse" /> Trip in progress...
+                      <div className="grid grid-cols-2 gap-3">
+                        <Button
+                          onClick={() => handleComplete(trip.id)}
+                          className="w-full bg-green-600 hover:bg-green-700 text-white font-black h-12 rounded-xl gap-2"
+                        >
+                          <Check className="h-4 w-4" /> Complete
+                        </Button>
+                        <Button
+                          variant="outline"
+                          onClick={() => handleFuelChange(trip.id)}
+                          className="w-full text-brand-blue border-brand-blue/30 hover:bg-brand-blue/5 font-black h-12 rounded-xl"
+                        >
+                          Fuel Change
+                        </Button>
                       </div>
                     )}
                     {trip.state === "completed" && (

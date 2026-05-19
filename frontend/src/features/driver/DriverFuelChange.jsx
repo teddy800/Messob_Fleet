@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { Fuel, CheckCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -14,6 +15,7 @@ export default function DriverFuelChange() {
   const [tripId, setTripId]       = useState("");
   const [trips, setTrips]         = useState([]);
   const [error, setError]         = useState(null);
+  const [searchParams] = useSearchParams();
 
   const { register, handleSubmit, reset, formState: { errors } } = useForm({
     defaultValues: { station_name: "", liters: "", price: "", odometer: "", date: "" },
@@ -21,9 +23,16 @@ export default function DriverFuelChange() {
 
   useEffect(() => {
     // Load active trips for the driver to link fuel log to
+    const tripKey = searchParams.get("tripId");
     searchRead("messob.fms.trip", [["state", "in", ["approved", "in_progress"]]], ["id", "name", "destination"], 50)
-      .then(setTrips).catch(() => {});
-  }, []);
+      .then((activeTrips) => {
+        setTrips(activeTrips);
+        if (tripKey && activeTrips.some((t) => String(t.id) === String(tripKey))) {
+          setTripId(tripKey);
+        }
+      })
+      .catch(() => {});
+  }, [searchParams]);
 
   const onSubmit = async (data) => {
     setError(null);

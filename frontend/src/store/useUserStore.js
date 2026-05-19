@@ -8,22 +8,25 @@ export const useUserStore = create((set, get) => ({
   // Initialize from localStorage on app start
   initializeAuth: () => {
     const token = localStorage.getItem("messob_token");
-    const role = localStorage.getItem("user-role");
-    
-    if (token && role) {
-      // Mock user data based on role - in real app, you'd decode JWT
-      const mockUsers = {
-        Staff: { name: "Sumeya (Staff)", role: "Staff", email: "staff@mesobcenter.et" },
-        Dispatcher: { name: "Abebe (Dispatcher)", role: "Dispatcher", email: "dispatcher@mesobcenter.et" },
-        Admin: { name: "Admin User", role: "Admin", email: "admin@mesobcenter.et" },
-        Maintainer: { name: "Mike (Maintainer)", role: "Maintainer", email: "maintainer@mesobcenter.et" },
-        Driver: { name: "Dawit (Driver)", role: "Driver", email: "driver@mesobcenter.et" },
-      };
-      
-      set({ 
-        user: mockUsers[role] || null, 
-        isAuthenticated: true 
-      });
+    const storedUser = localStorage.getItem("user-data");
+
+    if (!token) return;
+
+    if (storedUser) {
+      try {
+        const user = JSON.parse(storedUser);
+        set({ user, isAuthenticated: true });
+        return;
+      } catch {
+        localStorage.removeItem("user-data");
+      }
+    }
+
+    // Legacy sessions (role only) — clear so user re-authenticates with correct role
+    const legacyRole = localStorage.getItem("user-role");
+    if (legacyRole) {
+      localStorage.removeItem("messob_token");
+      localStorage.removeItem("user-role");
     }
   },
 
@@ -42,6 +45,7 @@ export const useUserStore = create((set, get) => ({
     // Store the token and role for persistence
     localStorage.setItem("messob_token", token);
     localStorage.setItem("user-role", userData.role);
+    localStorage.setItem("user-data", JSON.stringify(userData));
   },
 
   /**
@@ -65,6 +69,7 @@ export const useUserStore = create((set, get) => ({
     });
     
     localStorage.setItem("user-role", role);
+    localStorage.setItem("user-data", JSON.stringify(selectedUser));
     localStorage.setItem("messob_token", "dev-mock-token");
   },
 
@@ -75,5 +80,6 @@ export const useUserStore = create((set, get) => ({
     set({ user: null, isAuthenticated: false });
     localStorage.removeItem("messob_token");
     localStorage.removeItem("user-role");
+    localStorage.removeItem("user-data");
   },
 }));

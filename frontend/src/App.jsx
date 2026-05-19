@@ -2,6 +2,7 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import DashboardLayout from "./components/layouts/DashboardLayout";
 import Login from "./features/auth/Login";
 import ProtectedRoute from "./features/auth/ProtectedRoute";
+import RoleGuard from "./features/auth/RoleGuard";
 import RoleIndex from "./features/RoleIndex";
 import RequestWizard from "./features/requests/components/RequestWizard";
 import RequestStatus from "./features/requests/RequestStatus";
@@ -33,29 +34,39 @@ export default function App() {
         <Route path="/dashboard" element={<DashboardLayout />}>
           {/* Index: redirect each role to their home */}
           <Route index element={<RoleIndex />} />
-          {/* Staff */}
-          <Route path="requests/new" element={<RequestWizard />} />
-          <Route path="requests/status" element={<RequestStatus />} />
-          <Route path="requests/status/:status" element={<RequestList />} />
-          {/* Driver */}
-          <Route path="driver/requests" element={<DriverRequests />} />
-          <Route path="driver/fuel" element={<DriverFuelChange />} />
-          {/* Dispatcher */}
-          <Route path="dispatch/approvals" element={<ApprovalQueue />} />
-          {/* Admin */}
-          <Route path="admin" element={<AdminDashboard />} />
-          <Route path="admin/users" element={<UserManagement />} />
-          <Route path="admin/vehicles" element={<VehicleManagement />} />
-          <Route path="admin/drivers" element={<DriverManagement />} />
-          <Route path="admin/reports" element={<Reports />} />
-          {/* Mechanic */}
-          <Route path="mechanic" element={<MechanicDashboard />} />
-          <Route path="mechanic/repair-log" element={<RepairLog />} />
-          {/* Shared */}
+
+          <Route element={<RoleGuard allowedRoles={["Staff"]} />}>
+            <Route path="requests/new" element={<RequestWizard />} />
+            <Route path="requests/status" element={<RequestStatus />} />
+            <Route path="requests/status/:status" element={<RequestList />} />
+          </Route>
+
+          <Route element={<RoleGuard allowedRoles={["Driver"]} />}>
+            <Route path="driver/requests" element={<DriverRequests />} />
+            <Route path="driver/fuel" element={<DriverFuelChange />} />
+          </Route>
+
+          <Route element={<RoleGuard allowedRoles={["Dispatcher", "Admin"]} />}>
+            <Route path="dispatch/approvals" element={<ApprovalQueue />} />
+          </Route>
+
+          <Route element={<RoleGuard allowedRoles={["Admin"]} />}>
+            <Route path="admin" element={<AdminDashboard />} />
+            <Route path="admin/users" element={<UserManagement />} />
+            <Route path="admin/vehicles" element={<VehicleManagement />} />
+            <Route path="admin/drivers" element={<DriverManagement />} />
+            <Route path="admin/reports" element={<Reports />} />
+            <Route path="fleet" element={<ManageFleet />} />
+            <Route path="maintenance" element={<Maintenance />} />
+          </Route>
+
+          <Route element={<RoleGuard allowedRoles={["Maintainer"]} />}>
+            <Route path="mechanic" element={<MechanicDashboard />} />
+            <Route path="mechanic/repair-log" element={<RepairLog />} />
+            <Route path="fuel-log" element={<FuelLog />} />
+          </Route>
+
           <Route path="profile" element={<Profile />} />
-          <Route path="fleet" element={<ManageFleet />} />
-          <Route path="fuel-log" element={<FuelLog />} />
-          <Route path="maintenance" element={<Maintenance />} />
         </Route>
       </Route>
 

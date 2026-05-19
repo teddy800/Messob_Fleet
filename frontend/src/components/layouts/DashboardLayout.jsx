@@ -76,13 +76,7 @@ export default function DashboardLayout() {
               <Bell className="h-5 w-5" />
               <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-red-500" />
             </Button>
-
-            <div className="flex items-center gap-2 rounded-full bg-gray-100 dark:bg-gray-800 px-2 py-1">
-              <UserAvatar size={8} textSize="text-sm" />
-              <span className="hidden sm:block text-sm font-medium text-gray-800 dark:text-gray-100">
-                {user.name}
-              </span>
-            </div>
+              <UserAvatar size={10} textSize="text-sm" />            
           </div>
         </header>
 
