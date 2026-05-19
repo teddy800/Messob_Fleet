@@ -77,11 +77,11 @@ export default function Reports() {
                 </thead>
                 <tbody>
                   {trips.map((t) => (
-                    <tr key={t.id} className="border-b border-gray-50 hover:bg-gray-50 transition-colors">
+                    <tr key={t.id} className="border-b border-gray-50 hover:bg-gray-50 transition-colors dark:hover:bg-gray-700">
                       <td className="py-3 px-3 font-bold text-brand-blue">{t.name}</td>
-                      <td className="py-3 px-3 text-gray-700">{Array.isArray(t.requester_id) ? t.requester_id[1] : "—"}</td>
-                      <td className="py-3 px-3 text-gray-600">{t.pickup} → {t.destination}</td>
-                      <td className="py-3 px-3 text-gray-500 text-xs">{t.start_dt ? new Date(t.start_dt).toLocaleDateString() : "—"}</td>
+                      <td className="py-3 px-3 text-gray-700 dark:text-gray-300">{Array.isArray(t.requester_id) ? t.requester_id[1] : "—"}</td>
+                      <td className="py-3 px-3 text-gray-600 dark:text-gray-300">{t.pickup} → {t.destination}</td>
+                      <td className="py-3 px-3 text-gray-500 text-xs dark:text-gray-400">{t.start_dt ? new Date(t.start_dt).toLocaleDateString() : "—"}</td>
                       <td className="py-3 px-3">
                         <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded-full ${stateBadge[t.state] || "bg-gray-100 text-gray-500"}`}>
                           {t.state}

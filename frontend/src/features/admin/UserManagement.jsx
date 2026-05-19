@@ -350,9 +350,9 @@ export default function UserManagement() {
       {loading ? (
         <p className="text-sm text-gray-400">Loading...</p>
       ) : (
-        <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+        <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden dark:bg-gray-800 dark:border-gray-700">
           <Table>
-            <TableHeader className="bg-gray-50">
+            <TableHeader className="bg-gray-50 dark:bg-gray-700">
               <TableRow>
                 {["Name", "Email / Login", "Role", "Action"].map((h) => (
                   <TableHead
@@ -366,9 +366,9 @@ export default function UserManagement() {
             </TableHeader>
             <TableBody>
               {users.map((u) => (
-                <TableRow key={u.id} className="hover:bg-gray-50 transition-colors">
+                <TableRow key={u.id} className="hover:bg-gray-50 transition-colors dark:hover:bg-gray-700">
                   <TableCell className="font-bold text-sm">{u.name}</TableCell>
-                  <TableCell className="text-sm text-gray-600">{u.login}</TableCell>
+                  <TableCell className="text-sm text-gray-600 dark:text-gray-400">{u.login}</TableCell>
                   <TableCell>
                     <span
                       className={`text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded-full ${roleBadge[u.roleName] || "bg-gray-100 text-gray-500"}`}
@@ -381,7 +381,7 @@ export default function UserManagement() {
                       variant="outline"
                       size="sm"
                       onClick={() => openEdit(u)}
-                      className="rounded-lg border-brand-blue/30 text-brand-blue hover:bg-brand-blue hover:text-white"
+                      className="rounded-lg border-brand-blue/30 text-brand-blue hover:bg-brand-blue hover:text-white dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-900 dark:bg-gray-800 dark:hover:text-white"
                     >
                       <Pencil className="h-3.5 w-3.5" />
                     </Button>
@@ -389,7 +389,7 @@ export default function UserManagement() {
                       variant="outline"
                       size="sm"
                       onClick={() => handleDelete(u.id)}
-                      className="rounded-lg border-red-200 text-red-500 hover:bg-red-500 hover:text-white"
+                      className="rounded-lg border-red-200 text-red-500 hover:bg-red-500 hover:text-white dark:border-red-700 dark:text-red-400 dark:hover:bg-red-600 dark:hover:text-white"
                     >
                       <Trash2 className="h-3.5 w-3.5" />
                     </Button>
@@ -402,19 +402,19 @@ export default function UserManagement() {
       )}
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-md p-6 max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-md p-6 max-h-[90vh] overflow-y-auto dark:bg-gray-800">
           <DialogHeader>
-            <DialogTitle className="text-brand-blue font-black">
+            <DialogTitle className="text-brand-blue font-black dark:text-gray-100">
               {editing ? "Edit User" : "Add New User"}
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-2">
             <div className="space-y-1.5">
-              <Label className="text-xs font-bold uppercase tracking-widest text-gray-500">
+              <Label className="text-xs font-bold uppercase tracking-widest text-gray-500 dark:text-gray-400">
                 Full Name
               </Label>
               <Input
-                className="h-11 border-2 rounded-xl"
+                className="h-11 border-2 rounded-xl dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300"
                 placeholder="e.g. Sumeya Hassen"
                 value={form.name}
                 onChange={(e) => setForm({ ...form, name: e.target.value })}
@@ -423,11 +423,11 @@ export default function UserManagement() {
 
             {!editing && (
               <div className="space-y-1.5">
-                <Label className="text-xs font-bold uppercase tracking-widest text-gray-500">
+                <Label className="text-xs font-bold uppercase tracking-widest text-gray-500 dark:text-gray-400">
                   Email (Login)
                 </Label>
                 <Input
-                  className="h-11 border-2 rounded-xl"
+                  className="h-11 border-2 rounded-xl dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300"
                   placeholder="name@mesobcenter.et"
                   type="email"
                   value={form.login}
@@ -438,19 +438,19 @@ export default function UserManagement() {
 
             {editing && (
               <div className="space-y-1.5">
-                <Label className="text-xs font-bold uppercase tracking-widest text-gray-500">
+                <Label className="text-xs font-bold uppercase tracking-widest text-gray-500 dark:text-gray-400">
                   Email (Login)
                 </Label>
-                <Input className="h-11 border-2 rounded-xl bg-gray-50" value={form.login} readOnly />
+                <Input className="h-11 border-2 rounded-xl bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300" value={form.login} readOnly />
               </div>
             )}
 
             <div className="space-y-1.5">
-              <Label className="text-xs font-bold uppercase tracking-widest text-gray-500">
+              <Label className="text-xs font-bold uppercase tracking-widest text-gray-500 dark:text-gray-400">
                 FMS Role
               </Label>
               <Select value={form.role} onValueChange={(role) => setForm({ ...form, role })}>
-                <SelectTrigger className="h-11 border-2 rounded-xl">
+                <SelectTrigger className="h-11 border-2 rounded-xl dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300">
                   <SelectValue placeholder="Select role" />
                 </SelectTrigger>
                 <SelectContent>
@@ -464,9 +464,9 @@ export default function UserManagement() {
             </div>
 
             {form.role === "Driver" && (
-              <div className="space-y-4 pt-2 border-t border-gray-100">
+              <div className="space-y-4 pt-2 border-t border-gray-100 dark:border-gray-700">
                 <div className="space-y-1.5">
-                  <Label className="text-xs font-bold uppercase tracking-widest text-gray-500">
+                  <Label className="text-xs font-bold uppercase tracking-widest text-gray-500 dark:text-gray-400">
                     License Number
                   </Label>
                   <Input
@@ -477,11 +477,11 @@ export default function UserManagement() {
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <Label className="text-xs font-bold uppercase tracking-widest text-gray-500">
+                  <Label className="text-xs font-bold uppercase tracking-widest text-gray-500 dark:text-gray-400">
                     Phone Number
                   </Label>
                   <Input
-                    className="h-11 border-2 rounded-xl"
+                    className="h-11 border-2 rounded-xl dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300"
                     placeholder="e.g. +251 91 234 5678"
                     value={form.phone}
                     onChange={(e) => setForm({ ...form, phone: e.target.value })}
@@ -490,7 +490,7 @@ export default function UserManagement() {
               </div>
             )}
 
-            <div className="pt-2 border-t border-gray-100 space-y-4">
+            <div className="pt-2 border-t border-gray-100 dark:border-gray-700 space-y-4">
               <p className="text-xs font-bold uppercase tracking-widest text-brand-blue">
                 {editing ? "Change password (optional)" : "Set password"}
               </p>
@@ -518,11 +518,11 @@ export default function UserManagement() {
 
             {error && <p className="text-sm text-red-500 font-semibold">{error}</p>}
           </div>
-          <DialogFooter className="gap-2">
+          <DialogFooter className="gap-2 dark:bg-gray-700">
             <Button variant="ghost" onClick={() => setDialogOpen(false)}>
-              <X className="h-4 w-4 mr-1" /> Cancel
+              <X className="h-4 w-4 mr-1 dark:text-gray-200" /> Cancel
             </Button>
-            <Button onClick={handleSave} className="bg-brand-blue hover:bg-blue-900 text-white font-bold">
+            <Button onClick={handleSave} className="bg-brand-blue hover:bg-blue-900 text-white font-bold rounded-xl gap-2">
               <Check className="h-4 w-4 mr-1" /> {editing ? "Save Changes" : "Add User"}
             </Button>
           </DialogFooter>

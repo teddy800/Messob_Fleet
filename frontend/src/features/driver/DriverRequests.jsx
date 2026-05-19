@@ -181,7 +181,7 @@ export default function DriverRequests() {
                         <Button
                           variant="outline"
                           onClick={() => handleFuelChange(trip.id)}
-                          className="w-full text-brand-blue border-brand-blue/30 hover:bg-brand-blue/5 font-black h-12 rounded-xl"
+                          className="w-full bg-brand-blue border-brand-blue/30 hover:bg-brand-blue/50 font-black h-12 rounded-xl text-white gap-2"
                         >
                           Fuel Change
                         </Button>

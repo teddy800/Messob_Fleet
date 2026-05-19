@@ -10,8 +10,6 @@ import RequestList from "./features/requests/RequestList";
 import ApprovalQueue from "./features/dispatch/ApprovalQueue";
 import Profile from "./features/profile/profile";
 import ManageFleet from "./features/fleet/ManageFleet";
-import FuelLog from "./features/fleet/FuelLog";
-import Maintenance from "./features/fleet/Maintenance";
 import DriverRequests from "./features/driver/DriverRequests";
 import DriverFuelChange from "./features/driver/DriverFuelChange";
 import AdminDashboard from "./features/admin/AdminDashboard";
@@ -57,13 +55,11 @@ export default function App() {
             <Route path="admin/drivers" element={<DriverManagement />} />
             <Route path="admin/reports" element={<Reports />} />
             <Route path="fleet" element={<ManageFleet />} />
-            <Route path="maintenance" element={<Maintenance />} />
           </Route>
 
           <Route element={<RoleGuard allowedRoles={["Maintainer"]} />}>
             <Route path="mechanic" element={<MechanicDashboard />} />
             <Route path="mechanic/repair-log" element={<RepairLog />} />
-            <Route path="fuel-log" element={<FuelLog />} />
           </Route>
 
           <Route path="profile" element={<Profile />} />

@@ -94,21 +94,21 @@ export default function Profile() {
     : avatar;
 
   return (
-    <div className="relative -m-4 md:-m-8 min-h-screen bg-gray-50">
+    <div className="relative -m-4 md:-m-8 min-h-screen bg-gray-50 dark:bg-gray-900">
       <div className="relative z-10 p-4 md:p-8 max-w-4xl mx-auto space-y-6 pt-12">
 
         <div className="flex items-end justify-between mb-8">
           <div>
             <h1 className="text-4xl font-black text-brand-blue">Account Settings</h1>
-            <p className="text-gray-600 font-medium">Manage your MESSOB-FMS identity</p>
+            <p className="text-gray-600 font-medium dark:text-gray-300">Manage your MESSOB-FMS identity</p>
           </div>
           <Button onClick={openEdit} className="bg-brand-blue hover:bg-blue-900 gap-2 rounded-xl">
             <Edit3 className="h-4 w-4" /> Edit Profile
           </Button>
         </div>
 
-        <Card className="border-none shadow-2xl bg-white overflow-hidden rounded-3xl">
-          <CardHeader className="bg-brand-blue text-white p-10 relative overflow-hidden">
+        <Card className="border-none shadow-2xl bg-white overflow-hidden rounded-3xl dark:bg-gray-800">
+          <CardHeader className="bg-brand-blue text-white p-10 relative overflow-hidden border-b-4 border-brand-gold">
             <div className="absolute top-0 right-0 p-6">
               <span className="bg-brand-gold text-brand-blue px-4 py-1 rounded-full text-[10px] font-black uppercase tracking-widest shadow-lg">
                 {user.role} Verified
@@ -144,7 +144,7 @@ export default function Profile() {
                 </div>
                 <div>
                   <p className="text-xs text-gray-400 font-bold uppercase">System Access</p>
-                  <p className="font-bold text-gray-800">{user.role} Permissions</p>
+                  <p className="font-bold text-gray-800 dark:text-gray-300">{user.role} Permissions</p>
                 </div>
               </div>
               <div className="flex items-center gap-4 group">
@@ -153,7 +153,7 @@ export default function Profile() {
                 </div>
                 <div>
                   <p className="text-xs text-gray-400 font-bold uppercase">Department</p>
-                  <p className="font-bold text-gray-800">Fleet Operations & Logistics</p>
+                  <p className="font-bold text-gray-800 dark:text-gray-300">Fleet Operations & Logistics</p>
                 </div>
               </div>
             </div>
@@ -166,7 +166,7 @@ export default function Profile() {
                 </div>
                 <div>
                   <p className="text-xs text-gray-400 font-bold uppercase">Assigned Hub</p>
-                  <p className="font-bold text-gray-800">MESSOB Center, Addis Ababa</p>
+                  <p className="font-bold text-gray-800 dark:text-gray-300">MESSOB Center, Addis Ababa</p>
                 </div>
               </div>
             </div>
@@ -176,17 +176,17 @@ export default function Profile() {
 
       {/* Edit Profile Dialog */}
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
-        <DialogContent className="max-w-md p-6">
+        <DialogContent className="max-w-md p-6 dark:bg-gray-800">
           <DialogHeader>
-            <DialogTitle className="text-brand-blue font-black">Edit Profile</DialogTitle>
+            <DialogTitle className="text-brand-blue font-black dark:text-gray-300">Edit Profile</DialogTitle>
           </DialogHeader>
 
           <div className="space-y-4 py-2">
             {/* Photo */}
             <div className="space-y-1.5">
-              <Label className="text-xs font-bold uppercase tracking-widest text-gray-500">Profile Photo</Label>
+              <Label className="text-xs font-bold uppercase tracking-widest text-gray-500 dark:text-gray-300">Profile Photo</Label>
               <div className="flex items-center gap-4">
-                <div className="h-16 w-16 rounded-2xl overflow-hidden border-2 border-gray-200 shrink-0">
+                <div className="h-16 w-16 rounded-2xl overflow-hidden border-2 border-gray-200 shrink-0 dark:border-gray-700">
                   {previewSrc ? (
                     <img src={previewSrc} alt="" className="h-full w-full object-cover" />
                   ) : (
@@ -196,7 +196,7 @@ export default function Profile() {
                   )}
                 </div>
                 <label className="cursor-pointer">
-                  <span className="text-sm font-bold text-brand-blue border-2 border-brand-blue/30 rounded-xl px-4 py-2 hover:bg-brand-blue hover:text-white transition-colors">
+                  <span className="text-sm font-bold text-brand-blue border-2 border-brand-blue/30 rounded-xl px-4 py-2 hover:bg-brand-blue hover:text-white transition-colors dark:border-gray-300 dark:text-gray-300 dark:hover:bg-gray-300 dark:hover:text-gray-800">
                     Choose Photo
                   </span>
                   <input type="file" accept="image/*" className="hidden" onChange={handlePhotoChange} />
@@ -206,22 +206,22 @@ export default function Profile() {
 
             {/* Name */}
             <div className="space-y-1.5">
-              <Label className="text-xs font-bold uppercase tracking-widest text-gray-500">Full Name</Label>
-              <Input className="h-11 border-2 rounded-xl" placeholder="Your full name"
+              <Label className="text-xs font-bold uppercase tracking-widest text-gray-500 dark:text-gray-300">Full Name</Label>
+              <Input className="h-11 border-2 rounded-xl dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300" placeholder="Your full name"
                 value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
             </div>
 
             {/* Email (read-only) */}
             <div className="space-y-1.5">
-              <Label className="text-xs font-bold uppercase tracking-widest text-gray-500">Email</Label>
-              <Input className="h-11 border-2 rounded-xl bg-gray-50" value={form.email} disabled />
-              <p className="text-xs text-gray-400">Email cannot be changed here. Contact your admin.</p>
+              <Label className="text-xs font-bold uppercase tracking-widest text-gray-500 dark:text-gray-300">Email</Label>
+              <Input className="h-11 border-2 rounded-xl bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300" value={form.email} disabled />
+              <p className="text-xs text-gray-400 dark:text-gray-400">Email cannot be changed here. Contact your admin.</p>
             </div>
 
             {/* Password */}
             <div className="space-y-1.5">
-              <Label className="text-xs font-bold uppercase tracking-widest text-gray-500">New Password</Label>
-              <Input className="h-11 border-2 rounded-xl" type="password"
+              <Label className="text-xs font-bold uppercase tracking-widest text-gray-500 dark:text-gray-300">New Password</Label>
+              <Input className="h-11 border-2 rounded-xl dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300" type="password"
                 placeholder="Leave blank to keep current"
                 value={password} onChange={(e) => setPassword(e.target.value)} />
             </div>
@@ -230,7 +230,7 @@ export default function Profile() {
             {success && <p className="text-sm text-green-600 font-semibold">Profile updated successfully!</p>}
           </div>
 
-          <DialogFooter className="gap-2">
+          <DialogFooter className="gap-2 dark:bg-gray-600">
             <Button variant="ghost" onClick={() => setEditOpen(false)} disabled={saving}>
               <X className="h-4 w-4 mr-1" /> Cancel
             </Button>

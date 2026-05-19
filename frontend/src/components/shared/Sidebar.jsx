@@ -96,18 +96,6 @@ const menuItems = [
     icon: Gauge,
     roles: ["Maintainer"],
   },
-  {
-    name: "Fuel Logs",
-    path: "/dashboard/fuel-log",
-    icon: Fuel,
-    roles: ["Maintainer"],
-  },
-  {
-    name: "Maintenance",
-    path: "/dashboard/maintenance",
-    icon: Gauge,
-    roles: ["Admin"],
-  },
 ];
 
 /** Highlight only the most specific menu path that matches the current URL. */

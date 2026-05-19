@@ -72,9 +72,9 @@ export default function DriverManagement() {
       </div>
 
       {loading ? <p className="text-sm text-gray-400">Loading...</p> : (
-        <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+        <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden dark:bg-gray-800 dark:border-gray-700">
           <Table>
-            <TableHeader className="bg-gray-50">
+            <TableHeader className="bg-gray-50 dark:bg-gray-700">
               <TableRow>
                 {["Name", "License No.", "Phone No.", "Status", "Action"].map((h) => (
                   <TableHead key={h} className={`font-bold text-xs uppercase tracking-widest ${h === "Action" ? "text-right" : ""}`}>{h}</TableHead>
@@ -83,10 +83,10 @@ export default function DriverManagement() {
             </TableHeader>
             <TableBody>
               {drivers.map((d) => (
-                <TableRow key={d.id} className="hover:bg-gray-50 transition-colors">
+                <TableRow key={d.id} className="hover:bg-gray-50 transition-colors dark:hover:bg-gray-700">
                   <TableCell className="font-bold text-sm">{d.name}</TableCell>
-                  <TableCell className="text-sm text-gray-600 font-mono">{d.license_no || "—"}</TableCell>
-                  <TableCell className="text-sm text-gray-600">{d.phone || "—"}</TableCell>
+                  <TableCell className="text-sm text-gray-600 font-mono dark:text-gray-300">{d.license_no || "—"}</TableCell>
+                  <TableCell className="text-sm text-gray-600 dark:text-gray-300">{d.phone || "—"}</TableCell>
                   <TableCell>
                     <Badge className={`text-[10px] font-black uppercase tracking-widest border ${statusBadge[d.status] || statusBadge.active}`}>
                       {d.status || "active"}
@@ -94,10 +94,10 @@ export default function DriverManagement() {
                   </TableCell>
                   <TableCell className="text-right space-x-2">
                     <Button variant="outline" size="sm" onClick={() => openEdit(d)} className="rounded-lg border-brand-blue/30 text-brand-blue hover:bg-brand-blue hover:text-white">
-                      <Pencil className="h-3.5 w-3.5" />
+                      <Pencil className="h-3.5 w-3.5 dark:text-gray-300" />
                     </Button>
                     <Button variant="outline" size="sm" onClick={() => handleDelete(d.id)} className="rounded-lg border-red-200 text-red-500 hover:bg-red-500 hover:text-white">
-                      <Trash2 className="h-3.5 w-3.5" />
+                      <Trash2 className="h-3.5 w-3.5 dark:text-gray-300" />
                     </Button>
                   </TableCell>
                 </TableRow>
