@@ -9,6 +9,7 @@ let sessionId = null;
  * Low-level JSON-RPC call to Odoo
  */
 async function rpc(url, params = {}) {
+  console.log("📡 RPC Call:", url, params);
   const res = await fetch(`${BASE_URL}${url}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -21,9 +22,23 @@ async function rpc(url, params = {}) {
   });
 
   const json = await res.json();
+  console.log("📥 RPC Response:", json);
 
   if (json.error) {
-    throw new Error(json.error.data?.message || json.error.message || "Odoo RPC error");
+    console.error("❌ RPC Error Details:", {
+      message: json.error.message,
+      data: json.error.data,
+      code: json.error.code,
+      fullError: json.error
+    });
+    
+    // Extract meaningful error message
+    const errorMessage = json.error.data?.message 
+      || json.error.data?.arguments?.[0] 
+      || json.error.message 
+      || "Odoo RPC error";
+    
+    throw new Error(errorMessage);
   }
 
   return json.result;
@@ -38,18 +53,31 @@ async function rpc(url, params = {}) {
  * Returns { uid, name, username, session_id, user_context } on success.
  */
 export async function odooLogin(email, password) {
-  const result = await rpc("/web/session/authenticate", {
-    db: "fleet_management",       // your database name
-    login: email,
-    password,
-  });
+  try {
+    const result = await rpc("/web/session/authenticate", {
+      db: "fleet_management",       // your database name
+      login: email,
+      password,
+    });
 
-  if (!result || !result.uid) {
-    throw new Error("Invalid email or password");
+    console.log("🔑 Authentication result:", result);
+
+    if (!result || !result.uid) {
+      throw new Error("Invalid email or password");
+    }
+
+    sessionId = result.session_id;
+    return result;
+  } catch (error) {
+    console.error("🚫 Login failed:", error);
+    
+    // Provide more helpful error messages
+    if (error.message.includes("Access Denied")) {
+      throw new Error("Access Denied: This user may not exist or doesn't have permission to access the system. Please check your credentials in Odoo.");
+    }
+    
+    throw error;
   }
-
-  sessionId = result.session_id;
-  return result;
 }
 
 /**

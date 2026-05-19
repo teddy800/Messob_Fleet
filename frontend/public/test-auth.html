@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Odoo Authentication Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-card {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #1E40AF;
+        }
+        .form-group {
+            margin: 20px 0;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        button {
+            background: #1E40AF;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 10px;
+        }
+        button:hover {
+            background: #1e3a8a;
+        }
+        #result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+            display: none;
+        }
+        .success {
+            background: #f0fdf4;
+            border: 2px solid #10b981;
+            color: #065f46;
+        }
+        .error {
+            background: #fef2f2;
+            border: 2px solid #ef4444;
+            color: #991b1b;
+        }
+        pre {
+            background: #f9f9f9;
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-card">
+        <h1>🔐 Odoo Authentication Test</h1>
+        <p>This page will help you test authentication with your Odoo backend.</p>
+        
+        <div class="form-group">
+            <label for="email">Email:</label>
+            <input type="email" id="email" placeholder="admin@example.com" value="admin@fleetmanagement.com">
+        </div>
+        
+        <div class="form-group">
+            <label for="password">Password:</label>
+            <input type="password" id="password" placeholder="Your password" value="Admin@123">
+        </div>
+        
+        <button onclick="testAuth()">Test Authentication</button>
+        <button onclick="testSession()">Check Current Session</button>
+        <button onclick="listDatabases()">List Databases</button>
+        
+        <div id="result"></div>
+    </div>
+
+    <script>
+        const BASE_URL = "/odoo";
+
+        async function rpc(url, params = {}) {
+            console.log("📡 RPC Call:", url, params);
+            const res = await fetch(`${BASE_URL}${url}`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                credentials: "include",
+                body: JSON.stringify({
+                    jsonrpc: "2.0",
+                    method: "call",
+                    params,
+                }),
+            });
+
+            const json = await res.json();
+            console.log("📥 RPC Response:", json);
+            return json;
+        }
+
+        async function testAuth() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const resultDiv = document.getElementById('result');
+            
+            resultDiv.style.display = 'block';
+            resultDiv.className = '';
+            resultDiv.innerHTML = '<p>Testing authentication...</p>';
+            
+            try {
+                const response = await rpc("/web/session/authenticate", {
+                    db: "fleet_management",
+                    login: email,
+                    password: password,
+                });
+                
+                console.log("Full response:", response);
+                
+                if (response.error) {
+                    resultDiv.className = 'error';
+                    resultDiv.innerHTML = `
+                        <h3>❌ Authentication Failed</h3>
+                        <p><strong>Error:</strong> ${response.error.message || 'Unknown error'}</p>
+                        <p><strong>Details:</strong></p>
+                        <pre>${JSON.stringify(response.error, null, 2)}</pre>
+                        <hr>
+                        <p><strong>Possible Solutions:</strong></p>
+                        <ul>
+                            <li>Check if user "${email}" exists in Odoo</li>
+                            <li>Verify the password is correct</li>
+                            <li>Check if user has proper access rights</li>
+                            <li>Try using your Odoo admin email instead</li>
+                        </ul>
+                    `;
+                } else if (response.result && response.result.uid) {
+                    resultDiv.className = 'success';
+                    resultDiv.innerHTML = `
+                        <h3>✅ Authentication Successful!</h3>
+                        <p><strong>User ID:</strong> ${response.result.uid}</p>
+                        <p><strong>Name:</strong> ${response.result.name}</p>
+                        <p><strong>Username:</strong> ${response.result.username}</p>
+                        <p><strong>Session ID:</strong> ${response.result.session_id}</p>
+                        <p><strong>Company:</strong> ${response.result.company_name}</p>
+                        <hr>
+                        <p><strong>Full Response:</strong></p>
+                        <pre>${JSON.stringify(response.result, null, 2)}</pre>
+                    `;
+                } else {
+                    resultDiv.className = 'error';
+                    resultDiv.innerHTML = `
+                        <h3>⚠️ Unexpected Response</h3>
+                        <p>Authentication returned but no user ID found.</p>
+                        <pre>${JSON.stringify(response, null, 2)}</pre>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.className = 'error';
+                resultDiv.innerHTML = `
+                    <h3>❌ Request Failed</h3>
+                    <p><strong>Error:</strong> ${error.message}</p>
+                    <p>Check browser console for more details.</p>
+                `;
+                console.error("Test failed:", error);
+            }
+        }
+
+        async function testSession() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.style.display = 'block';
+            resultDiv.className = '';
+            resultDiv.innerHTML = '<p>Checking current session...</p>';
+            
+            try {
+                const response = await rpc("/web/session/get_session_info", {});
+                
+                if (response.result && response.result.uid) {
+                    resultDiv.className = 'success';
+                    resultDiv.innerHTML = `
+                        <h3>✅ Active Session Found</h3>
+                        <p><strong>User ID:</strong> ${response.result.uid}</p>
+                        <p><strong>Name:</strong> ${response.result.name}</p>
+                        <p><strong>Username:</strong> ${response.result.username}</p>
+                        <p><strong>Database:</strong> ${response.result.db}</p>
+                        <hr>
+                        <p><strong>Full Session Info:</strong></p>
+                        <pre>${JSON.stringify(response.result, null, 2)}</pre>
+                    `;
+                } else {
+                    resultDiv.className = 'error';
+                    resultDiv.innerHTML = `
+                        <h3>⚠️ No Active Session</h3>
+                        <p>You are not currently logged in to Odoo.</p>
+                        <p>Try authenticating first using the form above.</p>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.className = 'error';
+                resultDiv.innerHTML = `
+                    <h3>❌ Request Failed</h3>
+                    <p><strong>Error:</strong> ${error.message}</p>
+                `;
+                console.error("Session check failed:", error);
+            }
+        }
+
+        async function listDatabases() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.style.display = 'block';
+            resultDiv.className = '';
+            resultDiv.innerHTML = '<p>Fetching databases...</p>';
+            
+            try {
+                const response = await rpc("/web/database/list", {});
+                
+                if (response.result) {
+                    resultDiv.className = 'success';
+                    resultDiv.innerHTML = `
+                        <h3>📊 Available Databases</h3>
+                        <ul>
+                            ${response.result.map(db => `<li><strong>${db}</strong></li>`).join('')}
+                        </ul>
+                        <p>Make sure "fleet_management" is in this list!</p>
+                    `;
+                } else {
+                    resultDiv.className = 'error';
+                    resultDiv.innerHTML = `
+                        <h3>⚠️ No Databases Found</h3>
+                        <p>Could not retrieve database list.</p>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.className = 'error';
+                resultDiv.innerHTML = `
+                    <h3>❌ Request Failed</h3>
+                    <p><strong>Error:</strong> ${error.message}</p>
+                `;
+                console.error("Database list failed:", error);
+            }
+        }
+    </script>
+</body>
+</html>
