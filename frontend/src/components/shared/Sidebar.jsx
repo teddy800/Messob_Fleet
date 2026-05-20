@@ -24,13 +24,13 @@ const menuItems = [
     name: "Request Status",
     path: "/dashboard/requests/status",
     icon: ClipboardList,
-    roles: ["Staff"],
+    roles: ["Staff", "Dispatcher", "Admin"],
   },
   {
     name: "New Request",
     path: "/dashboard/requests/new",
     icon: Car,
-    roles: ["Staff"],
+    roles: ["Staff", "Dispatcher", "Admin"],
   },
   // Driver: trips + fuel
   {

@@ -33,7 +33,7 @@ export default function App() {
           {/* Index: redirect each role to their home */}
           <Route index element={<RoleIndex />} />
 
-          <Route element={<RoleGuard allowedRoles={["Staff"]} />}>
+          <Route element={<RoleGuard allowedRoles={["Staff", "Dispatcher", "Admin"]} />}>
             <Route path="requests/new" element={<RequestWizard />} />
             <Route path="requests/status" element={<RequestStatus />} />
             <Route path="requests/status/:status" element={<RequestList />} />
