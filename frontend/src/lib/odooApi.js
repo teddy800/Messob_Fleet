@@ -140,12 +140,16 @@ export async function writeRecord(model, ids = [], values = {}) {
 
 /**
  * Call any model method (button actions, wizards, etc.)
+ * @param {string} model - Model name
+ * @param {string} method - Method name
+ * @param {Array} args - Arguments array (will be spread as positional args)
+ * @param {Object} kwargs - Keyword arguments
  */
-export async function callMethod(model, method, ids = [], kwargs = {}) {
+export async function callMethod(model, method, args = [], kwargs = {}) {
   return rpc("/web/dataset/call_kw", {
     model,
     method,
-    args: [ids],
+    args: Array.isArray(args) ? args : [args],
     kwargs,
   });
 }

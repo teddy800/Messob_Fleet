@@ -24,10 +24,8 @@ export function useFleetAvailability(date, filters = {}) {
       const response = await callMethod(
         'messob.fms.trip',
         'get_fleet_availability',
-        [],
+        [startDate.toISOString(), endDate.toISOString()],
         {
-          start_date: startDate.toISOString(),
-          end_date: endDate.toISOString(),
           category: filters.category || null,
           status: filters.status || null,
         }

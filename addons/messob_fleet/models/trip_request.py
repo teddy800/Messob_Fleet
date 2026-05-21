@@ -530,7 +530,8 @@ class MessobFmsTrip(models.Model):
             # Get maintenance for this vehicle in date range
             maintenance = Maintenance.search([
                 ('vehicle_id', '=', vehicle.id),
-                ('start_date', '<', end_dt),
+                ('date', '<=', end_dt),
+                ('date', '>=', start_dt),
             ])
             
             result.append({
