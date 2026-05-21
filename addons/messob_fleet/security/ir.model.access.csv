@@ -30,3 +30,10 @@ access_messob_fms_maintenance_alert_driver,messob.fms.maintenance.alert.driver,m
 access_messob_fms_maintenance_alert_mechanic,messob.fms.maintenance.alert.mechanic,model_messob_fms_maintenance_alert,messob_fleet.group_fms_mechanic,1,1,1,0
 access_messob_fms_maintenance_alert_dispatcher,messob.fms.maintenance.alert.dispatcher,model_messob_fms_maintenance_alert,messob_fleet.group_fms_dispatcher,1,1,1,1
 access_messob_fms_maintenance_alert_admin,messob.fms.maintenance.alert.admin,model_messob_fms_maintenance_alert,messob_fleet.group_fms_admin,1,1,1,1
+access_messob_fms_gps_device_admin,messob.fms.gps.device.admin,model_messob_fms_gps_device,messob_fleet.group_fms_admin,1,1,1,1
+access_messob_fms_gps_device_dispatcher,messob.fms.gps.device.dispatcher,model_messob_fms_gps_device,messob_fleet.group_fms_dispatcher,1,1,0,0
+access_messob_fms_gps_position_admin,messob.fms.gps.position.admin,model_messob_fms_gps_position,messob_fleet.group_fms_admin,1,1,1,1
+access_messob_fms_gps_position_dispatcher,messob.fms.gps.position.dispatcher,model_messob_fms_gps_position,messob_fleet.group_fms_dispatcher,1,0,0,0
+access_messob_fms_gps_position_user,messob.fms.gps.position.user,model_messob_fms_gps_position,messob_fleet.group_fms_user,1,0,0,0
+access_messob_fms_geofence_admin,messob.fms.geofence.admin,model_messob_fms_geofence,messob_fleet.group_fms_admin,1,1,1,1
+access_messob_fms_geofence_dispatcher,messob.fms.geofence.dispatcher,model_messob_fms_geofence,messob_fleet.group_fms_dispatcher,1,1,1,0

@@ -11,3 +11,7 @@ from . import maintenance_alert
 from . import audit_log
 from . import fms_driver
 from . import location
+from . import gps_device
+from . import gps_position
+from . import gps_gateway
+from . import geofence
