@@ -14,7 +14,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { odooApi } from '@/lib/odooApi';
+import { searchRead } from '@/lib/odooApi';
 import { format } from 'date-fns';
 
 export default function TripSelection() {
@@ -34,9 +34,19 @@ export default function TripSelection() {
       setError(null);
 
       // Fetch trips that can be tracked (approved or in_progress)
-      const response = await odooApi.call(
+      const response = await searchRead(
         'messob.fms.trip',
-        'search_read',
+        [
+          ['state', 'in', ['approved', 'in_progress']],
+          ['assigned_vehicle_id', '!=', false]
+        ],
+        [
+          'id', 'name', 'requester_id', 'start_dt', 'end_dt',
+          'pickup', 'destination', 'state', 'assigned_vehicle_id',
+          'assigned_driver_id', 'purpose'
+        ],
+        50
+      );
         [
           [['state', 'in', ['approved', 'in_progress']]]
         ],

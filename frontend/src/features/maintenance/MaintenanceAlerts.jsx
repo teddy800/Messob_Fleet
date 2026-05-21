@@ -20,7 +20,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { odooApi } from '@/lib/odooApi';
+import { searchRead, callMethod } from '@/lib/odooApi';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 
@@ -90,14 +90,12 @@ export default function MaintenanceAlerts() {
     try {
       setLoading(true);
       
-      const response = await odooApi.call(
+      const response = await searchRead(
         'messob.fms.maintenance.alert',
-        'search_read',
-        [[]],
-        {
-          fields: [
-            'id', 'alert_title', 'alert_message', 'vehicle_id', 'service_type',
-            'scheduled_date', 'days_until_due', 'priority', 'status', 'is_overdue',
+        [],
+        [
+          'id', 'alert_title', 'alert_message', 'vehicle_id', 'service_type',
+          'scheduled_date', 'days_until_due', 'priority', 'status', 'is_overdue',
             'email_sent', 'sms_sent', 'dashboard_notification', 'alert_date',
             'description', 'current_odometer', 'scheduled_odometer'
           ],
@@ -129,7 +127,7 @@ export default function MaintenanceAlerts() {
 
   const handleAlertAction = async (alertId, action) => {
     try {
-      await odooApi.call(
+      await callMethod(
         'messob.fms.maintenance.alert',
         action,
         [alertId]
@@ -145,7 +143,7 @@ export default function MaintenanceAlerts() {
 
   const handleSendNotifications = async (alertId) => {
     try {
-      await odooApi.call(
+      await callMethod(
         'messob.fms.maintenance.alert',
         'action_send_notifications',
         [alertId]

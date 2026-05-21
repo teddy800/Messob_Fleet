@@ -14,7 +14,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { odooApi } from '@/lib/odooApi';
+import { searchRead, writeRecord } from '@/lib/odooApi';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 
@@ -78,24 +78,18 @@ export default function MaintenanceNotifications({
     try {
       setLoading(true);
       
-      const response = await odooApi.call(
+      const response = await searchRead(
         'messob.fms.maintenance.alert',
-        'search_read',
         [
-          [
-            ['status', 'in', ['pending', 'sent']],
-            ['dashboard_notification', '=', true]
-          ]
+          ['status', 'in', ['pending', 'sent']],
+          ['dashboard_notification', '=', true]
         ],
-        {
-          fields: [
-            'id', 'alert_title', 'alert_message', 'vehicle_id', 'service_type',
-            'scheduled_date', 'days_until_due', 'priority', 'status', 'is_overdue',
-            'alert_date'
-          ],
-          order: 'priority desc, scheduled_date asc',
-          limit: maxAlerts
-        }
+        [
+          'id', 'alert_title', 'alert_message', 'vehicle_id', 'service_type',
+          'scheduled_date', 'days_until_due', 'priority', 'status', 'is_overdue',
+          'alert_date'
+        ],
+        maxAlerts
       );
 
       setAlerts(response || []);
@@ -121,9 +115,8 @@ export default function MaintenanceNotifications({
     event.stopPropagation();
     
     try {
-      await odooApi.call(
+      await writeRecord(
         'messob.fms.maintenance.alert',
-        'write',
         [alertId],
         { dashboard_notification: false }
       );

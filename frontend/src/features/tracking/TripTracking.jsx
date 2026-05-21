@@ -6,7 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import RouteDisplay from './components/RouteDisplay';
 import CollaborativePickup from './components/CollaborativePickup';
 import PickupPointUpdate from './components/PickupPointUpdate';
-import { odooApi } from '@/lib/odooApi';
+import { callMethod } from '@/lib/odooApi';
 import { toast } from 'sonner';
 
 export default function TripTracking() {
@@ -26,9 +26,18 @@ export default function TripTracking() {
         setError(null);
 
         // Fetch trip details from existing API
-        const response = await odooApi.call(
+        const response = await callMethod(
           'messob.fms.trip',
           'read',
+          [parseInt(tripId)],
+          {
+            fields: [
+              'id', 'name', 'requester_id', 'start_dt', 'end_dt',
+              'pickup', 'destination', 'state', 'assigned_vehicle_id',
+              'assigned_driver_id', 'purpose', 'vehicle_category'
+            ]
+          }
+        );
           [parseInt(tripId)],
           {
             fields: [
