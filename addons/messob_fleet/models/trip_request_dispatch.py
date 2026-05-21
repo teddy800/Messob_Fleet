@@ -54,6 +54,15 @@ class MessobFmsTripDispatcher(models.Model):
                     _('Please assign a driver before approving request %s.') % rec.name
                 )
             rec._check_resource_availability()
+            
+            # Log approval action
+            self.env['messob.fms.audit.log'].log_business_action(
+                action='APPROVE',
+                model=rec._name,
+                record_id=rec.id,
+                description=f"Approved trip request {rec.name} - Vehicle: {rec.assigned_vehicle_id.license_plate}, Driver: {rec.assigned_driver_id.name}",
+                severity='high'
+            )
 
         self.write({'state': 'approved'})
         return self._notify('Approved', 'Trip request has been approved.', 'success')
@@ -71,6 +80,15 @@ class MessobFmsTripDispatcher(models.Model):
         for rec in self:
             if rec.state != 'pending':
                 raise UserError(_('Only "Pending" requests can be rejected.'))
+            
+            # Log rejection action
+            self.env['messob.fms.audit.log'].log_business_action(
+                action='REJECT',
+                model=rec._name,
+                record_id=rec.id,
+                description=f"Rejected trip request {rec.name} - Requester: {rec.requester_id.name}",
+                severity='medium'
+            )
 
         self.write({'state': 'rejected'})
         return self._notify('Rejected', 'Trip request has been rejected.', 'warning')

@@ -21,15 +21,17 @@ from datetime import timedelta
 
 class MessobFmsTrip(models.Model):
     """
+    Trip Request model with comprehensive audit logging.
+    
     Vehicle trip request raised by a staff member.
-
-    Inherits mail.thread for chatter (status history) and
-    mail.activity.mixin for scheduled activities (reminders, follow-ups).
+    Inherits mail.thread for chatter (status history),
+    mail.activity.mixin for scheduled activities (reminders, follow-ups),
+    and base.model.audit.mixin for automatic change tracking.
     """
 
     _name = 'messob.fms.trip'
     _description = 'MESSOB FMS - Vehicle Trip Request'
-    _inherit = ['mail.thread', 'mail.activity.mixin']
+    _inherit = ['mail.thread', 'mail.activity.mixin', 'base.model.audit.mixin']
     _order = 'create_date desc'          # Newest requests appear first
     _rec_name = 'name'
 
@@ -271,6 +273,38 @@ class MessobFmsTrip(models.Model):
                 )
         return super().create(vals_list)
 
+    def write(self, vals):
+        """Override write to log resource assignments."""
+        # Track vehicle/driver assignments
+        for rec in self:
+            if 'assigned_vehicle_id' in vals and vals['assigned_vehicle_id'] != rec.assigned_vehicle_id.id:
+                old_vehicle = rec.assigned_vehicle_id.license_plate if rec.assigned_vehicle_id else 'None'
+                new_vehicle_obj = self.env['fleet.vehicle'].browse(vals['assigned_vehicle_id']) if vals['assigned_vehicle_id'] else None
+                new_vehicle = new_vehicle_obj.license_plate if new_vehicle_obj else 'None'
+                
+                self.env['messob.fms.audit.log'].log_business_action(
+                    action='ASSIGN',
+                    model=rec._name,
+                    record_id=rec.id,
+                    description=f"Vehicle assignment changed for {rec.name}: {old_vehicle} → {new_vehicle}",
+                    severity='medium'
+                )
+            
+            if 'assigned_driver_id' in vals and vals['assigned_driver_id'] != rec.assigned_driver_id.id:
+                old_driver = rec.assigned_driver_id.name if rec.assigned_driver_id else 'None'
+                new_driver_obj = self.env['res.partner'].browse(vals['assigned_driver_id']) if vals['assigned_driver_id'] else None
+                new_driver = new_driver_obj.name if new_driver_obj else 'None'
+                
+                self.env['messob.fms.audit.log'].log_business_action(
+                    action='ASSIGN',
+                    model=rec._name,
+                    record_id=rec.id,
+                    description=f"Driver assignment changed for {rec.name}: {old_driver} → {new_driver}",
+                    severity='medium'
+                )
+        
+        return super().write(vals)
+
     # =========================================================================
     # CONSTRAINTS
     # =========================================================================
@@ -320,6 +354,16 @@ class MessobFmsTrip(models.Model):
                 raise UserError(
                     _('Only "Draft" requests can be submitted.')
                 )
+            
+            # Log submission action
+            self.env['messob.fms.audit.log'].log_business_action(
+                action='SUBMIT',
+                model=rec._name,
+                record_id=rec.id,
+                description=f"Submitted trip request {rec.name} - Purpose: {rec.purpose[:50]}...",
+                severity='medium'
+            )
+            
         self.write({'state': 'pending'})
         return self._notify('Request Submitted',
                             'Your request has been sent to the dispatcher.',
@@ -336,6 +380,16 @@ class MessobFmsTrip(models.Model):
                 raise UserError(
                     _('You can only cancel requests that are in "Pending" status.')
                 )
+            
+            # Log cancellation action
+            self.env['messob.fms.audit.log'].log_business_action(
+                action='CANCEL',
+                model=rec._name,
+                record_id=rec.id,
+                description=f"Cancelled trip request {rec.name}",
+                severity='low'
+            )
+            
         self.write({'state': 'draft'})
         return self._notify('Request Cancelled',
                             'Your request has been returned to Draft.',

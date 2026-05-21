@@ -13,10 +13,14 @@ from odoo.exceptions import UserError
 
 
 class MessobFmsDriver(models.Model):
-    """Driver master record managed by the Fleet Admin."""
+    """
+    Driver master record managed by the Fleet Admin.
+    Includes comprehensive audit logging for all driver changes.
+    """
 
     _name = 'messob.fms.driver'
     _description = 'MESSOB FMS - Driver'
+    _inherit = ['base.model.audit.mixin']
     _order = 'name'
     _rec_name = 'name'
 

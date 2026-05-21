@@ -20,10 +20,12 @@ class MessobFmsFuelLog(models.Model):
     """
     Records a single fuel refill event for a vehicle.
     Linked to the trip that was active at the time.
+    Includes comprehensive audit logging for all fuel transactions.
     """
 
     _name = 'messob.fms.fuel.log'
     _description = 'MESSOB FMS - Fuel Log'
+    _inherit = ['base.model.audit.mixin']
     _order = 'date desc'
     _rec_name = 'station_name'
 

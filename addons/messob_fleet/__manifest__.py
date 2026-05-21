@@ -48,6 +48,7 @@ Covers:
         'data/locations.xml',
         'data/maintenance_alert_templates.xml',
         'data/maintenance_alert_cron.xml',
+        'data/audit_log_cron.xml',
 
         # 3. Views: model views, then wizard, then menus last
         'views/trip_views.xml',
