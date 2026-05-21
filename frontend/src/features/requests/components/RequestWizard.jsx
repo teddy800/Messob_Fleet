@@ -25,6 +25,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import LocationPicker from "@/components/map/LocationPicker";
 
 const BG_URL = "https://www.ena.et/o/adaptive-media/image/6826100/Preview-1000x0/Moseb%20ethiopian%20service.jpg";
 
@@ -169,6 +170,7 @@ export default function RequestWizard() {
     handleSubmit,
     trigger,
     reset,
+    setValue,
     formState: { errors },
   } = useForm({
     resolver: zodResolver(requestSchema),
@@ -446,31 +448,49 @@ export default function RequestWizard() {
               )}
 
               {step === 3 && (
-                <div className="grid gap-8 animate-in fade-in slide-in-from-right-4">
-                  <div className="grid gap-3">
-                    <Label className="text-brand-blue font-black uppercase text-xs tracking-widest dark:text-gray-400">
-                      From (Starting Point) <span className="text-red-500 dark:text-red-400">*</span>
-                    </Label>
-                    <Input
-                      {...register("startPoint")}
-                      className="h-14 border-2 border-gray-100 rounded-xl text-lg font-bold bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300"
-                      readOnly
-                    />
-                    <FieldError message={errors.startPoint?.message} />
-                  </div>
-                  <div className="grid gap-3">
-                    <Label className="text-brand-blue font-black uppercase text-xs tracking-widest dark:text-gray-400">
-                      To (Destination City/Area) <span className="text-red-500 dark:text-red-400">*</span>
-                    </Label>
-                    <Input
-                      {...register("destination")}
-                      placeholder="e.g. Adama, Bahir Dar"
-                      className={cn(
-                        "h-14 border-2 rounded-xl text-lg font-bold dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300",
-                        errors.destination ? "border-red-400" : "border-gray-100 focus:border-brand-blue dark:border-gray-600 dark:focus:border-yellow-400"
-                      )}
-                    />
-                    <FieldError message={errors.destination?.message} />
+                <div className="space-y-6 animate-in fade-in slide-in-from-right-4">
+                  {/* Interactive Map */}
+                  <LocationPicker
+                    startPoint={formData.startPoint}
+                    destination={formData.destination}
+                    onStartPointChange={(value) => {
+                      setValue("startPoint", value, { shouldValidate: true, shouldDirty: true });
+                    }}
+                    onDestinationChange={(value) => {
+                      setValue("destination", value, { shouldValidate: true, shouldDirty: true });
+                    }}
+                  />
+
+                  {/* Text Inputs (Hidden but still functional for form validation) */}
+                  <div className="grid gap-4 pt-4 border-t-2 border-gray-100">
+                    <div className="grid gap-2">
+                      <Label className="text-brand-blue font-black uppercase text-xs tracking-widest dark:text-gray-400">
+                        From (Starting Point) <span className="text-red-500 dark:text-red-400">*</span>
+                      </Label>
+                      <Input
+                        {...register("startPoint")}
+                        className={cn(
+                          "h-12 border-2 rounded-xl text-base font-bold dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300",
+                          errors.startPoint ? "border-red-400" : "border-gray-100 focus:border-brand-blue dark:border-gray-600 dark:focus:border-yellow-400"
+                        )}
+                        placeholder="Select from map or type manually"
+                      />
+                      <FieldError message={errors.startPoint?.message} />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label className="text-brand-blue font-black uppercase text-xs tracking-widest dark:text-gray-400">
+                        To (Destination) <span className="text-red-500 dark:text-red-400">*</span>
+                      </Label>
+                      <Input
+                        {...register("destination")}
+                        placeholder="Select from map or type manually"
+                        className={cn(
+                          "h-12 border-2 rounded-xl text-base font-bold dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300",
+                          errors.destination ? "border-red-400" : "border-gray-100 focus:border-brand-blue dark:border-gray-600 dark:focus:border-yellow-400"
+                        )}
+                      />
+                      <FieldError message={errors.destination?.message} />
+                    </div>
                   </div>
                 </div>
               )}
