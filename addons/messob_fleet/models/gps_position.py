@@ -271,6 +271,43 @@ class MessobFmsGpsPosition(models.Model):
             'target': 'new',
         }
 
+    @api.model_create_multi
+    def create(self, vals_list):
+        """
+        Override create to broadcast GPS updates via WebSocket (FR-3.2).
+        This enables real-time tracking for staff and dispatchers.
+        """
+        positions = super().create(vals_list)
+        
+        # Broadcast each position to WebSocket clients
+        for position in positions:
+            if position.device_id and position.device_id.vehicle_id:
+                try:
+                    # Broadcast to channel: gps_position_{vehicle_id}
+                    self.env['bus.bus']._sendone(
+                        f'gps_position_{position.device_id.vehicle_id.id}',
+                        'gps_update',
+                        {
+                            'vehicle_id': position.device_id.vehicle_id.id,
+                            'vehicle_plate': position.device_id.vehicle_id.license_plate,
+                            'latitude': position.latitude,
+                            'longitude': position.longitude,
+                            'speed': position.speed or 0,
+                            'heading': position.heading or 0,
+                            'altitude': position.altitude or 0,
+                            'accuracy': position.accuracy or 0,
+                            'status': position.status,
+                            'ignition': position.ignition,
+                            'timestamp': position.timestamp.isoformat(),
+                            'trip_id': position.trip_id.id if position.trip_id else None,
+                        }
+                    )
+                    _logger.info(f"Broadcasted GPS update for vehicle {position.device_id.vehicle_id.license_plate}")
+                except Exception as e:
+                    _logger.error(f"Failed to broadcast GPS update: {e}")
+        
+        return positions
+
     @api.model
     def get_latest_position(self, vehicle_id):
         """Get the latest GPS position for a vehicle."""

@@ -340,6 +340,46 @@ class MessobFmsTrip(models.Model):
                     _('Purpose must be at least 10 characters long.')
                 )
 
+    def _check_resource_availability(self):
+        """
+        Check if assigned vehicle and driver are available (BR-2, BR-3).
+        Raises UserError if there's a conflict.
+        """
+        for rec in self:
+            if not rec.assigned_vehicle_id and not rec.assigned_driver_id:
+                continue
+            
+            # Find overlapping trips
+            overlapping = self.search([
+                ('state', 'in', ['approved', 'in_progress']),
+                ('id', '!=', rec.id or 0),
+                ('start_dt', '<', rec.end_dt),
+                ('end_dt', '>', rec.start_dt),
+            ])
+            
+            # Check vehicle conflict (BR-2)
+            if rec.assigned_vehicle_id:
+                conflicting_vehicle = overlapping.filtered(
+                    lambda t: t.assigned_vehicle_id.id == rec.assigned_vehicle_id.id
+                )
+                if conflicting_vehicle:
+                    raise UserError(
+                        _('Vehicle %s is already assigned to trip %s during this time period.') % 
+                        (rec.assigned_vehicle_id.license_plate, conflicting_vehicle[0].name)
+                    )
+            
+            # Check driver conflict (BR-3)
+            if rec.assigned_driver_id:
+                conflicting_driver = overlapping.filtered(
+                    lambda t: t.assigned_driver_id.id == rec.assigned_driver_id.id
+                )
+                if conflicting_driver:
+                    raise UserError(
+                        _('Driver %s is already assigned to trip %s during this time period.') % 
+                        (rec.assigned_driver_id.name, conflicting_driver[0].name)
+                    )
+
+
     # =========================================================================
     # STAFF ACTIONS (Module 1 — FR-1.3)
     # =========================================================================

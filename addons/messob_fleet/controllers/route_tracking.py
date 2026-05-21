@@ -416,3 +416,75 @@ class RouteTrackingController(http.Controller):
         
         # In real system: send email/SMS to driver and dispatcher
         return True
+
+    @http.route(
+        '/api/fleet/availability',
+        type='json',
+        auth='user',
+        methods=['POST'],
+        csrf=False
+    )
+    def get_fleet_availability(self, start_date, end_date, category=None):
+        """
+        FR-2.3: Get fleet availability calendar data.
+        Shows all vehicles with their scheduled trips and maintenance.
+        
+        Args:
+            start_date (str): ISO datetime string
+            end_date (str): ISO datetime string
+            category (str, optional): Filter by vehicle category
+            
+        Returns:
+            dict: Fleet availability data for calendar/timeline view
+        """
+        try:
+            # Check if user is dispatcher or admin
+            user = request.env.user
+            if not user.has_group('messob_fleet.group_fms_dispatcher'):
+                return {'success': False, 'error': 'Access denied. Dispatcher role required.'}
+            
+            Trip = request.env['messob.fms.trip']
+            result = Trip.get_fleet_availability(start_date, end_date, category)
+            
+            return {
+                'success': True,
+                'start_date': start_date,
+                'end_date': end_date,
+                'vehicles': result['vehicles']
+            }
+            
+        except Exception as e:
+            return {'success': False, 'error': str(e)}
+
+    @http.route(
+        '/api/fleet/quick-assign',
+        type='json',
+        auth='user',
+        methods=['POST'],
+        csrf=False
+    )
+    def quick_assign_vehicle(self, trip_id, vehicle_id, driver_id):
+        """
+        FR-2.3: Quick assign vehicle and driver from calendar view.
+        
+        Args:
+            trip_id (int): Trip request ID
+            vehicle_id (int): Vehicle ID to assign
+            driver_id (int): Driver ID to assign
+            
+        Returns:
+            dict: Assignment result
+        """
+        try:
+            # Check if user is dispatcher or admin
+            user = request.env.user
+            if not user.has_group('messob_fleet.group_fms_dispatcher'):
+                return {'success': False, 'error': 'Access denied. Dispatcher role required.'}
+            
+            Trip = request.env['messob.fms.trip']
+            result = Trip.quick_assign_vehicle(trip_id, vehicle_id, driver_id)
+            
+            return result
+            
+        except Exception as e:
+            return {'success': False, 'error': str(e)}

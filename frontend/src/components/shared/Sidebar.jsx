@@ -14,8 +14,11 @@ import {
   Calendar,
   Route,
   AlertTriangle,
+  Moon,
+  Sun,
 } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
 import logo from "@/assets/logo.png";
 import { cn } from "@/lib/utils";
 import { useUserStore } from "@/store/useUserStore";
@@ -135,6 +138,26 @@ export default function Sidebar({ setOpen }) {
   // Get User Data and Logout Function from Zustand Store
   const user = useUserStore((state) => state.user);
   const logout = useUserStore((state) => state.logout);
+  
+  // Theme state (UI-3: Dark Mode Support)
+  const [isDark, setIsDark] = useState(false);
+  
+  useEffect(() => {
+    // Check if dark mode is active
+    setIsDark(document.documentElement.classList.contains('dark'));
+  }, []);
+  
+  const toggleTheme = () => {
+    const newIsDark = !isDark;
+    setIsDark(newIsDark);
+    if (newIsDark) {
+      document.documentElement.classList.add('dark');
+      localStorage.setItem('theme', 'dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+      localStorage.setItem('theme', 'light');
+    }
+  };
 
   // Filter items based on the user's role. 
   // If no user is logged in, show an empty array to prevent errors.
@@ -207,6 +230,20 @@ export default function Sidebar({ setOpen }) {
            <p className="text-[10px] text-gray-400 uppercase font-bold tracking-tighter">Current User</p>
            <p className="text-sm font-bold truncate text-brand-gold">{user?.name || "Unauthorized"}</p>
         </div>
+
+        {/* Theme Toggle Button (UI-3: Dark Mode) */}
+        <button 
+          onClick={toggleTheme}
+          className="w-full flex items-center px-4 py-3 hover:bg-white/10 rounded-xl transition-all group"
+          title={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
+        >
+          {isDark ? (
+            <Sun className="mr-3 h-5 w-5 text-yellow-400 group-hover:rotate-180 transition-transform duration-500" />
+          ) : (
+            <Moon className="mr-3 h-5 w-5 text-blue-300 group-hover:rotate-12 transition-transform" />
+          )}
+          <span className="text-sm">{isDark ? "Light Mode" : "Dark Mode"}</span>
+        </button>
 
         <Link 
               to="/dashboard/profile" 
