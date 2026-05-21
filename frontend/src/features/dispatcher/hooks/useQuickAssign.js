@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { odooApi } from '@/lib/odooApi';
+import { callMethod } from '@/lib/odooApi';
 import { toast } from 'sonner';
 
 /**
@@ -15,11 +15,11 @@ export function useQuickAssign() {
     setError(null);
 
     try {
-      const response = await odooApi.call(
+      const response = await callMethod(
         'messob.fms.trip',
         'quick_assign_vehicle',
+        [tripId],
         {
-          trip_id: tripId,
           vehicle_id: vehicleId,
           driver_id: driverId,
         }

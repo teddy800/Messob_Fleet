@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { odooApi } from '@/lib/odooApi';
+import { callMethod } from '@/lib/odooApi';
 import { startOfDay, endOfDay } from 'date-fns';
 
 /**
@@ -21,9 +21,10 @@ export function useFleetAvailability(date, filters = {}) {
       const startDate = startOfDay(date);
       const endDate = endOfDay(date);
 
-      const response = await odooApi.call(
+      const response = await callMethod(
         'messob.fms.trip',
         'get_fleet_availability',
+        [],
         {
           start_date: startDate.toISOString(),
           end_date: endDate.toISOString(),

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { odooApi } from '@/lib/odooApi';
+import { callMethod } from '@/lib/odooApi';
 
 /**
  * Custom hook for route tracking functionality
@@ -21,10 +21,10 @@ export function useRouteTracking(tripId) {
       setLoading(true);
       setError(null);
 
-      const response = await odooApi.call(
-        '/api/route/display',
-        'POST',
-        { trip_id: tripId }
+      const response = await callMethod(
+        'messob.fms.trip',
+        'get_route_display',
+        [tripId]
       );
 
       if (response.success) {
@@ -44,10 +44,10 @@ export function useRouteTracking(tripId) {
     if (!tripId) return;
 
     try {
-      const response = await odooApi.call(
-        '/api/route/gps-position',
-        'POST',
-        { trip_id: tripId }
+      const response = await callMethod(
+        'messob.fms.trip',
+        'get_gps_position',
+        [tripId]
       );
 
       if (response.success) {
@@ -122,10 +122,10 @@ export function useCollaborativePickup(tripId) {
       setLoading(true);
       setError(null);
 
-      const response = await odooApi.call(
-        '/api/route/collaborative-pickup',
-        'POST',
-        { trip_id: tripId }
+      const response = await callMethod(
+        'messob.fms.trip',
+        'get_collaborative_pickup',
+        [tripId]
       );
 
       if (response.success) {
@@ -167,11 +167,11 @@ export function usePickupUpdate(tripId) {
       setUpdating(true);
       setError(null);
 
-      const response = await odooApi.call(
-        '/api/route/update-pickup',
-        'POST',
+      const response = await callMethod(
+        'messob.fms.trip',
+        'update_pickup_point',
+        [tripId],
         {
-          trip_id: tripId,
           new_pickup_address: newAddress,
           new_coordinates: newCoordinates,
         }

@@ -150,11 +150,11 @@ class ResUsersAuditExtension(models.Model):
     _inherit = 'res.users'
 
     @classmethod
-    def _login(cls, db, login, password, user_agent_env=None):
+    def _login(cls, db, credential, user_agent_env=None):
         """Override _login to capture login attempts."""
         try:
             # Call original login
-            uid = super()._login(db, login, password, user_agent_env=user_agent_env)
+            uid = super()._login(db, credential, user_agent_env=user_agent_env)
             
             if uid:
                 # Successful login - log it
@@ -192,16 +192,21 @@ class ResUsersAuditExtension(models.Model):
                     # Extract IP from environment
                     ip_address = None
                     user_agent = None
+                    login_attempt = "unknown"
                     if user_agent_env:
                         ip_address = user_agent_env.get('REMOTE_ADDR')
                         user_agent = user_agent_env.get('HTTP_USER_AGENT')
+                    
+                    # Try to get login from credential
+                    if isinstance(credential, dict):
+                        login_attempt = credential.get('login', 'unknown')
                     
                     audit_log.log_login(
                         user_id=None,
                         success=False,
                         ip_address=ip_address,
                         user_agent=user_agent,
-                        error_message=f"Failed login attempt for: {login}"
+                        error_message=f"Failed login attempt for: {login_attempt}"
                     )
                     cr.commit()
             except Exception as log_error:
