@@ -11,6 +11,9 @@ import {
   Users,
   UserCheck,
   FileText,
+  Calendar,
+  Route,
+  AlertTriangle,
 } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import logo from "@/assets/logo.png";
@@ -30,6 +33,12 @@ const menuItems = [
     name: "New Request",
     path: "/dashboard/requests/new",
     icon: Car,
+    roles: ["Staff", "Dispatcher", "Admin"],
+  },
+  {
+    name: "Track Trip",
+    path: "/dashboard/tracking",
+    icon: Route,
     roles: ["Staff", "Dispatcher", "Admin"],
   },
   // Driver: trips + fuel
@@ -56,6 +65,12 @@ const menuItems = [
     name: "Current Requests",
     path: "/dashboard/dispatch/approvals",
     icon: CheckSquare,
+    roles: ["Dispatcher", "Admin"],
+  },
+  {
+    name: "Fleet Calendar",
+    path: "/dashboard/dispatch/fleet-calendar",
+    icon: Calendar,
     roles: ["Dispatcher", "Admin"],
   },
   // Admin: full operations menu
@@ -95,6 +110,12 @@ const menuItems = [
     path: "/dashboard/mechanic/repair-log",
     icon: Gauge,
     roles: ["Maintainer"],
+  },
+  {
+    name: "Maintenance Alerts",
+    path: "/dashboard/maintenance/alerts",
+    icon: AlertTriangle,
+    roles: ["Maintainer", "Dispatcher", "Admin"],
   },
 ];
 

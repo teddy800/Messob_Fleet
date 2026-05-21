@@ -46,12 +46,15 @@ Covers:
         # 2. Master data (sequences + locations)
         'data/sequences.xml',
         'data/locations.xml',
+        'data/maintenance_alert_templates.xml',
+        'data/maintenance_alert_cron.xml',
 
         # 3. Views: model views, then wizard, then menus last
         'views/trip_views.xml',
         'views/dispatcher_views.xml',
         'views/driver_views.xml',
         'views/mechanic_views.xml',
+        'views/maintenance_alert_views.xml',
         'views/admin_views.xml',
         'views/staff_dashboard_action.xml',
         'views/wizard_views.xml',

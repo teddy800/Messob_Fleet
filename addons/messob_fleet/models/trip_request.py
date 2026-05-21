@@ -372,3 +372,160 @@ class MessobFmsTrip(models.Model):
                 'next': {'type': 'ir.actions.act_window_close'},
             },
         }
+
+    # =========================================================================
+    # FLEET CALENDAR METHODS (FR-2.3)
+    # =========================================================================
+
+    @api.model
+    def get_fleet_availability(self, start_date, end_date, category=None, status=None):
+        """
+        Get all vehicles with their trip assignments and maintenance schedules
+        for the fleet availability calendar.
+        
+        Args:
+            start_date (str): ISO datetime string
+            end_date (str): ISO datetime string
+            category (str, optional): Filter by vehicle category
+            status (str, optional): Filter by vehicle status
+            
+        Returns:
+            dict: {
+                'vehicles': [
+                    {
+                        'id': int,
+                        'plate_no': str,
+                        'category': str,
+                        'status': str,
+                        'trips': [...],
+                        'maintenance': [...]
+                    }
+                ]
+            }
+        """
+        from datetime import datetime
+        
+        Vehicle = self.env['fleet.vehicle']
+        Maintenance = self.env['messob.fms.maintenance.log']
+        
+        # Build vehicle domain
+        vehicle_domain = []
+        if category:
+            vehicle_domain.append(('category_id.name', '=ilike', category))
+        
+        vehicles = Vehicle.search(vehicle_domain)
+        
+        # Parse dates
+        try:
+            start_dt = datetime.fromisoformat(start_date.replace('Z', '+00:00'))
+            end_dt = datetime.fromisoformat(end_date.replace('Z', '+00:00'))
+        except:
+            start_dt = datetime.fromisoformat(start_date)
+            end_dt = datetime.fromisoformat(end_date)
+        
+        result = []
+        for vehicle in vehicles:
+            # Get trips for this vehicle in date range
+            trips = self.search([
+                ('assigned_vehicle_id', '=', vehicle.id),
+                ('state', 'in', ['approved', 'in_progress']),
+                ('start_dt', '<', end_dt),
+                ('end_dt', '>', start_dt),
+            ])
+            
+            # Get maintenance for this vehicle in date range
+            maintenance = Maintenance.search([
+                ('vehicle_id', '=', vehicle.id),
+                ('start_date', '<', end_dt),
+            ])
+            
+            result.append({
+                'id': vehicle.id,
+                'plate_no': vehicle.license_plate or 'N/A',
+                'category': vehicle.category_id.name if vehicle.category_id else 'Unknown',
+                'status': vehicle.state_id.name if vehicle.state_id else 'Active',
+                'trips': [{
+                    'id': trip.id,
+                    'request_id': trip.name,
+                    'requester': trip.requester_id.name,
+                    'start_dt': trip.start_dt.isoformat(),
+                    'end_dt': trip.end_dt.isoformat(),
+                    'pickup': trip.pickup,
+                    'destination': trip.destination,
+                    'state': trip.state,
+                    'purpose': trip.purpose[:50] + '...' if len(trip.purpose) > 50 else trip.purpose,
+                } for trip in trips],
+                'maintenance': [{
+                    'id': maint.id,
+                    'type': maint.maintenance_type if hasattr(maint, 'maintenance_type') else 'Maintenance',
+                    'start_dt': maint.start_date.isoformat(),
+                    'end_dt': maint.end_date.isoformat() if maint.end_date else None,
+                    'description': maint.description if hasattr(maint, 'description') else 'Scheduled maintenance',
+                } for maint in maintenance],
+            })
+        
+        return {'vehicles': result}
+
+    @api.model
+    def quick_assign_vehicle(self, trip_id, vehicle_id, driver_id):
+        """
+        Quick assign vehicle and driver to a pending trip from the calendar.
+        Validates availability and prevents conflicts.
+        
+        Args:
+            trip_id (int): Trip request ID
+            vehicle_id (int): Vehicle ID to assign
+            driver_id (int): Driver ID to assign
+            
+        Returns:
+            dict: {
+                'success': bool,
+                'message': str,
+                'trip': dict (if success)
+            }
+        """
+        trip = self.browse(trip_id)
+        
+        if not trip.exists():
+            return {'success': False, 'message': 'Trip not found'}
+        
+        if trip.state != 'pending':
+            return {
+                'success': False,
+                'message': f'Only pending trips can be assigned. Current status: {trip.state}'
+            }
+        
+        # Assign resources
+        trip.write({
+            'assigned_vehicle_id': vehicle_id,
+            'assigned_driver_id': driver_id,
+        })
+        
+        # Validate availability (will raise UserError if conflict)
+        try:
+            trip._check_resource_availability()
+        except UserError as e:
+            # Rollback assignment
+            trip.write({
+                'assigned_vehicle_id': False,
+                'assigned_driver_id': False,
+            })
+            return {'success': False, 'message': str(e)}
+        except Exception as e:
+            trip.write({
+                'assigned_vehicle_id': False,
+                'assigned_driver_id': False,
+            })
+            return {'success': False, 'message': f'Assignment failed: {str(e)}'}
+        
+        return {
+            'success': True,
+            'message': 'Vehicle and driver assigned successfully',
+            'trip': {
+                'id': trip.id,
+                'name': trip.name,
+                'state': trip.state,
+                'vehicle': trip.assigned_vehicle_id.license_plate if trip.assigned_vehicle_id else None,
+                'driver': trip.assigned_driver_id.name if trip.assigned_driver_id else None,
+            }
+        }

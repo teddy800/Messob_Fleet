@@ -1,0 +1,347 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    MESSOB Fleet Management System
+    Views: Maintenance Alert System (FR-4.3)
+
+    Views for:
+    - Maintenance alert list and form
+    - Dashboard notifications
+    - Alert management
+-->
+<odoo>
+
+    <!-- ================================================================
+         MAINTENANCE ALERT: List View
+    ================================================================ -->
+    <record id="view_maintenance_alert_list" model="ir.ui.view">
+        <field name="name">messob.fms.maintenance.alert.list</field>
+        <field name="model">messob.fms.maintenance.alert</field>
+        <field name="arch" type="xml">
+            <list string="Maintenance Alerts"
+                  decoration-danger="priority == 'critical'"
+                  decoration-warning="priority == 'high'"
+                  decoration-info="priority == 'medium'"
+                  decoration-muted="status in ['completed', 'dismissed']">
+
+                <field name="alert_date" string="Alert Date"/>
+                <field name="vehicle_id" string="Vehicle"/>
+                <field name="alert_title" string="Alert"/>
+                <field name="service_type" string="Service Type" widget="badge"/>
+                <field name="scheduled_date" string="Due Date"/>
+                <field name="days_until_due" string="Days Until Due"/>
+                <field name="priority" string="Priority" widget="badge"/>
+                <field name="status" string="Status" widget="badge"/>
+                <field name="email_sent" string="Email Sent" widget="boolean"/>
+                <field name="sms_sent" string="SMS Sent" widget="boolean"/>
+
+                <!-- Action buttons -->
+                <button name="action_acknowledge" type="object" 
+                        string="Acknowledge" 
+                        class="btn-primary"
+                        attrs="{'invisible': [('status', 'not in', ['pending', 'sent'])]}"/>
+                <button name="action_send_notifications" type="object" 
+                        string="Send Notifications" 
+                        class="btn-secondary"
+                        attrs="{'invisible': [('email_sent', '=', True)]}"/>
+                <button name="action_complete_maintenance" type="object" 
+                        string="Mark Complete" 
+                        class="btn-success"
+                        attrs="{'invisible': [('status', 'in', ['completed', 'dismissed'])]}"/>
+
+            </list>
+        </field>
+    </record>
+
+    <!-- ================================================================
+         MAINTENANCE ALERT: Form View
+    ================================================================ -->
+    <record id="view_maintenance_alert_form" model="ir.ui.view">
+        <field name="name">messob.fms.maintenance.alert.form</field>
+        <field name="model">messob.fms.maintenance.alert</field>
+        <field name="arch" type="xml">
+            <form string="Maintenance Alert">
+
+                <header>
+                    <button name="action_acknowledge" type="object" 
+                            string="Acknowledge Alert" 
+                            class="btn-primary"
+                            attrs="{'invisible': [('status', 'not in', ['pending', 'sent'])]}"/>
+                    <button name="action_send_notifications" type="object" 
+                            string="Send Notifications" 
+                            class="btn-secondary"
+                            attrs="{'invisible': [('email_sent', '=', True)]}"/>
+                    <button name="action_complete_maintenance" type="object" 
+                            string="Mark as Completed" 
+                            class="btn-success"
+                            attrs="{'invisible': [('status', 'in', ['completed', 'dismissed'])]}"/>
+                    <button name="action_dismiss" type="object" 
+                            string="Dismiss Alert" 
+                            class="btn-warning"
+                            attrs="{'invisible': [('status', 'in', ['completed', 'dismissed'])]}"/>
+                    
+                    <field name="status" widget="statusbar" 
+                           statusbar_visible="pending,sent,acknowledged,completed"/>
+                </header>
+
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_view_vehicle" type="object" 
+                                class="oe_stat_button" icon="fa-car">
+                            <div class="o_field_widget o_stat_info">
+                                <span class="o_stat_text">View</span>
+                                <span class="o_stat_text">Vehicle</span>
+                            </div>
+                        </button>
+                        <button name="action_view_maintenance_log" type="object" 
+                                class="oe_stat_button" icon="fa-wrench"
+                                attrs="{'invisible': [('maintenance_log_id', '=', False)]}">
+                            <div class="o_field_widget o_stat_info">
+                                <span class="o_stat_text">View</span>
+                                <span class="o_stat_text">Maintenance</span>
+                            </div>
+                        </button>
+                    </div>
+
+                    <div class="oe_title">
+                        <h1><field name="alert_title"/></h1>
+                        <h3><field name="alert_message" readonly="1"/></h3>
+                    </div>
+
+                    <!-- Alert Information -->
+                    <group string="Alert Information" col="4">
+                        <field name="alert_type"/>
+                        <field name="priority" widget="priority"/>
+                        <field name="alert_date"/>
+                        <field name="dashboard_notification"/>
+                    </group>
+
+                    <!-- Vehicle & Maintenance -->
+                    <group string="Vehicle &amp; Maintenance" col="4">
+                        <field name="vehicle_id" options="{'no_create': True}"/>
+                        <field name="service_type"/>
+                        <field name="maintenance_log_id" options="{'no_create': True}"/>
+                        <field name="scheduled_date"/>
+                    </group>
+
+                    <!-- Schedule Details -->
+                    <group string="Schedule Details" col="4">
+                        <field name="scheduled_odometer"/>
+                        <field name="current_odometer"/>
+                        <field name="days_until_due" readonly="1"/>
+                        <field name="odometer_difference" readonly="1"/>
+                    </group>
+
+                    <!-- Status Indicators -->
+                    <group string="Status" col="4">
+                        <field name="is_overdue" readonly="1" widget="boolean"/>
+                        <field name="email_sent" readonly="1" widget="boolean"/>
+                        <field name="sms_sent" readonly="1" widget="boolean"/>
+                    </group>
+
+                    <!-- Description -->
+                    <group string="Description">
+                        <field name="description" nolabel="1"/>
+                    </group>
+
+                    <!-- Recipients -->
+                    <notebook>
+                        <page string="Notification Recipients">
+                            <group>
+                                <field name="mechanic_ids" widget="many2many_tags" 
+                                       options="{'color_field': 'color', 'no_create': True}"/>
+                                <field name="manager_ids" widget="many2many_tags" 
+                                       options="{'color_field': 'color', 'no_create': True}"/>
+                            </group>
+                        </page>
+                    </notebook>
+
+                </sheet>
+
+                <chatter/>
+
+            </form>
+        </field>
+    </record>
+
+    <!-- ================================================================
+         MAINTENANCE ALERT: Search View
+    ================================================================ -->
+    <record id="view_maintenance_alert_search" model="ir.ui.view">
+        <field name="name">messob.fms.maintenance.alert.search</field>
+        <field name="model">messob.fms.maintenance.alert</field>
+        <field name="arch" type="xml">
+            <search string="Maintenance Alerts">
+                <field name="alert_title"/>
+                <field name="vehicle_id"/>
+                <field name="service_type"/>
+                <field name="mechanic_ids"/>
+                <field name="manager_ids"/>
+                
+                <filter name="pending" string="Pending" 
+                        domain="[('status', '=', 'pending')]"/>
+                <filter name="sent" string="Sent" 
+                        domain="[('status', '=', 'sent')]"/>
+                <filter name="acknowledged" string="Acknowledged" 
+                        domain="[('status', '=', 'acknowledged')]"/>
+                <filter name="overdue" string="Overdue" 
+                        domain="[('is_overdue', '=', True)]"/>
+                
+                <separator/>
+                <filter name="critical" string="Critical Priority" 
+                        domain="[('priority', '=', 'critical')]"/>
+                <filter name="high" string="High Priority" 
+                        domain="[('priority', '=', 'high')]"/>
+                <filter name="medium" string="Medium Priority" 
+                        domain="[('priority', '=', 'medium')]"/>
+                
+                <separator/>
+                <filter name="today" string="Due Today" 
+                        domain="[('scheduled_date', '=', context_today().strftime('%Y-%m-%d'))]"/>
+                <filter name="this_week" string="Due This Week" 
+                        domain="[('scheduled_date', '&gt;=', context_today().strftime('%Y-%m-%d')), 
+                                ('scheduled_date', '&lt;=', (context_today() + datetime.timedelta(days=7)).strftime('%Y-%m-%d'))]"/>
+                <filter name="this_month" string="Due This Month" 
+                        domain="[('scheduled_date', '&gt;=', context_today().strftime('%Y-%m-01')), 
+                                ('scheduled_date', '&lt;=', (context_today().replace(day=1) + datetime.timedelta(days=32)).replace(day=1) - datetime.timedelta(days=1)).strftime('%Y-%m-%d'))]"/>
+                
+                <group expand="0" string="Group By">
+                    <filter name="group_vehicle" string="Vehicle" 
+                            context="{'group_by': 'vehicle_id'}"/>
+                    <filter name="group_priority" string="Priority" 
+                            context="{'group_by': 'priority'}"/>
+                    <filter name="group_status" string="Status" 
+                            context="{'group_by': 'status'}"/>
+                    <filter name="group_service_type" string="Service Type" 
+                            context="{'group_by': 'service_type'}"/>
+                    <filter name="group_due_date" string="Due Date" 
+                            context="{'group_by': 'scheduled_date'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- ================================================================
+         MAINTENANCE ALERT: Kanban View
+    ================================================================ -->
+    <record id="view_maintenance_alert_kanban" model="ir.ui.view">
+        <field name="name">messob.fms.maintenance.alert.kanban</field>
+        <field name="model">messob.fms.maintenance.alert</field>
+        <field name="arch" type="xml">
+            <kanban default_group_by="priority" class="o_kanban_small_column">
+                <field name="id"/>
+                <field name="alert_title"/>
+                <field name="vehicle_id"/>
+                <field name="service_type"/>
+                <field name="scheduled_date"/>
+                <field name="days_until_due"/>
+                <field name="priority"/>
+                <field name="status"/>
+                <field name="is_overdue"/>
+                <field name="alert_message"/>
+                
+                <templates>
+                    <t t-name="kanban-box">
+                        <div class="oe_kanban_card oe_kanban_global_click">
+                            <div class="o_kanban_record_top">
+                                <div class="o_kanban_record_headings">
+                                    <strong class="o_kanban_record_title">
+                                        <field name="alert_title"/>
+                                    </strong>
+                                    <div class="o_kanban_record_subtitle">
+                                        <field name="vehicle_id"/>
+                                    </div>
+                                </div>
+                                <div class="o_kanban_manage_button_section">
+                                    <a class="o_kanban_manage_toggle_button" href="#">
+                                        <i class="fa fa-ellipsis-v" role="img" aria-label="Manage" title="Manage"/>
+                                    </a>
+                                </div>
+                            </div>
+                            
+                            <div class="o_kanban_record_body">
+                                <div class="o_kanban_tags_section">
+                                    <span t-if="record.is_overdue.raw_value" 
+                                          class="badge badge-danger">OVERDUE</span>
+                                    <span t-attf-class="badge badge-#{record.priority.raw_value == 'critical' and 'danger' or record.priority.raw_value == 'high' and 'warning' or record.priority.raw_value == 'medium' and 'info' or 'secondary'}">
+                                        <t t-esc="record.priority.value"/>
+                                    </span>
+                                </div>
+                                
+                                <div class="mt8">
+                                    <strong>Service:</strong> <t t-esc="record.service_type.value"/><br/>
+                                    <strong>Due:</strong> <t t-esc="record.scheduled_date.value"/><br/>
+                                    <strong>Days:</strong> 
+                                    <span t-attf-class="#{record.days_until_due.raw_value &lt; 0 and 'text-danger' or record.days_until_due.raw_value &lt;= 3 and 'text-warning' or 'text-muted'}">
+                                        <t t-esc="record.days_until_due.value"/>
+                                    </span>
+                                </div>
+                                
+                                <div class="mt8 text-muted">
+                                    <t t-esc="record.alert_message.value"/>
+                                </div>
+                            </div>
+                            
+                            <div class="o_kanban_record_bottom">
+                                <div class="oe_kanban_bottom_left">
+                                    <span t-attf-class="badge badge-#{record.status.raw_value == 'completed' and 'success' or record.status.raw_value == 'dismissed' and 'secondary' or 'primary'}">
+                                        <t t-esc="record.status.value"/>
+                                    </span>
+                                </div>
+                                <div class="oe_kanban_bottom_right">
+                                    <button name="action_acknowledge" type="object" 
+                                            class="btn btn-sm btn-primary"
+                                            t-if="record.status.raw_value in ['pending', 'sent']">
+                                        Acknowledge
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div class="o_kanban_manage_button_section" style="display: none;">
+                                <a name="action_send_notifications" type="object" 
+                                   class="dropdown-item">Send Notifications</a>
+                                <a name="action_complete_maintenance" type="object" 
+                                   class="dropdown-item">Mark Complete</a>
+                                <a name="action_dismiss" type="object" 
+                                   class="dropdown-item">Dismiss</a>
+                            </div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <!-- ================================================================
+         MAINTENANCE ALERT: Window Action
+    ================================================================ -->
+    <record id="action_maintenance_alert" model="ir.actions.act_window">
+        <field name="name">Maintenance Alerts</field>
+        <field name="res_model">messob.fms.maintenance.alert</field>
+        <field name="view_mode">kanban,list,form</field>
+        <field name="view_ids" eval="[
+            (5, 0, 0),
+            (0, 0, {'view_mode': 'kanban', 'view_id': ref('view_maintenance_alert_kanban')}),
+            (0, 0, {'view_mode': 'list', 'view_id': ref('view_maintenance_alert_list')}),
+            (0, 0, {'view_mode': 'form', 'view_id': ref('view_maintenance_alert_form')}),
+        ]"/>
+        <field name="search_view_id" ref="view_maintenance_alert_search"/>
+        <field name="context">{'search_default_pending': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">No maintenance alerts yet.</p>
+            <p>Maintenance alerts are automatically generated based on scheduled maintenance dates and odometer readings.</p>
+            <p>Configure maintenance schedules in the Repair &amp; Maintenance Log to enable automated alerts.</p>
+        </field>
+    </record>
+
+    <!-- ================================================================
+         MAINTENANCE ALERT: Dashboard Action (Pending Alerts)
+    ================================================================ -->
+    <record id="action_maintenance_alert_dashboard" model="ir.actions.act_window">
+        <field name="name">Pending Maintenance Alerts</field>
+        <field name="res_model">messob.fms.maintenance.alert</field>
+        <field name="view_mode">kanban,list</field>
+        <field name="domain">[('status', 'in', ['pending', 'sent']), ('dashboard_notification', '=', True)]</field>
+        <field name="context">{'search_default_overdue': 1, 'search_default_critical': 1}</field>
+    </record>
+
+</odoo>

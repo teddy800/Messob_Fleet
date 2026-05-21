@@ -25,3 +25,8 @@ access_res_users_admin,res.users.admin,base.model_res_users,messob_fleet.group_f
 access_messob_fms_location_user,messob.fms.location.user,model_messob_fms_location,messob_fleet.group_fms_user,1,0,0,0
 access_messob_fms_location_dispatcher,messob.fms.location.dispatcher,model_messob_fms_location,messob_fleet.group_fms_dispatcher,1,0,0,0
 access_messob_fms_location_admin,messob.fms.location.admin,model_messob_fms_location,messob_fleet.group_fms_admin,1,1,1,1
+access_messob_fms_maintenance_alert_user,messob.fms.maintenance.alert.user,model_messob_fms_maintenance_alert,messob_fleet.group_fms_user,1,0,0,0
+access_messob_fms_maintenance_alert_driver,messob.fms.maintenance.alert.driver,model_messob_fms_maintenance_alert,messob_fleet.group_fms_driver,1,0,0,0
+access_messob_fms_maintenance_alert_mechanic,messob.fms.maintenance.alert.mechanic,model_messob_fms_maintenance_alert,messob_fleet.group_fms_mechanic,1,1,1,0
+access_messob_fms_maintenance_alert_dispatcher,messob.fms.maintenance.alert.dispatcher,model_messob_fms_maintenance_alert,messob_fleet.group_fms_dispatcher,1,1,1,1
+access_messob_fms_maintenance_alert_admin,messob.fms.maintenance.alert.admin,model_messob_fms_maintenance_alert,messob_fleet.group_fms_admin,1,1,1,1
