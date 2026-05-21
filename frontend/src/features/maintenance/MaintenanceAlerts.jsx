@@ -96,11 +96,10 @@ export default function MaintenanceAlerts() {
         [
           'id', 'alert_title', 'alert_message', 'vehicle_id', 'service_type',
           'scheduled_date', 'days_until_due', 'priority', 'status', 'is_overdue',
-            'email_sent', 'sms_sent', 'dashboard_notification', 'alert_date',
-            'description', 'current_odometer', 'scheduled_odometer'
-          ],
-          order: 'priority desc, scheduled_date asc'
-        }
+          'email_sent', 'sms_sent', 'dashboard_notification', 'alert_date',
+          'description', 'current_odometer', 'scheduled_odometer'
+        ],
+        100
       );
 
       setAlerts(response || []);

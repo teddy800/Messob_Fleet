@@ -47,18 +47,6 @@ export default function TripSelection() {
         ],
         50
       );
-        [
-          [['state', 'in', ['approved', 'in_progress']]]
-        ],
-        {
-          fields: [
-            'name', 'requester_id', 'purpose', 'state', 
-            'start_dt', 'end_dt', 'pickup', 'destination',
-            'assigned_vehicle_id', 'assigned_driver_id'
-          ],
-          order: 'start_dt desc'
-        }
-      );
 
       setTrips(response || []);
     } catch (err) {

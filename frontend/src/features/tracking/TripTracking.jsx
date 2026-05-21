@@ -38,15 +38,6 @@ export default function TripTracking() {
             ]
           }
         );
-          [parseInt(tripId)],
-          {
-            fields: [
-              'name', 'requester_id', 'purpose', 'state', 
-              'start_dt', 'end_dt', 'pickup', 'destination',
-              'assigned_vehicle_id', 'assigned_driver_id'
-            ]
-          }
-        );
 
         if (response && response.length > 0) {
           setTripData(response[0]);
