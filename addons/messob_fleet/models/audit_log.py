@@ -44,9 +44,9 @@ class MessobFmsAuditLog(models.Model):
         comodel_name='res.users',
         string='User',
         readonly=True,
-        required=True,
+        required=False,  # Not required for failed login attempts
         index=True,
-        default=lambda self: self.env.user,
+        default=lambda self: self.env.user if self.env.user and self.env.user.id else False,
     )
 
     session_id = fields.Char(
