@@ -57,8 +57,10 @@ class AuthenticationAuditHooks(http.Controller):
         request_info = self._get_request_info()
         
         try:
-            # Call original authentication
-            result = request.session.authenticate(db, login, password)
+            # Call original authentication - Odoo 18 signature: authenticate(login, password)
+            # Database is set separately
+            request.session.db = db
+            result = request.session.authenticate(login, password)
             
             if result:
                 # Successful login

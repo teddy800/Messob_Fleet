@@ -146,26 +146,51 @@ export function clearCache(pattern = null) {
  */
 export async function odooLogin(email, password) {
   try {
-    const result = await rpc("/web/session/authenticate", {
-      db: "fleet_management",       // your database name
-      login: email,
-      password,
+    // Direct fetch to authenticate endpoint with correct parameter structure
+    // Backend expects: db, login, password as top-level params
+    const res = await fetch(`${BASE_URL}/web/session/authenticate`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({
+        jsonrpc: "2.0",
+        method: "call",
+        params: {
+          db: "fleet_management",
+          login: email,
+          password: password,
+        },
+        id: Math.floor(Math.random() * 1000000),
+      }),
     });
 
-    console.log("🔑 Authentication result:", result);
+    const json = await res.json();
+    console.log("🔑 Authentication response:", json);
+
+    if (json.error) {
+      console.error("❌ Authentication error:", json.error);
+      const errorMessage = json.error.data?.message 
+        || json.error.data?.arguments?.[0] 
+        || json.error.message 
+        || "Authentication failed";
+      throw new Error(errorMessage);
+    }
+
+    const result = json.result;
 
     if (!result || !result.uid) {
       throw new Error("Invalid email or password");
     }
 
     sessionId = result.session_id;
+    console.log("✅ Login successful:", { uid: result.uid, username: result.username });
     return result;
   } catch (error) {
     console.error("🚫 Login failed:", error);
     
     // Provide more helpful error messages
     if (error.message.includes("Access Denied")) {
-      throw new Error("Access Denied: This user may not exist or doesn't have permission to access the system. Please check your credentials in Odoo.");
+      throw new Error("Access Denied: This user may not exist or doesn't have permission to access the system.");
     }
     
     throw error;
