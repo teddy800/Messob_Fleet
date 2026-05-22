@@ -252,6 +252,32 @@ class MessobFmsMaintenanceAlert(models.Model):
                     alert.alert_message = f"REMINDER: {service_type} for {vehicle_name} is due on {alert.scheduled_date}."
 
     # ── Actions ──
+    def action_view_vehicle(self):
+        """Open the vehicle form view."""
+        self.ensure_one()
+        return {
+            'type': 'ir.actions.act_window',
+            'name': 'Vehicle',
+            'res_model': 'fleet.vehicle',
+            'res_id': self.vehicle_id.id,
+            'view_mode': 'form',
+            'target': 'current',
+        }
+
+    def action_view_maintenance_log(self):
+        """Open the maintenance log form view."""
+        self.ensure_one()
+        if not self.maintenance_log_id:
+            return
+        return {
+            'type': 'ir.actions.act_window',
+            'name': 'Maintenance Log',
+            'res_model': 'messob.fms.maintenance.log',
+            'res_id': self.maintenance_log_id.id,
+            'view_mode': 'form',
+            'target': 'current',
+        }
+
     def action_acknowledge(self):
         """Mark alert as acknowledged."""
         self.write({'status': 'acknowledged'})
@@ -503,13 +529,14 @@ class MessobFmsMaintenanceLog(models.Model):
         for record in self:
             record.alert_count = len(record.alert_ids)
 
-    @api.model
-    def create(self, vals):
+    @api.model_create_multi
+    def create(self, vals_list):
         """Override create to generate alerts for future maintenance."""
-        record = super().create(vals)
-        if record.next_service_date:
-            record._schedule_maintenance_alert()
-        return record
+        records = super().create(vals_list)
+        for record in records:
+            if record.next_service_date:
+                record._schedule_maintenance_alert()
+        return records
 
     def write(self, vals):
         """Override write to update alerts when next service date changes."""

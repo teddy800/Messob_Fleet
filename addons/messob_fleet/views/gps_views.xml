@@ -204,7 +204,7 @@
                     </div>
                     
                     <group>
-                        <group string="Device & Vehicle">
+                        <group string="Device &amp; Vehicle">
                             <field name="device_id"/>
                             <field name="vehicle_id"/>
                             <field name="trip_id"/>

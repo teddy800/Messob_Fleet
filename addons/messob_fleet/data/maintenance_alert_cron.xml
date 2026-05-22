@@ -87,9 +87,7 @@ for alert in urgent_alerts:
     try:
         alert.action_send_notifications()
     except Exception as e:
-        import logging
-        _logger = logging.getLogger(__name__)
-        _logger.error(f"Failed to send urgent notification for alert {alert.id}: {e}")
+        log(f"Failed to send urgent notification for alert {alert.id}: {e}")
         </field>
         <field name="interval_number">1</field>
         <field name="interval_type">hours</field>
@@ -106,21 +104,18 @@ for alert in urgent_alerts:
         <field name="name">MESSOB Fleet: Cleanup Old Maintenance Alerts</field>
         <field name="model_id" ref="model_messob_fms_maintenance_alert"/>
         <field name="state">code</field>
-        <field name="code"><![CDATA[
-from datetime import datetime, timedelta
-
+        <field name="code">
 # Delete completed and dismissed alerts older than 90 days
 cutoff_date = datetime.now() - timedelta(days=90)
 old_alerts = model.search([
     ('status', 'in', ['completed', 'dismissed']),
-    ('alert_date', '<', cutoff_date)
+    ('alert_date', '&lt;', cutoff_date)
 ])
 if old_alerts:
+    count = len(old_alerts)
     old_alerts.unlink()
-    import logging
-    _logger = logging.getLogger(__name__)
-    _logger.info(f"Cleaned up {len(old_alerts)} old maintenance alerts")
-        ]]></field>
+    log(f"Cleaned up {count} old maintenance alerts")
+        </field>
         <field name="interval_number">1</field>
         <field name="interval_type">weeks</field>
         <field name="active">True</field>

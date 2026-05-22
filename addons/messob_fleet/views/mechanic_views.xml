@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
     MESSOB Fleet Management System
-    View: Mechanic — Repair & Maintenance Logging (FR-4.4)
+    View: Mechanic — Repair &amp; Maintenance Logging (FR-4.4)
 
     List view columns (wireframe image 1):
       Date | Vehicle | Service Type | Mechanic | Cost | State | Actions
@@ -103,7 +103,7 @@
     </record>
 
     <!-- ================================================================
-         MECHANIC: Window Action — Repair & Maintenance Logging
+         MECHANIC: Window Action — Repair &amp; Maintenance Logging
     ================================================================ -->
     <record id="action_maintenance_log" model="ir.actions.act_window">
         <field name="name">Repair &amp; Maintenance Logging</field>

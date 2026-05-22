@@ -82,7 +82,7 @@
                     </group>
 
                     <!-- ══════════════════════════════════════════
-                         STEP 4 — Review & Submit
+                         STEP 4 — Review &amp; Submit
                     ══════════════════════════════════════════ -->
                     <group string="Review Your Request" invisible="step != 4">
                         <group string="Trip Details">
