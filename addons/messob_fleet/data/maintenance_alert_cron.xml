@@ -21,7 +21,6 @@
         <field name="code">model._cron_generate_maintenance_alerts()</field>
         <field name="interval_number">6</field>
         <field name="interval_type">hours</field>
-        <field name="numbercall">-1</field>
         <field name="active">True</field>
         <field name="priority">5</field>
         <field name="user_id" ref="base.user_admin"/>
@@ -39,7 +38,6 @@
         <field name="code">model._cron_send_daily_alert_summary()</field>
         <field name="interval_number">1</field>
         <field name="interval_type">days</field>
-        <field name="numbercall">-1</field>
         <field name="active">True</field>
         <field name="priority">10</field>
         <field name="user_id" ref="base.user_admin"/>
@@ -67,7 +65,6 @@ for alert in alerts:
         </field>
         <field name="interval_number">2</field>
         <field name="interval_type">hours</field>
-        <field name="numbercall">-1</field>
         <field name="active">True</field>
         <field name="priority">15</field>
         <field name="user_id" ref="base.user_admin"/>
@@ -99,7 +96,6 @@ for alert in urgent_alerts:
         </field>
         <field name="interval_number">1</field>
         <field name="interval_type">hours</field>
-        <field name="numbercall">-1</field>
         <field name="active">True</field>
         <field name="priority">5</field>
         <field name="user_id" ref="base.user_admin"/>
@@ -131,7 +127,6 @@ if old_alerts:
         ]]></field>
         <field name="interval_number">1</field>
         <field name="interval_type">weeks</field>
-        <field name="numbercall">-1</field>
         <field name="active">True</field>
         <field name="priority">20</field>
         <field name="user_id" ref="base.user_admin"/>
