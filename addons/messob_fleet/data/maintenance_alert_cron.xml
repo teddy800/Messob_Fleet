@@ -24,7 +24,6 @@
         <field name="active">True</field>
         <field name="priority">5</field>
         <field name="user_id" ref="base.user_admin"/>
-        <field name="doall">False</field>
     </record>
 
     <!-- ================================================================
@@ -41,7 +40,6 @@
         <field name="active">True</field>
         <field name="priority">10</field>
         <field name="user_id" ref="base.user_admin"/>
-        <field name="doall">False</field>
         <field name="nextcall" eval="(DateTime.now() + timedelta(days=1)).replace(hour=8, minute=0, second=0)"/>
     </record>
 
@@ -68,7 +66,6 @@ for alert in alerts:
         <field name="active">True</field>
         <field name="priority">15</field>
         <field name="user_id" ref="base.user_admin"/>
-        <field name="doall">False</field>
     </record>
 
     <!-- ================================================================
@@ -99,7 +96,6 @@ for alert in urgent_alerts:
         <field name="active">True</field>
         <field name="priority">5</field>
         <field name="user_id" ref="base.user_admin"/>
-        <field name="doall">False</field>
     </record>
 
     <!-- ================================================================
@@ -130,7 +126,6 @@ if old_alerts:
         <field name="active">True</field>
         <field name="priority">20</field>
         <field name="user_id" ref="base.user_admin"/>
-        <field name="doall">False</field>
         <field name="nextcall" eval="(DateTime.now() + timedelta(days=7)).replace(hour=2, minute=0, second=0)"/>
     </record>
 
