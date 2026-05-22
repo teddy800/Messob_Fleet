@@ -623,7 +623,10 @@ class MessobFmsTrip(models.Model):
                 } for maint in maintenance],
             })
         
-        return {'vehicles': result}
+        return {
+            'success': True,
+            'vehicles': result
+        }
 
     @api.model
     def quick_assign_vehicle(self, trip_id, vehicle_id, driver_id):

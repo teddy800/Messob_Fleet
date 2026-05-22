@@ -19,7 +19,7 @@ import DriverManagement from "./features/admin/DriverManagement";
 import Reports from "./features/admin/Reports";
 import MechanicDashboard from "./features/mechanic/MechanicDashboard";
 import RepairLog from "./features/mechanic/RepairLog";
-import FleetCalendar from "./features/dispatcher/components/FleetCalendar";
+import FleetCalendarEnhanced from "./features/dispatcher/components/FleetCalendarEnhanced";
 import TripTracking from "./features/tracking/TripTracking";
 import TripSelection from "./features/tracking/TripSelection";
 import MaintenanceAlerts from "./features/maintenance/MaintenanceAlerts";
@@ -52,7 +52,7 @@ export default function App() {
 
           <Route element={<RoleGuard allowedRoles={["Dispatcher", "Admin"]} />}>
             <Route path="dispatch/approvals" element={<ApprovalQueue />} />
-            <Route path="dispatch/fleet-calendar" element={<FleetCalendar />} />
+            <Route path="dispatch/fleet-calendar" element={<FleetCalendarEnhanced />} />
           </Route>
 
           <Route element={<RoleGuard allowedRoles={["Admin"]} />}>
@@ -67,6 +67,9 @@ export default function App() {
           <Route element={<RoleGuard allowedRoles={["Maintainer"]} />}>
             <Route path="mechanic" element={<MechanicDashboard />} />
             <Route path="mechanic/repair-log" element={<RepairLog />} />
+          </Route>
+
+          <Route element={<RoleGuard allowedRoles={["Maintainer", "Dispatcher", "Admin"]} />}>
             <Route path="maintenance/alerts" element={<MaintenanceAlerts />} />
           </Route>
 

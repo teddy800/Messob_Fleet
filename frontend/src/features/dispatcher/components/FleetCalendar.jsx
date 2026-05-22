@@ -1,6 +1,19 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { format } from 'date-fns';
-import { Calendar, ChevronLeft, ChevronRight, Filter, Search, RefreshCw } from 'lucide-react';
+import { 
+  Calendar, 
+  ChevronLeft, 
+  ChevronRight, 
+  Search, 
+  RefreshCw, 
+  Download,
+  Printer,
+  TrendingUp,
+  Car,
+  CheckCircle,
+  AlertTriangle,
+  BarChart3
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -10,15 +23,16 @@ import VehicleTimelineRow from './VehicleTimelineRow';
 
 export default function FleetCalendar() {
   const [filters, setFilters] = useState({
-    category: '',
+    category: 'all',
     status: '',
     searchQuery: '',
   });
+  const [viewMode, setViewMode] = useState('timeline'); // timeline, list, stats
 
   const {
     currentDate,
-    viewMode,
-    setViewMode,
+    viewMode: calendarViewMode,
+    setViewMode: setCalendarViewMode,
     goToToday,
     goToPrevious,
     goToNext,
@@ -33,7 +47,47 @@ export default function FleetCalendar() {
   // Generate 24-hour timeline
   const hours = Array.from({ length: 24 }, (_, i) => i);
 
-  if (loading && !data) {
+  const vehicles = data?.vehicles || [];
+
+  // Calculate statistics
+  const stats = useMemo(() => {
+    const total = vehicles.length;
+    const available = vehicles.filter(v => 
+      (!v.trips || v.trips.length === 0) && 
+      (!v.maintenance || v.maintenance.length === 0)
+    ).length;
+    const occupied = vehicles.filter(v => v.trips && v.trips.length > 0).length;
+    const maintenance = vehicles.filter(v => v.maintenance && v.maintenance.length > 0).length;
+    const utilizationRate = total > 0 ? ((occupied / total) * 100).toFixed(1) : 0;
+
+    return { total, available, occupied, maintenance, utilizationRate };
+  }, [vehicles]);
+
+  // Export to CSV
+  const handleExport = () => {
+    const csvContent = [
+      ['Vehicle', 'Category', 'Status', 'Trips', 'Maintenance'],
+      ...vehicles.map(v => [
+        v.plate_no,
+        v.category,
+        v.status,
+        v.trips?.length || 0,
+        v.maintenance?.length || 0
+      ])
+    ].map(row => row.join(',')).join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `fleet-calendar-${format(currentDate, 'yyyy-MM-dd')}.csv`;
+    a.click();
+  };
+
+  // Print calendar
+  const handlePrint = () => {
+    window.print();
+  };
     return (
       <div className="flex items-center justify-center h-96">
         <div className="text-center">
@@ -124,14 +178,14 @@ export default function FleetCalendar() {
           </div>
 
           <Select
-            value={filters.category}
-            onValueChange={(value) => handleFilterChange('category', value)}
+            value={filters.category || "all"}
+            onValueChange={(value) => handleFilterChange('category', value === 'all' ? '' : value)}
           >
             <SelectTrigger className="w-48 bg-white border-0 h-10">
               <SelectValue placeholder="All Categories" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All Categories</SelectItem>
+              <SelectItem value="all">All Categories</SelectItem>
               <SelectItem value="sedan">Sedan</SelectItem>
               <SelectItem value="suv">SUV</SelectItem>
               <SelectItem value="bus">Bus</SelectItem>
@@ -140,9 +194,9 @@ export default function FleetCalendar() {
             </SelectContent>
           </Select>
 
-          {(filters.category || filters.searchQuery) && (
+          {(filters.category !== 'all' || filters.searchQuery) && (
             <Button
-              onClick={() => setFilters({ category: '', status: '', searchQuery: '' })}
+              onClick={() => setFilters({ category: 'all', status: '', searchQuery: '' })}
               variant="ghost"
               size="sm"
               className="text-white hover:bg-white/20"

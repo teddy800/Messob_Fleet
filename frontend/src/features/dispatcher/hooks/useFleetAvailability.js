@@ -21,34 +21,69 @@ export function useFleetAvailability(date, filters = {}) {
       const startDate = startOfDay(date);
       const endDate = endOfDay(date);
 
+      console.log('🚗 Fetching fleet availability:', {
+        startDate: startDate.toISOString(),
+        endDate: endDate.toISOString(),
+        filters
+      });
+
       const response = await callMethod(
         'messob.fms.trip',
         'get_fleet_availability',
         [startDate.toISOString(), endDate.toISOString()],
         {
-          category: filters.category || null,
+          category: (filters.category && filters.category !== 'all') ? filters.category : null,
           status: filters.status || null,
         }
       );
 
-      if (response.success) {
-        // Filter by search query if provided
-        let vehicles = response.vehicles || [];
-        
-        if (filters.searchQuery) {
-          const query = filters.searchQuery.toLowerCase();
-          vehicles = vehicles.filter(v => 
-            v.plate_no.toLowerCase().includes(query)
-          );
-        }
+      console.log('📦 Fleet availability response:', response);
 
-        setData({ vehicles });
-      } else {
-        setError(response.error || 'Failed to fetch availability');
+      // Handle different response formats
+      if (!response) {
+        console.error('❌ No response received from API');
+        setError('No response from server');
+        return;
       }
+
+      // Check if response has success flag
+      if (response.success === false) {
+        const errorMsg = response.error || 'API returned success: false';
+        console.error('❌ API returned error:', errorMsg);
+        setError(errorMsg);
+        return;
+      }
+
+      // Extract vehicles array
+      let vehicles = [];
+      if (response.success && response.vehicles) {
+        vehicles = response.vehicles;
+      } else if (Array.isArray(response.vehicles)) {
+        vehicles = response.vehicles;
+      } else if (Array.isArray(response)) {
+        vehicles = response;
+      }
+      
+      console.log(`✅ Received ${vehicles.length} vehicles`);
+      
+      if (filters.searchQuery) {
+        const query = filters.searchQuery.toLowerCase();
+        vehicles = vehicles.filter(v => 
+          v.plate_no && v.plate_no.toLowerCase().includes(query)
+        );
+        console.log(`🔍 Filtered to ${vehicles.length} vehicles matching "${query}"`);
+      }
+
+      setData({ vehicles });
     } catch (err) {
-      setError(err.message || 'An error occurred');
-      console.error('Fleet availability error:', err);
+      const errorMsg = err.message || 'An error occurred';
+      console.error('❌ Fleet availability error:', err);
+      console.error('Error details:', {
+        message: err.message,
+        stack: err.stack,
+        response: err.response
+      });
+      setError(errorMsg);
     } finally {
       setLoading(false);
     }
