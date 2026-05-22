@@ -155,76 +155,6 @@ export default function FleetCalendarEnhanced() {
 
   return (
     <div className="p-6 space-y-6">
-      {/* Statistics Dashboard */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-        {/* Total Vehicles */}
-        <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-lg p-4 text-white transform hover:scale-105 transition-all">
-          <div className="flex items-center justify-between mb-2">
-            <Car className="h-8 w-8 opacity-80" />
-            <span className="text-3xl font-bold">{stats.total}</span>
-          </div>
-          <p className="text-sm font-medium opacity-90">Total Vehicles</p>
-          <div className="mt-2 h-1 bg-white/30 rounded-full overflow-hidden">
-            <div className="h-full bg-white rounded-full" style={{ width: '100%' }}></div>
-          </div>
-        </div>
-
-        {/* Available */}
-        <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-xl shadow-lg p-4 text-white transform hover:scale-105 transition-all">
-          <div className="flex items-center justify-between mb-2">
-            <CheckCircle className="h-8 w-8 opacity-80" />
-            <span className="text-3xl font-bold">{stats.available}</span>
-          </div>
-          <p className="text-sm font-medium opacity-90">Available Now</p>
-          <div className="mt-2 h-1 bg-white/30 rounded-full overflow-hidden">
-            <div className="h-full bg-white rounded-full" style={{ width: `${stats.availabilityRate}%` }}></div>
-          </div>
-          <p className="text-xs mt-1 opacity-75">{stats.availabilityRate}% availability</p>
-        </div>
-
-        {/* Occupied */}
-        <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl shadow-lg p-4 text-white transform hover:scale-105 transition-all">
-          <div className="flex items-center justify-between mb-2">
-            <TrendingUp className="h-8 w-8 opacity-80" />
-            <span className="text-3xl font-bold">{stats.occupied}</span>
-          </div>
-          <p className="text-sm font-medium opacity-90">In Use</p>
-          <div className="mt-2 h-1 bg-white/30 rounded-full overflow-hidden">
-            <div className="h-full bg-white rounded-full" style={{ width: `${stats.utilizationRate}%` }}></div>
-          </div>
-          <p className="text-xs mt-1 opacity-75">{stats.utilizationRate}% utilization</p>
-        </div>
-
-        {/* Maintenance */}
-        <div className="bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-xl shadow-lg p-4 text-white transform hover:scale-105 transition-all">
-          <div className="flex items-center justify-between mb-2">
-            <AlertTriangle className="h-8 w-8 opacity-80" />
-            <span className="text-3xl font-bold">{stats.maintenance}</span>
-          </div>
-          <p className="text-sm font-medium opacity-90">Maintenance</p>
-          <div className="mt-2 h-1 bg-white/30 rounded-full overflow-hidden">
-            <div className="h-full bg-white rounded-full" style={{ width: stats.total > 0 ? `${(stats.maintenance / stats.total * 100)}%` : '0%' }}></div>
-          </div>
-          <p className="text-xs mt-1 opacity-75">Under service</p>
-        </div>
-
-        {/* Quick Stats */}
-        <div className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl shadow-lg p-4 text-white transform hover:scale-105 transition-all">
-          <div className="flex items-center justify-between mb-2">
-            <BarChart3 className="h-8 w-8 opacity-80" />
-            <span className="text-3xl font-bold">{Object.keys(stats.categoryStats).length}</span>
-          </div>
-          <p className="text-sm font-medium opacity-90">Categories</p>
-          <div className="mt-2 space-y-1">
-            {Object.entries(stats.categoryStats).slice(0, 2).map(([cat, data]) => (
-              <p key={cat} className="text-xs opacity-75 truncate">
-                {cat}: {data.available}/{data.total}
-              </p>
-            ))}
-          </div>
-        </div>
-      </div>
-
       {/* Header with Controls */}
       <div className="bg-gradient-to-r from-brand-blue to-blue-700 p-6 rounded-xl shadow-lg">
         <div className="flex items-center justify-between mb-4">
@@ -263,28 +193,6 @@ export default function FleetCalendarEnhanced() {
           </div>
 
           <div className="flex items-center gap-2">
-            <Button
-              onClick={handleExport}
-              variant="ghost"
-              size="sm"
-              className="text-white hover:bg-white/20 transition-all"
-              title="Export to CSV"
-            >
-              <Download className="h-4 w-4 mr-2" />
-              Export
-            </Button>
-
-            <Button
-              onClick={handlePrint}
-              variant="ghost"
-              size="sm"
-              className="text-white hover:bg-white/20 transition-all"
-              title="Print Calendar"
-            >
-              <Printer className="h-4 w-4 mr-2" />
-              Print
-            </Button>
-
             <Button
               onClick={toggleFullscreen}
               variant="ghost"
