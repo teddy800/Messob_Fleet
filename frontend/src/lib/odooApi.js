@@ -1,47 +1,139 @@
 // lib/odooApi.js
 // Handles all communication with the Odoo 18 backend at http://localhost:8018
+// NFR-1: Performance optimizations with caching and request deduplication
 
 const BASE_URL = "/odoo"; // proxied via vite to avoid CORS
 
 let sessionId = null;
 
+// NFR-1: Performance - Simple in-memory cache for read-only data
+const cache = new Map();
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
+// NFR-1: Performance - Request deduplication to prevent duplicate API calls
+const pendingRequests = new Map();
+
+/**
+ * Generate cache key from request parameters
+ */
+function getCacheKey(url, params) {
+  return `${url}:${JSON.stringify(params)}`;
+}
+
+/**
+ * Check if cached data is still valid
+ */
+function isCacheValid(cacheEntry) {
+  return cacheEntry && (Date.now() - cacheEntry.timestamp < CACHE_TTL);
+}
+
 /**
  * Low-level JSON-RPC call to Odoo
+ * NFR-1: Enhanced with request deduplication
  */
-async function rpc(url, params = {}) {
+async function rpc(url, params = {}, options = {}) {
+  const { skipCache = false, skipDedup = false } = options;
+  
   console.log("📡 RPC Call:", url, params);
-  const res = await fetch(`${BASE_URL}${url}`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    credentials: "include",
-    body: JSON.stringify({
-      jsonrpc: "2.0",
-      method: "call",
-      params,
-    }),
-  });
-
-  const json = await res.json();
-  console.log("📥 RPC Response:", json);
-
-  if (json.error) {
-    console.error("❌ RPC Error Details:", {
-      message: json.error.message,
-      data: json.error.data,
-      code: json.error.code,
-      fullError: json.error
-    });
+  
+  // NFR-1: Check cache for read operations
+  if (!skipCache && (url.includes('search_read') || url.includes('read'))) {
+    const cacheKey = getCacheKey(url, params);
+    const cached = cache.get(cacheKey);
     
-    // Extract meaningful error message
-    const errorMessage = json.error.data?.message 
-      || json.error.data?.arguments?.[0] 
-      || json.error.message 
-      || "Odoo RPC error";
-    
-    throw new Error(errorMessage);
+    if (isCacheValid(cached)) {
+      console.log("⚡ Cache hit:", cacheKey);
+      return cached.data;
+    }
   }
+  
+  // NFR-1: Request deduplication - prevent duplicate simultaneous requests
+  if (!skipDedup) {
+    const requestKey = getCacheKey(url, params);
+    const pending = pendingRequests.get(requestKey);
+    
+    if (pending) {
+      console.log("🔄 Deduplicating request:", requestKey);
+      return pending;
+    }
+  }
+  
+  // Make the actual request
+  const requestPromise = (async () => {
+    const res = await fetch(`${BASE_URL}${url}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({
+        jsonrpc: "2.0",
+        method: "call",
+        params,
+      }),
+    });
 
-  return json.result;
+    const json = await res.json();
+    console.log("📥 RPC Response:", json);
+
+    if (json.error) {
+      console.error("❌ RPC Error Details:", {
+        message: json.error.message,
+        data: json.error.data,
+        code: json.error.code,
+        fullError: json.error
+      });
+      
+      // Extract meaningful error message
+      const errorMessage = json.error.data?.message 
+        || json.error.data?.arguments?.[0] 
+        || json.error.message 
+        || "Odoo RPC error";
+      
+      throw new Error(errorMessage);
+    }
+
+    // NFR-1: Cache successful read operations
+    if (!skipCache && (url.includes('search_read') || url.includes('read'))) {
+      const cacheKey = getCacheKey(url, params);
+      cache.set(cacheKey, {
+        data: json.result,
+        timestamp: Date.now()
+      });
+    }
+
+    return json.result;
+  })();
+  
+  // NFR-1: Store pending request
+  if (!skipDedup) {
+    const requestKey = getCacheKey(url, params);
+    pendingRequests.set(requestKey, requestPromise);
+    
+    // Clean up after request completes
+    requestPromise.finally(() => {
+      pendingRequests.delete(requestKey);
+    });
+  }
+  
+  return requestPromise;
+}
+
+/**
+ * Clear cache (useful after write operations)
+ * NFR-1: Performance - Cache invalidation
+ */
+export function clearCache(pattern = null) {
+  if (pattern) {
+    // Clear specific cache entries matching pattern
+    for (const key of cache.keys()) {
+      if (key.includes(pattern)) {
+        cache.delete(key);
+      }
+    }
+  } else {
+    // Clear all cache
+    cache.clear();
+  }
+  console.log("🗑️ Cache cleared:", pattern || 'all');
 }
 
 // ---------------------------------------------------------------------------
@@ -116,26 +208,38 @@ export async function searchRead(model, domain = [], fields = [], limit = 80) {
 
 /**
  * Create a record.
+ * NFR-1: Clears cache after write operation
  */
 export async function createRecord(model, values = {}) {
-  return rpc("/web/dataset/call_kw", {
+  const result = await rpc("/web/dataset/call_kw", {
     model,
     method: "create",
     args: [values],
     kwargs: {},
-  });
+  }, { skipCache: true });
+  
+  // Clear cache for this model
+  clearCache(model);
+  
+  return result;
 }
 
 /**
  * Write (update) a record.
+ * NFR-1: Clears cache after write operation
  */
 export async function writeRecord(model, ids = [], values = {}) {
-  return rpc("/web/dataset/call_kw", {
+  const result = await rpc("/web/dataset/call_kw", {
     model,
     method: "write",
     args: [ids, values],
     kwargs: {},
-  });
+  }, { skipCache: true });
+  
+  // Clear cache for this model
+  clearCache(model);
+  
+  return result;
 }
 
 /**
@@ -144,12 +248,22 @@ export async function writeRecord(model, ids = [], values = {}) {
  * @param {string} method - Method name
  * @param {Array} args - Arguments array (will be spread as positional args)
  * @param {Object} kwargs - Keyword arguments
+ * NFR-1: Clears cache for write operations
  */
 export async function callMethod(model, method, args = [], kwargs = {}) {
-  return rpc("/web/dataset/call_kw", {
+  const isWriteOperation = ['create', 'write', 'unlink', 'action_'].some(op => method.includes(op));
+  
+  const result = await rpc("/web/dataset/call_kw", {
     model,
     method,
     args: Array.isArray(args) ? args : [args],
     kwargs,
-  });
+  }, { skipCache: isWriteOperation });
+  
+  // Clear cache for write operations
+  if (isWriteOperation) {
+    clearCache(model);
+  }
+  
+  return result;
 }

@@ -36,6 +36,7 @@ class MessobFmsMaintenanceAlert(models.Model):
         string='Alert Title',
         required=True,
         tracking=True,
+        index=True,  # NFR-1: Performance - Index for search
         help='Title of the maintenance alert.',
     )
 
@@ -49,6 +50,7 @@ class MessobFmsMaintenanceAlert(models.Model):
         required=True,
         default='date_based',
         tracking=True,
+        index=True,  # NFR-1: Performance - Index for filtering
     )
 
     alert_date = fields.Datetime(
@@ -56,6 +58,7 @@ class MessobFmsMaintenanceAlert(models.Model):
         required=True,
         default=fields.Datetime.now,
         tracking=True,
+        index=True,  # NFR-1: Performance - Index for date queries
         help='When this alert was generated.',
     )
 
@@ -65,12 +68,14 @@ class MessobFmsMaintenanceAlert(models.Model):
         string='Vehicle',
         required=True,
         tracking=True,
+        index=True,  # NFR-1: Performance - Index for vehicle queries
         help='Vehicle requiring maintenance.',
     )
 
     maintenance_log_id = fields.Many2one(
         comodel_name='messob.fms.maintenance.log',
         string='Related Maintenance Log',
+        index=True,  # NFR-1: Performance - Index for relations
         help='Original maintenance record that scheduled this alert.',
     )
 
@@ -78,6 +83,7 @@ class MessobFmsMaintenanceAlert(models.Model):
     scheduled_date = fields.Date(
         string='Scheduled Maintenance Date',
         required=True,
+        index=True,  # NFR-1: Performance - Index for date range queries
         tracking=True,
         help='Date when maintenance is due.',
     )

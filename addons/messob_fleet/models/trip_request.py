@@ -45,6 +45,7 @@ class MessobFmsTrip(models.Model):
         copy=False,
         default='New',
         tracking=True,
+        index=True,  # NFR-1: Performance - Index for fast lookup
         help='Auto-generated sequence: REQ/YYYY/NNNN',
     )
 
@@ -55,6 +56,7 @@ class MessobFmsTrip(models.Model):
         required=True,
         readonly=True,
         tracking=True,
+        index=True,  # NFR-1: Performance - Index for user queries
         help='Staff member who raised this request.',
     )
 
@@ -91,12 +93,14 @@ class MessobFmsTrip(models.Model):
         string='Start Date / Time',
         required=True,
         tracking=True,
+        index=True,  # NFR-1: Performance - Index for date range queries
     )
 
     end_dt = fields.Datetime(
         string='End Date / Time',
         required=True,
         tracking=True,
+        index=True,  # NFR-1: Performance - Index for date range queries
         help='Must be after Start Date/Time. Multi-day trips are supported.',
     )
 
@@ -150,6 +154,7 @@ class MessobFmsTrip(models.Model):
         readonly=True,
         tracking=True,
         copy=False,
+        index=True,  # NFR-1: Performance - Index for status filtering
         help='Current lifecycle state of the trip request.',
     )
 
@@ -161,6 +166,7 @@ class MessobFmsTrip(models.Model):
         comodel_name='fleet.vehicle',
         string='Assigned Vehicle',
         tracking=True,
+        index=True,  # NFR-1: Performance - Index for vehicle queries
         help='Vehicle assigned by the dispatcher (Plate No. shown).',
     )
 
@@ -168,6 +174,7 @@ class MessobFmsTrip(models.Model):
         comodel_name='res.partner',
         string='Assigned Driver',
         tracking=True,
+        index=True,  # NFR-1: Performance - Index for driver queries
         help='Driver assigned by the dispatcher.',
     )
 
@@ -209,23 +216,41 @@ class MessobFmsTrip(models.Model):
         Find all vehicles and drivers already committed to approved/in-progress
         trips that overlap with this trip's time window.
         Result is used as exclusion domain on the assignment dropdowns.
+        
+        NFR-1: Performance - Optimized with single query for all records.
         """
         active_states = ['approved', 'in_progress']
-        for rec in self:
-            if not rec.start_dt or not rec.end_dt:
+        
+        # Batch process all records at once for better performance
+        records_to_process = self.filtered(lambda r: r.start_dt and r.end_dt)
+        
+        if not records_to_process:
+            for rec in self:
                 rec.unavailable_vehicle_ids = []
                 rec.unavailable_driver_ids = []
-                continue
-
-            overlapping = self.search([
-                ('state', 'in', active_states),
-                ('id', '!=', rec.id or 0),
-                ('start_dt', '<', rec.end_dt),
-                ('end_dt', '>', rec.start_dt),
-            ])
-
+            return
+        
+        # Single query to get all overlapping trips
+        all_overlapping = self.search([
+            ('state', 'in', active_states),
+            ('id', 'not in', records_to_process.ids),
+            ('start_dt', '!=', False),
+            ('end_dt', '!=', False),
+        ])
+        
+        for rec in records_to_process:
+            # Filter overlapping trips for this specific record
+            overlapping = all_overlapping.filtered(
+                lambda t: t.start_dt < rec.end_dt and t.end_dt > rec.start_dt
+            )
+            
             rec.unavailable_vehicle_ids = overlapping.mapped('assigned_vehicle_id')
             rec.unavailable_driver_ids = overlapping.mapped('assigned_driver_id')
+        
+        # Handle records without dates
+        for rec in (self - records_to_process):
+            rec.unavailable_vehicle_ids = []
+            rec.unavailable_driver_ids = []
 
     # =========================================================================
     # COMPUTED / DISPLAY FIELDS
@@ -339,6 +364,23 @@ class MessobFmsTrip(models.Model):
                 raise UserError(
                     _('Purpose must be at least 10 characters long.')
                 )
+
+    # =========================================================================
+    # SQL CONSTRAINTS (NFR-1: Performance & Data Integrity)
+    # =========================================================================
+    
+    _sql_constraints = [
+        (
+            'name_unique',
+            'UNIQUE(name)',
+            'Request ID must be unique!'
+        ),
+        (
+            'check_dates_order',
+            'CHECK(end_dt > start_dt)',
+            'End date/time must be after start date/time!'
+        ),
+    ]
 
     def _check_resource_availability(self):
         """
@@ -477,6 +519,8 @@ class MessobFmsTrip(models.Model):
         Get all vehicles with their trip assignments and maintenance schedules
         for the fleet availability calendar.
         
+        NFR-1: Performance - Optimized with batch queries and minimal database hits.
+        
         Args:
             start_date (str): ISO datetime string
             end_date (str): ISO datetime string
@@ -507,6 +551,7 @@ class MessobFmsTrip(models.Model):
         if category:
             vehicle_domain.append(('category_id.name', '=ilike', category))
         
+        # NFR-1: Fetch all vehicles at once
         vehicles = Vehicle.search(vehicle_domain)
         
         # Parse dates
@@ -517,22 +562,41 @@ class MessobFmsTrip(models.Model):
             start_dt = datetime.fromisoformat(start_date)
             end_dt = datetime.fromisoformat(end_date)
         
+        # NFR-1: Batch fetch all trips in date range (single query)
+        all_trips = self.search([
+            ('assigned_vehicle_id', 'in', vehicles.ids),
+            ('state', 'in', ['approved', 'in_progress']),
+            ('start_dt', '<', end_dt),
+            ('end_dt', '>', start_dt),
+        ])
+        
+        # NFR-1: Batch fetch all maintenance in date range (single query)
+        all_maintenance = Maintenance.search([
+            ('vehicle_id', 'in', vehicles.ids),
+            ('date', '<=', end_dt),
+            ('date', '>=', start_dt),
+        ])
+        
+        # NFR-1: Group trips and maintenance by vehicle (in-memory, no DB queries)
+        trips_by_vehicle = {}
+        for trip in all_trips:
+            vehicle_id = trip.assigned_vehicle_id.id
+            if vehicle_id not in trips_by_vehicle:
+                trips_by_vehicle[vehicle_id] = []
+            trips_by_vehicle[vehicle_id].append(trip)
+        
+        maintenance_by_vehicle = {}
+        for maint in all_maintenance:
+            vehicle_id = maint.vehicle_id.id
+            if vehicle_id not in maintenance_by_vehicle:
+                maintenance_by_vehicle[vehicle_id] = []
+            maintenance_by_vehicle[vehicle_id].append(maint)
+        
+        # Build result
         result = []
         for vehicle in vehicles:
-            # Get trips for this vehicle in date range
-            trips = self.search([
-                ('assigned_vehicle_id', '=', vehicle.id),
-                ('state', 'in', ['approved', 'in_progress']),
-                ('start_dt', '<', end_dt),
-                ('end_dt', '>', start_dt),
-            ])
-            
-            # Get maintenance for this vehicle in date range
-            maintenance = Maintenance.search([
-                ('vehicle_id', '=', vehicle.id),
-                ('date', '<=', end_dt),
-                ('date', '>=', start_dt),
-            ])
+            trips = trips_by_vehicle.get(vehicle.id, [])
+            maintenance = maintenance_by_vehicle.get(vehicle.id, [])
             
             result.append({
                 'id': vehicle.id,
@@ -748,6 +812,8 @@ class MessobFmsTrip(models.Model):
         """
         FR-3.3: Get collaborative pickup information for shared trips.
         
+        NFR-1: Performance - Optimized query with date range filtering.
+        
         Args:
             trip_id (int): Trip request ID
             
@@ -768,12 +834,16 @@ class MessobFmsTrip(models.Model):
         if not trip.assigned_vehicle_id:
             return {'success': False, 'error': 'No vehicle assigned'}
         
-        # Find other trips using the same vehicle on the same day
+        # NFR-1: Optimized query - find other trips using same vehicle on same day
+        # Use date range instead of replace() for better index usage
+        day_start = trip.start_dt.replace(hour=0, minute=0, second=0, microsecond=0)
+        day_end = trip.start_dt.replace(hour=23, minute=59, second=59, microsecond=999999)
+        
         same_day_trips = self.search([
             ('assigned_vehicle_id', '=', trip.assigned_vehicle_id.id),
             ('state', 'in', ['approved', 'in_progress']),
-            ('start_dt', '>=', trip.start_dt.replace(hour=0, minute=0, second=0)),
-            ('start_dt', '<', trip.start_dt.replace(hour=23, minute=59, second=59)),
+            ('start_dt', '>=', day_start),
+            ('start_dt', '<=', day_end),
             ('id', '!=', trip.id)
         ])
         
