@@ -329,29 +329,174 @@ class MessobFmsMaintenanceAlert(models.Model):
         self.write({'email_sent': True})
 
     def _send_sms_notifications(self):
-        """Send SMS notifications to mechanics and managers."""
+        """Send SMS notifications to mechanics and managers via SMS gateway."""
         if self.sms_sent:
             return
 
+        # Get SMS gateway configuration
+        sms_provider = self.env['ir.config_parameter'].sudo().get_param('messob_fleet.sms_provider', 'twilio')
+        sms_enabled = self.env['ir.config_parameter'].sudo().get_param('messob_fleet.sms_enabled', 'False') == 'True'
+        
+        if not sms_enabled:
+            _logger.info("SMS notifications disabled in system parameters")
+            self.write({'sms_sent': True})
+            return
+
         recipients = self.mechanic_ids + self.manager_ids
+        sms_log_model = self.env['messob.fms.sms.log']
+        
         for recipient in recipients:
             if recipient.mobile:
                 try:
-                    # SMS integration would go here
-                    # For now, we'll log the SMS that would be sent
-                    sms_message = f"MESSOB Fleet Alert: {self.alert_message[:140]}"
-                    _logger.info(f"SMS to {recipient.mobile}: {sms_message}")
+                    # Prepare SMS message (max 160 chars for standard SMS)
+                    sms_message = f"MESSOB Fleet: {self.alert_message[:140]}"
                     
-                    # In a real implementation, integrate with SMS gateway:
-                    # self.env['sms.sms'].create({
-                    #     'number': recipient.mobile,
-                    #     'body': sms_message,
-                    # }).send()
+                    # Send via configured SMS gateway
+                    if sms_provider == 'twilio':
+                        success = self._send_sms_twilio(recipient.mobile, sms_message)
+                    elif sms_provider == 'aws_sns':
+                        success = self._send_sms_aws_sns(recipient.mobile, sms_message)
+                    elif sms_provider == 'local':
+                        success = self._send_sms_local_gateway(recipient.mobile, sms_message)
+                    else:
+                        _logger.warning(f"Unknown SMS provider: {sms_provider}")
+                        success = False
                     
+                    # Log SMS delivery
+                    sms_log_model.create({
+                        'recipient_name': recipient.name,
+                        'recipient_mobile': recipient.mobile,
+                        'message': sms_message,
+                        'status': 'sent' if success else 'failed',
+                        'provider': sms_provider,
+                        'related_model': self._name,
+                        'related_id': self.id,
+                    })
+                    
+                    if success:
+                        _logger.info(f"SMS sent successfully to {recipient.mobile}")
+                    else:
+                        _logger.error(f"Failed to send SMS to {recipient.mobile}")
+                        
                 except Exception as e:
-                    _logger.error(f"Failed to send SMS to {recipient.mobile}: {e}")
+                    _logger.error(f"SMS sending error for {recipient.mobile}: {e}")
+                    # Log failed attempt
+                    sms_log_model.create({
+                        'recipient_name': recipient.name,
+                        'recipient_mobile': recipient.mobile,
+                        'message': sms_message if 'sms_message' in locals() else 'Error preparing message',
+                        'status': 'failed',
+                        'error_message': str(e),
+                        'provider': sms_provider,
+                        'related_model': self._name,
+                        'related_id': self.id,
+                    })
 
         self.write({'sms_sent': True})
+
+    def _send_sms_twilio(self, phone_number, message):
+        """Send SMS via Twilio API."""
+        try:
+            import requests
+            
+            account_sid = self.env['ir.config_parameter'].sudo().get_param('messob_fleet.twilio_account_sid')
+            auth_token = self.env['ir.config_parameter'].sudo().get_param('messob_fleet.twilio_auth_token')
+            from_number = self.env['ir.config_parameter'].sudo().get_param('messob_fleet.twilio_from_number')
+            
+            if not all([account_sid, auth_token, from_number]):
+                _logger.error("Twilio credentials not configured")
+                return False
+            
+            url = f"https://api.twilio.com/2010-04-01/Accounts/{account_sid}/Messages.json"
+            
+            response = requests.post(
+                url,
+                auth=(account_sid, auth_token),
+                data={
+                    'From': from_number,
+                    'To': phone_number,
+                    'Body': message,
+                },
+                timeout=10
+            )
+            
+            return response.status_code == 201
+            
+        except ImportError:
+            _logger.error("requests library not installed. Install with: pip install requests")
+            return False
+        except Exception as e:
+            _logger.error(f"Twilio SMS error: {e}")
+            return False
+
+    def _send_sms_aws_sns(self, phone_number, message):
+        """Send SMS via AWS SNS."""
+        try:
+            import boto3
+            
+            aws_access_key = self.env['ir.config_parameter'].sudo().get_param('messob_fleet.aws_access_key_id')
+            aws_secret_key = self.env['ir.config_parameter'].sudo().get_param('messob_fleet.aws_secret_access_key')
+            aws_region = self.env['ir.config_parameter'].sudo().get_param('messob_fleet.aws_region', 'us-east-1')
+            
+            if not all([aws_access_key, aws_secret_key]):
+                _logger.error("AWS credentials not configured")
+                return False
+            
+            sns_client = boto3.client(
+                'sns',
+                aws_access_key_id=aws_access_key,
+                aws_secret_access_key=aws_secret_key,
+                region_name=aws_region
+            )
+            
+            response = sns_client.publish(
+                PhoneNumber=phone_number,
+                Message=message,
+                MessageAttributes={
+                    'AWS.SNS.SMS.SMSType': {
+                        'DataType': 'String',
+                        'StringValue': 'Transactional'
+                    }
+                }
+            )
+            
+            return response['ResponseMetadata']['HTTPStatusCode'] == 200
+            
+        except ImportError:
+            _logger.error("boto3 library not installed. Install with: pip install boto3")
+            return False
+        except Exception as e:
+            _logger.error(f"AWS SNS SMS error: {e}")
+            return False
+
+    def _send_sms_local_gateway(self, phone_number, message):
+        """Send SMS via local SMS gateway (custom implementation)."""
+        try:
+            import requests
+            
+            gateway_url = self.env['ir.config_parameter'].sudo().get_param('messob_fleet.sms_gateway_url')
+            gateway_api_key = self.env['ir.config_parameter'].sudo().get_param('messob_fleet.sms_gateway_api_key')
+            
+            if not all([gateway_url, gateway_api_key]):
+                _logger.error("Local SMS gateway not configured")
+                return False
+            
+            response = requests.post(
+                gateway_url,
+                headers={'Authorization': f'Bearer {gateway_api_key}'},
+                json={
+                    'to': phone_number,
+                    'message': message,
+                    'sender': 'MESSOB Fleet',
+                },
+                timeout=10
+            )
+            
+            return response.status_code == 200
+            
+        except Exception as e:
+            _logger.error(f"Local SMS gateway error: {e}")
+            return False
 
     # ── Cron Job Methods ──
     @api.model

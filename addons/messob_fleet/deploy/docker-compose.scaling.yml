@@ -1,0 +1,300 @@
+# ============================================================================
+# MESSOB Fleet Management System - Horizontal Scaling Docker Compose
+# NFR-1.3: Horizontal Scaling Configuration
+# ============================================================================
+# This configuration deploys multiple Odoo instances with load balancing
+# ============================================================================
+
+version: '3.8'
+
+services:
+  # ── Database (PostgreSQL with replication support) ──
+  db:
+    image: postgres:16
+    container_name: fleet_db
+    environment:
+      POSTGRES_DB: fleet_management
+      POSTGRES_USER: odoo
+      POSTGRES_PASSWORD: odoo
+      POSTGRES_INITDB_ARGS: "-E UTF8"
+      # Replication settings
+      POSTGRES_MAX_CONNECTIONS: 200
+      POSTGRES_SHARED_BUFFERS: 256MB
+      POSTGRES_EFFECTIVE_CACHE_SIZE: 1GB
+      POSTGRES_WORK_MEM: 16MB
+    volumes:
+      - fleet_db_data:/var/lib/postgresql/data
+      - ./config/postgresql.conf:/etc/postgresql/postgresql.conf:ro
+    ports:
+      - "5432:5432"
+    networks:
+      - fleet_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U odoo"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # ── Database Connection Pooler (PgBouncer) ──
+  pgbouncer:
+    image: edoburu/pgbouncer:latest
+    container_name: fleet_pgbouncer
+    environment:
+      DATABASE_URL: "postgres://odoo:odoo@db:5432/fleet_management"
+      POOL_MODE: transaction
+      MAX_CLIENT_CONN: 1000
+      DEFAULT_POOL_SIZE: 25
+      RESERVE_POOL_SIZE: 5
+    ports:
+      - "6432:5432"
+    networks:
+      - fleet_network
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  # ── Redis (Session Storage for Multi-Instance) ──
+  redis:
+    image: redis:7-alpine
+    container_name: fleet_redis
+    command: redis-server --appendonly yes --requirepass fleet_redis_password
+    volumes:
+      - fleet_redis_data:/data
+    ports:
+      - "6379:6379"
+    networks:
+      - fleet_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+
+  # ── Odoo Instance 1 ──
+  odoo1:
+    image: odoo:18.0
+    container_name: fleet_odoo1
+    depends_on:
+      pgbouncer:
+        condition: service_started
+      redis:
+        condition: service_healthy
+    environment:
+      - HOST=pgbouncer
+      - PORT=5432
+      - USER=odoo
+      - PASSWORD=odoo
+    volumes:
+      - ../../../:/mnt/extra-addons
+      - fleet_odoo1_data:/var/lib/odoo
+      - ./config/odoo_multiworker.conf:/etc/odoo/odoo.conf:ro
+      - fleet_logs:/var/log/odoo
+    ports:
+      - "8069:8069"
+      - "8072:8072"
+    networks:
+      - fleet_network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8069/web/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    restart: unless-stopped
+
+  # ── Odoo Instance 2 ──
+  odoo2:
+    image: odoo:18.0
+    container_name: fleet_odoo2
+    depends_on:
+      pgbouncer:
+        condition: service_started
+      redis:
+        condition: service_healthy
+    environment:
+      - HOST=pgbouncer
+      - PORT=5432
+      - USER=odoo
+      - PASSWORD=odoo
+    volumes:
+      - ../../../:/mnt/extra-addons
+      - fleet_odoo2_data:/var/lib/odoo
+      - ./config/odoo_multiworker.conf:/etc/odoo/odoo.conf:ro
+      - fleet_logs:/var/log/odoo
+    ports:
+      - "8070:8069"
+      - "8073:8072"
+    networks:
+      - fleet_network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8069/web/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    restart: unless-stopped
+
+  # ── Odoo Instance 3 (Optional - scale as needed) ──
+  odoo3:
+    image: odoo:18.0
+    container_name: fleet_odoo3
+    depends_on:
+      pgbouncer:
+        condition: service_started
+      redis:
+        condition: service_healthy
+    environment:
+      - HOST=pgbouncer
+      - PORT=5432
+      - USER=odoo
+      - PASSWORD=odoo
+    volumes:
+      - ../../../:/mnt/extra-addons
+      - fleet_odoo3_data:/var/lib/odoo
+      - ./config/odoo_multiworker.conf:/etc/odoo/odoo.conf:ro
+      - fleet_logs:/var/log/odoo
+    ports:
+      - "8071:8069"
+      - "8074:8072"
+    networks:
+      - fleet_network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8069/web/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    restart: unless-stopped
+    profiles:
+      - scale3  # Only start with: docker-compose --profile scale3 up
+
+  # ── Nginx Load Balancer ──
+  nginx:
+    image: nginx:alpine
+    container_name: fleet_nginx
+    depends_on:
+      - odoo1
+      - odoo2
+    volumes:
+      - ./config/nginx_load_balancer.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro
+      - fleet_nginx_logs:/var/log/nginx
+      - ../../frontend/dist:/var/www/fleet-frontend:ro
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8080:8080"  # Monitoring port (internal only)
+    networks:
+      - fleet_network
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    restart: unless-stopped
+
+  # ── Monitoring (Prometheus - Optional) ──
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: fleet_prometheus
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - fleet_prometheus_data:/prometheus
+    ports:
+      - "9090:9090"
+    networks:
+      - fleet_network
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+    profiles:
+      - monitoring
+    restart: unless-stopped
+
+  # ── Grafana (Monitoring Dashboard - Optional) ──
+  grafana:
+    image: grafana/grafana:latest
+    container_name: fleet_grafana
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - fleet_grafana_data:/var/lib/grafana
+      - ./monitoring/grafana-dashboards:/etc/grafana/provisioning/dashboards:ro
+    ports:
+      - "3001:3000"
+    networks:
+      - fleet_network
+    depends_on:
+      - prometheus
+    profiles:
+      - monitoring
+    restart: unless-stopped
+
+volumes:
+  fleet_db_data:
+    driver: local
+  fleet_redis_data:
+    driver: local
+  fleet_odoo1_data:
+    driver: local
+  fleet_odoo2_data:
+    driver: local
+  fleet_odoo3_data:
+    driver: local
+  fleet_logs:
+    driver: local
+  fleet_nginx_logs:
+    driver: local
+  fleet_prometheus_data:
+    driver: local
+  fleet_grafana_data:
+    driver: local
+
+networks:
+  fleet_network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.25.0.0/16
+
+# ============================================================================
+# USAGE INSTRUCTIONS:
+# ============================================================================
+#
+# 1. START WITH 2 INSTANCES (Default):
+#    docker-compose -f docker-compose.scaling.yml up -d
+#
+# 2. START WITH 3 INSTANCES:
+#    docker-compose -f docker-compose.scaling.yml --profile scale3 up -d
+#
+# 3. START WITH MONITORING:
+#    docker-compose -f docker-compose.scaling.yml --profile monitoring up -d
+#
+# 4. SCALE DYNAMICALLY (Add more instances):
+#    docker-compose -f docker-compose.scaling.yml up -d --scale odoo2=3
+#
+# 5. CHECK STATUS:
+#    docker-compose -f docker-compose.scaling.yml ps
+#
+# 6. VIEW LOGS:
+#    docker-compose -f docker-compose.scaling.yml logs -f odoo1
+#
+# 7. STOP ALL:
+#    docker-compose -f docker-compose.scaling.yml down
+#
+# 8. MONITORING:
+#    - Nginx Status: http://localhost:8080/nginx_status
+#    - Prometheus: http://localhost:9090
+#    - Grafana: http://localhost:3001 (admin/admin)
+#
+# 9. PERFORMANCE TESTING:
+#    ab -n 1000 -c 10 http://localhost/web/database/list
+#    wrk -t12 -c400 -d30s http://localhost/
+#
+# ============================================================================

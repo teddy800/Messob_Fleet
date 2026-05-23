@@ -19,3 +19,4 @@ from . import gps_device
 from . import gps_position
 from . import gps_gateway
 from . import geofence
+from . import sms_log
