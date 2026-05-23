@@ -18,11 +18,12 @@ class MessobFmsMaintenanceLog(models.Model):
     """
     A single repair or maintenance event for a vehicle.
     Linked to the fleet.vehicle record.
+    Includes comprehensive audit logging for all changes.
     """
 
     _name = 'messob.fms.maintenance.log'
     _description = 'MESSOB FMS - Repair & Maintenance Log'
-    _inherit = ['mail.thread', 'mail.activity.mixin']
+    _inherit = ['mail.thread', 'mail.activity.mixin', 'base.model.audit.mixin']
     _order = 'date desc'
     _rec_name = 'service_type'
 

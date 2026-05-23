@@ -93,6 +93,13 @@
               sequence="10"
               groups="messob_fleet.group_fms_mechanic"/>
 
+    <menuitem id="menu_fms_maintenance_alerts"
+              name="Maintenance Alerts"
+              parent="menu_fms_mechanic_root"
+              action="messob_fleet.action_maintenance_alert"
+              sequence="20"
+              groups="messob_fleet.group_fms_mechanic,messob_fleet.group_fms_dispatcher,messob_fleet.group_fms_admin"/>
+
     <!-- ================================================================
          DRIVER MENUS
     ================================================================ -->

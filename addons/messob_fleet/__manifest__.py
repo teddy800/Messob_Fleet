@@ -32,6 +32,9 @@ Covers:
     'author': 'MESSOB Development Team',
     'category': 'Fleet',
     'depends': ['base', 'fleet', 'mail'],
+    'external_dependencies': {
+        'python': ['requests'],
+    },
 
     # -----------------------------------------------------------------------
     # Data files are loaded in this exact order.
@@ -46,13 +49,19 @@ Covers:
         # 2. Master data (sequences + locations)
         'data/sequences.xml',
         'data/locations.xml',
+        'data/maintenance_alert_templates.xml',
+        'data/maintenance_alert_cron.xml',
+        'data/audit_log_cron.xml',
+        'data/gps_cron.xml',
 
         # 3. Views: model views, then wizard, then menus last
         'views/trip_views.xml',
         'views/dispatcher_views.xml',
         'views/driver_views.xml',
         'views/mechanic_views.xml',
+        'views/maintenance_alert_views.xml',
         'views/admin_views.xml',
+        'views/gps_views.xml',
         'views/staff_dashboard_action.xml',
         'views/wizard_views.xml',
         'views/menus.xml',

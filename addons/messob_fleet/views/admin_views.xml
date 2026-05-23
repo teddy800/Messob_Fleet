@@ -177,34 +177,216 @@
     </record>
 
     <!-- ================================================================
-         5. AUDIT LOGS — messob.fms.audit.log list (FR-5.3)
-         Columns: Timestamp | User | Action | Resource | Details
+         5. AUDIT LOGS — messob.fms.audit.log (FR-5.3)
+         Comprehensive audit trail viewer with advanced filtering
     ================================================================ -->
+    
+    <!-- Search View with Filters -->
+    <record id="view_admin_audit_search" model="ir.ui.view">
+        <field name="name">messob.fms.audit.log.search</field>
+        <field name="model">messob.fms.audit.log</field>
+        <field name="arch" type="xml">
+            <search string="Audit Logs">
+                <!-- Search Fields -->
+                <field name="user_id" string="User"/>
+                <field name="action" string="Action"/>
+                <field name="resource_model" string="Model"/>
+                <field name="resource_display_name" string="Resource"/>
+                <field name="description" string="Description"/>
+                <field name="ip_address" string="IP Address"/>
+                
+                <!-- Filters -->
+                <filter name="filter_today" string="Today"
+                        domain="[('timestamp', '&gt;=', datetime.datetime.now().replace(hour=0, minute=0, second=0))]"/>
+                <filter name="filter_week" string="This Week"
+                        domain="[('timestamp', '&gt;=', (datetime.datetime.now() - datetime.timedelta(days=7)).strftime('%Y-%m-%d'))]"/>
+                <filter name="filter_month" string="This Month"
+                        domain="[('timestamp', '&gt;=', (datetime.datetime.now() - datetime.timedelta(days=30)).strftime('%Y-%m-%d'))]"/>
+                
+                <separator/>
+                
+                <filter name="filter_failed" string="Failed Actions"
+                        domain="[('success', '=', False)]"/>
+                <filter name="filter_critical" string="Critical"
+                        domain="[('severity', '=', 'critical')]"/>
+                <filter name="filter_high" string="High Severity"
+                        domain="[('severity', '=', 'high')]"/>
+                
+                <separator/>
+                
+                <!-- Action Categories -->
+                <filter name="filter_auth" string="Authentication"
+                        domain="[('action_category', '=', 'authentication')]"/>
+                <filter name="filter_business" string="Business Process"
+                        domain="[('action_category', '=', 'business_process')]"/>
+                <filter name="filter_data" string="Data Management"
+                        domain="[('action_category', '=', 'data_management')]"/>
+                <filter name="filter_security" string="Security"
+                        domain="[('action_category', '=', 'security')]"/>
+                <filter name="filter_system" string="System Admin"
+                        domain="[('action_category', '=', 'system_admin')]"/>
+                
+                <separator/>
+                
+                <!-- Group By -->
+                <group expand="0" string="Group By">
+                    <filter name="group_user" string="User" context="{'group_by': 'user_id'}"/>
+                    <filter name="group_action" string="Action" context="{'group_by': 'action'}"/>
+                    <filter name="group_category" string="Category" context="{'group_by': 'action_category'}"/>
+                    <filter name="group_severity" string="Severity" context="{'group_by': 'severity'}"/>
+                    <filter name="group_date" string="Date" context="{'group_by': 'timestamp:day'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+    
+    <!-- List View -->
     <record id="view_admin_audit_list" model="ir.ui.view">
         <field name="name">messob.fms.audit.log.list</field>
         <field name="model">messob.fms.audit.log</field>
         <field name="arch" type="xml">
-            <list string="Audit Logs" create="false" delete="false">
+            <list string="Audit Logs" create="false" delete="false" edit="false"
+                  decoration-danger="success == False"
+                  decoration-warning="severity == 'high'"
+                  decoration-info="severity == 'critical'">
                 <field name="timestamp" string="Timestamp" widget="datetime"/>
-                <field name="user_id"   string="User"/>
-                <field name="action"    string="Action"   widget="badge"/>
-                <field name="resource"  string="Resource"/>
-                <field name="details"   string="Details"/>
+                <field name="user_id" string="User"/>
+                <field name="action" string="Action" widget="badge"/>
+                <field name="action_category" string="Category" optional="show"/>
+                <field name="resource_name" string="Resource Type" optional="show"/>
+                <field name="resource_display_name" string="Resource" optional="hide"/>
+                <field name="description" string="Description"/>
+                <field name="severity" string="Severity" widget="badge" 
+                       decoration-danger="severity == 'critical'"
+                       decoration-warning="severity == 'high'"
+                       decoration-info="severity == 'medium'"
+                       decoration-muted="severity == 'low'"/>
+                <field name="success" string="Status" widget="boolean" optional="show"/>
+                <field name="ip_address" string="IP" optional="hide"/>
             </list>
         </field>
     </record>
-
+    
+    <!-- Form View (Read-only) -->
+    <record id="view_admin_audit_form" model="ir.ui.view">
+        <field name="name">messob.fms.audit.log.form</field>
+        <field name="model">messob.fms.audit.log</field>
+        <field name="arch" type="xml">
+            <form string="Audit Log Entry" create="false" delete="false" edit="false">
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_view_resource" type="object" 
+                                class="oe_stat_button" icon="fa-external-link"
+                                string="View Resource"
+                                invisible="not resource_model or not resource_id"/>
+                    </div>
+                    
+                    <div class="oe_title">
+                        <h1>
+                            <field name="action_display" readonly="1"/>
+                        </h1>
+                    </div>
+                    
+                    <group>
+                        <group string="Action Information">
+                            <field name="timestamp" widget="datetime"/>
+                            <field name="action" widget="badge"/>
+                            <field name="action_category" widget="badge"/>
+                            <field name="severity" widget="badge"/>
+                            <field name="success" widget="boolean"/>
+                            <field name="duration_ms" string="Duration (ms)" 
+                                   invisible="not duration_ms"/>
+                        </group>
+                        
+                        <group string="User Information">
+                            <field name="user_id"/>
+                            <field name="session_id" invisible="not session_id"/>
+                            <field name="ip_address" invisible="not ip_address"/>
+                            <field name="user_agent" invisible="not user_agent"/>
+                        </group>
+                    </group>
+                    
+                    <group string="Resource Information" 
+                           invisible="not resource_model">
+                        <field name="resource_model"/>
+                        <field name="resource_name"/>
+                        <field name="resource_id"/>
+                        <field name="resource_display_name"/>
+                    </group>
+                    
+                    <group string="Description">
+                        <field name="description" nolabel="1" widget="text"/>
+                    </group>
+                    
+                    <group string="Error Details" 
+                           invisible="success or not error_message">
+                        <field name="error_message" nolabel="1" widget="text"/>
+                    </group>
+                    
+                    <notebook>
+                        <page string="Change Details" 
+                              invisible="not old_values and not new_values">
+                            <group>
+                                <group string="Old Values">
+                                    <field name="old_values" nolabel="1" widget="text"/>
+                                </group>
+                                <group string="New Values">
+                                    <field name="new_values" nolabel="1" widget="text"/>
+                                </group>
+                            </group>
+                            <group string="Changed Fields">
+                                <field name="changed_fields" nolabel="1"/>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+    
+    <!-- Pivot View for Analytics -->
+    <record id="view_admin_audit_pivot" model="ir.ui.view">
+        <field name="name">messob.fms.audit.log.pivot</field>
+        <field name="model">messob.fms.audit.log</field>
+        <field name="arch" type="xml">
+            <pivot string="Audit Analytics">
+                <field name="action_category" type="row"/>
+                <field name="action" type="row"/>
+                <field name="user_id" type="col"/>
+            </pivot>
+        </field>
+    </record>
+    
+    <!-- Graph View for Trends -->
+    <record id="view_admin_audit_graph" model="ir.ui.view">
+        <field name="name">messob.fms.audit.log.graph</field>
+        <field name="model">messob.fms.audit.log</field>
+        <field name="arch" type="xml">
+            <graph string="Audit Trends" type="line">
+                <field name="timestamp" interval="day"/>
+                <field name="action_category" type="col"/>
+            </graph>
+        </field>
+    </record>
+    
+    <!-- Action Window -->
     <record id="action_admin_audit_logs" model="ir.actions.act_window">
         <field name="name">Audit Logs</field>
         <field name="res_model">messob.fms.audit.log</field>
-        <field name="view_mode">list</field>
+        <field name="view_mode">list,form,pivot,graph</field>
+        <field name="search_view_id" ref="view_admin_audit_search"/>
+        <field name="context">{'search_default_filter_month': 1}</field>
         <field name="view_ids" eval="[
             (5, 0, 0),
             (0, 0, {'view_mode': 'list', 'view_id': ref('view_admin_audit_list')}),
+            (0, 0, {'view_mode': 'form', 'view_id': ref('view_admin_audit_form')}),
+            (0, 0, {'view_mode': 'pivot', 'view_id': ref('view_admin_audit_pivot')}),
+            (0, 0, {'view_mode': 'graph', 'view_id': ref('view_admin_audit_graph')}),
         ]"/>
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">No audit logs yet.</p>
             <p>System actions will be recorded here automatically.</p>
+            <p>All critical actions including logins, approvals, and data changes are tracked.</p>
         </field>
     </record>
 

@@ -19,6 +19,10 @@ import DriverManagement from "./features/admin/DriverManagement";
 import Reports from "./features/admin/Reports";
 import MechanicDashboard from "./features/mechanic/MechanicDashboard";
 import RepairLog from "./features/mechanic/RepairLog";
+import FleetCalendarEnhanced from "./features/dispatcher/components/FleetCalendarEnhanced";
+import TripTracking from "./features/tracking/TripTracking";
+import TripSelection from "./features/tracking/TripSelection";
+import MaintenanceAlerts from "./features/maintenance/MaintenanceAlerts";
 
 export default function App() {
   return (
@@ -33,10 +37,12 @@ export default function App() {
           {/* Index: redirect each role to their home */}
           <Route index element={<RoleIndex />} />
 
-          <Route element={<RoleGuard allowedRoles={["Staff"]} />}>
+          <Route element={<RoleGuard allowedRoles={["Staff", "Dispatcher", "Admin"]} />}>
             <Route path="requests/new" element={<RequestWizard />} />
             <Route path="requests/status" element={<RequestStatus />} />
             <Route path="requests/status/:status" element={<RequestList />} />
+            <Route path="tracking" element={<TripSelection />} />
+            <Route path="tracking/:tripId" element={<TripTracking />} />
           </Route>
 
           <Route element={<RoleGuard allowedRoles={["Driver"]} />}>
@@ -46,6 +52,7 @@ export default function App() {
 
           <Route element={<RoleGuard allowedRoles={["Dispatcher", "Admin"]} />}>
             <Route path="dispatch/approvals" element={<ApprovalQueue />} />
+            <Route path="dispatch/fleet-calendar" element={<FleetCalendarEnhanced />} />
           </Route>
 
           <Route element={<RoleGuard allowedRoles={["Admin"]} />}>
@@ -60,6 +67,10 @@ export default function App() {
           <Route element={<RoleGuard allowedRoles={["Maintainer"]} />}>
             <Route path="mechanic" element={<MechanicDashboard />} />
             <Route path="mechanic/repair-log" element={<RepairLog />} />
+          </Route>
+
+          <Route element={<RoleGuard allowedRoles={["Maintainer", "Dispatcher", "Admin"]} />}>
+            <Route path="maintenance/alerts" element={<MaintenanceAlerts />} />
           </Route>
 
           <Route path="profile" element={<Profile />} />

@@ -1,0 +1,91 @@
+/* Fleet Calendar Print Styles */
+@media print {
+  /* Hide unnecessary elements */
+  nav,
+  aside,
+  .no-print,
+  button:not(.print-visible),
+  input[type="search"],
+  select {
+    display: none !important;
+  }
+
+  /* Page setup */
+  @page {
+    size: landscape;
+    margin: 0.5cm;
+  }
+
+  body {
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  /* Calendar container */
+  .fleet-calendar-container {
+    width: 100%;
+    page-break-inside: avoid;
+  }
+
+  /* Header */
+  .fleet-calendar-header {
+    background: linear-gradient(to right, #1e40af, #3b82f6) !important;
+    color: white !important;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    border-radius: 0.5rem;
+  }
+
+  /* Statistics cards */
+  .stats-card {
+    page-break-inside: avoid;
+    border: 1px solid #e5e7eb;
+    padding: 0.5rem;
+    margin-bottom: 0.5rem;
+  }
+
+  /* Timeline grid */
+  .timeline-grid {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .timeline-grid th,
+  .timeline-grid td {
+    border: 1px solid #d1d5db;
+    padding: 0.25rem;
+    font-size: 8pt;
+  }
+
+  /* Vehicle rows */
+  .vehicle-row {
+    page-break-inside: avoid;
+    border-bottom: 1px solid #e5e7eb;
+  }
+
+  /* Trip blocks */
+  .trip-block {
+    background-color: #3b82f6 !important;
+    color: white !important;
+    font-size: 7pt;
+    padding: 2px;
+  }
+
+  /* Legend */
+  .calendar-legend {
+    margin-top: 1rem;
+    padding: 0.5rem;
+    border: 1px solid #e5e7eb;
+    page-break-inside: avoid;
+  }
+
+  /* Footer */
+  .print-footer {
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    text-align: center;
+    font-size: 8pt;
+    color: #6b7280;
+  }
+}

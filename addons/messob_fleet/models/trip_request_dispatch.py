@@ -54,6 +54,18 @@ class MessobFmsTripDispatcher(models.Model):
                     _('Please assign a driver before approving request %s.') % rec.name
                 )
             rec._check_resource_availability()
+            
+            # Log approval action
+            self.env['messob.fms.audit.log'].log_business_action(
+                action='APPROVE',
+                model=rec._name,
+                record_id=rec.id,
+                description=f"Approved trip request {rec.name} - Vehicle: {rec.assigned_vehicle_id.license_plate}, Driver: {rec.assigned_driver_id.name}",
+                severity='high'
+            )
+            
+            # Send email notification to requester and driver (SW-3)
+            rec._send_approval_notification()
 
         self.write({'state': 'approved'})
         return self._notify('Approved', 'Trip request has been approved.', 'success')
@@ -71,9 +83,112 @@ class MessobFmsTripDispatcher(models.Model):
         for rec in self:
             if rec.state != 'pending':
                 raise UserError(_('Only "Pending" requests can be rejected.'))
+            
+            # Log rejection action
+            self.env['messob.fms.audit.log'].log_business_action(
+                action='REJECT',
+                model=rec._name,
+                record_id=rec.id,
+                description=f"Rejected trip request {rec.name} - Requester: {rec.requester_id.name}",
+                severity='medium'
+            )
+            
+            # Send email notification to requester (SW-3)
+            rec._send_rejection_notification()
 
         self.write({'state': 'rejected'})
         return self._notify('Rejected', 'Trip request has been rejected.', 'warning')
+
+    # =========================================================================
+    # EMAIL NOTIFICATIONS (SW-3)
+    # =========================================================================
+
+    def _send_approval_notification(self):
+        """Send email notification when trip is approved."""
+        self.ensure_one()
+        
+        # Notify requester
+        if self.requester_id.email:
+            subject = f"Trip Request Approved: {self.name}"
+            body = f"""
+            <p>Dear {self.requester_id.name},</p>
+            <p>Your trip request <strong>{self.name}</strong> has been approved.</p>
+            <h3>Trip Details:</h3>
+            <ul>
+                <li><strong>Purpose:</strong> {self.purpose}</li>
+                <li><strong>Date/Time:</strong> {self.start_dt.strftime('%Y-%m-%d %H:%M')} to {self.end_dt.strftime('%Y-%m-%d %H:%M')}</li>
+                <li><strong>Pickup:</strong> {self.pickup}</li>
+                <li><strong>Destination:</strong> {self.destination}</li>
+                <li><strong>Assigned Vehicle:</strong> {self.assigned_vehicle_id.license_plate}</li>
+                <li><strong>Assigned Driver:</strong> {self.assigned_driver_id.name}</li>
+            </ul>
+            <p>Please be ready at the pickup location at the scheduled time.</p>
+            <p>Best regards,<br/>MESSOB Fleet Management Team</p>
+            """
+            
+            self.message_post(
+                subject=subject,
+                body=body,
+                partner_ids=[self.requester_id.id],
+                message_type='email',
+                subtype_xmlid='mail.mt_comment',
+            )
+        
+        # Notify driver
+        if self.assigned_driver_id.email:
+            subject = f"New Trip Assignment: {self.name}"
+            body = f"""
+            <p>Dear {self.assigned_driver_id.name},</p>
+            <p>You have been assigned to a new trip.</p>
+            <h3>Trip Details:</h3>
+            <ul>
+                <li><strong>Request ID:</strong> {self.name}</li>
+                <li><strong>Requester:</strong> {self.requester_id.name}</li>
+                <li><strong>Purpose:</strong> {self.purpose}</li>
+                <li><strong>Date/Time:</strong> {self.start_dt.strftime('%Y-%m-%d %H:%M')} to {self.end_dt.strftime('%Y-%m-%d %H:%M')}</li>
+                <li><strong>Pickup:</strong> {self.pickup}</li>
+                <li><strong>Destination:</strong> {self.destination}</li>
+                <li><strong>Vehicle:</strong> {self.assigned_vehicle_id.license_plate}</li>
+            </ul>
+            <p>Please ensure the vehicle is ready and arrive at the pickup location on time.</p>
+            <p>Best regards,<br/>MESSOB Fleet Management Team</p>
+            """
+            
+            self.message_post(
+                subject=subject,
+                body=body,
+                partner_ids=[self.assigned_driver_id.id],
+                message_type='email',
+                subtype_xmlid='mail.mt_comment',
+            )
+
+    def _send_rejection_notification(self):
+        """Send email notification when trip is rejected."""
+        self.ensure_one()
+        
+        if self.requester_id.email:
+            subject = f"Trip Request Rejected: {self.name}"
+            body = f"""
+            <p>Dear {self.requester_id.name},</p>
+            <p>We regret to inform you that your trip request <strong>{self.name}</strong> has been rejected.</p>
+            <h3>Request Details:</h3>
+            <ul>
+                <li><strong>Purpose:</strong> {self.purpose}</li>
+                <li><strong>Date/Time:</strong> {self.start_dt.strftime('%Y-%m-%d %H:%M')} to {self.end_dt.strftime('%Y-%m-%d %H:%M')}</li>
+                <li><strong>Pickup:</strong> {self.pickup}</li>
+                <li><strong>Destination:</strong> {self.destination}</li>
+            </ul>
+            <p>Please contact the dispatcher for more information or to submit a new request.</p>
+            <p>Best regards,<br/>MESSOB Fleet Management Team</p>
+            """
+            
+            self.message_post(
+                subject=subject,
+                body=body,
+                partner_ids=[self.requester_id.id],
+                message_type='email',
+                subtype_xmlid='mail.mt_comment',
+            )
 
     # =========================================================================
     # AVAILABILITY CHECK (BR-2, BR-3)

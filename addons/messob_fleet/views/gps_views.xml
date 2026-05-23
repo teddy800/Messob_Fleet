@@ -1,0 +1,456 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    MESSOB Fleet Management System
+    Views: GPS Device Management (HW-1)
+    
+    Features:
+    - GPS Device registry and configuration
+    - Real-time position monitoring
+    - Geofence management
+    - Device health monitoring
+-->
+<odoo>
+
+    <!-- ================================================================
+         GPS DEVICE VIEWS
+    ================================================================ -->
+    
+    <!-- List View -->
+    <record id="view_gps_device_list" model="ir.ui.view">
+        <field name="name">messob.fms.gps.device.list</field>
+        <field name="model">messob.fms.gps.device</field>
+        <field name="arch" type="xml">
+            <list string="GPS Devices"
+                  decoration-success="status == 'active' and connection_status == 'connected'"
+                  decoration-warning="status == 'active' and connection_status == 'disconnected'"
+                  decoration-muted="status == 'inactive'">
+                <field name="name"/>
+                <field name="device_id"/>
+                <field name="device_type"/>
+                <field name="vehicle_id"/>
+                <field name="status" widget="badge"/>
+                <field name="connection_status" widget="badge"
+                       decoration-success="connection_status == 'connected'"
+                       decoration-danger="connection_status == 'disconnected'"
+                       decoration-muted="connection_status == 'unknown'"/>
+                <field name="last_communication" widget="datetime"/>
+                <field name="signal_strength" widget="progressbar"/>
+                <field name="battery_level" widget="progressbar" optional="show"/>
+            </list>
+        </field>
+    </record>
+    
+    <!-- Form View -->
+    <record id="view_gps_device_form" model="ir.ui.view">
+        <field name="name">messob.fms.gps.device.form</field>
+        <field name="model">messob.fms.gps.device</field>
+        <field name="arch" type="xml">
+            <form string="GPS Device">
+                <header>
+                    <button name="action_activate" string="Activate" type="object"
+                            class="oe_highlight" invisible="status == 'active'"/>
+                    <button name="action_deactivate" string="Deactivate" type="object"
+                            invisible="status != 'active'"/>
+                    <button name="action_test_connection" string="Test Connection" type="object"
+                            class="btn-primary"/>
+                    <button name="action_sync_now" string="Sync Now" type="object"
+                            class="btn-info" invisible="status != 'active'"/>
+                    <field name="status" widget="statusbar"
+                           statusbar_visible="inactive,active"/>
+                </header>
+                
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_view_positions" type="object"
+                                class="oe_stat_button" icon="fa-map-marker">
+                            <field name="total_positions" widget="statinfo" string="Positions"/>
+                        </button>
+                    </div>
+                    
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" placeholder="GPS Device Name"/>
+                        </h1>
+                    </div>
+                    
+                    <group>
+                        <group string="Device Information">
+                            <field name="device_id"/>
+                            <field name="device_type"/>
+                            <field name="manufacturer"/>
+                            <field name="model"/>
+                            <field name="firmware_version"/>
+                        </group>
+                        
+                        <group string="Assignment">
+                            <field name="vehicle_id"/>
+                            <field name="installation_date"/>
+                        </group>
+                    </group>
+                    
+                    <group>
+                        <group string="Gateway Configuration">
+                            <field name="gateway_url"/>
+                            <field name="gateway_protocol"/>
+                            <field name="api_key" password="True"/>
+                            <field name="update_interval"/>
+                        </group>
+                        
+                        <group string="Status">
+                            <field name="connection_status" widget="badge"/>
+                            <field name="last_communication" widget="datetime"/>
+                            <field name="signal_strength" widget="progressbar"/>
+                            <field name="battery_level" widget="progressbar"/>
+                            <field name="last_position_id"/>
+                        </group>
+                    </group>
+                    
+                    <notebook>
+                        <page string="Notes">
+                            <field name="notes" placeholder="Additional notes about this device..."/>
+                        </page>
+                    </notebook>
+                </sheet>
+                
+                <div class="oe_chatter">
+                    <field name="message_follower_ids"/>
+                    <field name="activity_ids"/>
+                    <field name="message_ids"/>
+                </div>
+            </form>
+        </field>
+    </record>
+    
+    <!-- Search View -->
+    <record id="view_gps_device_search" model="ir.ui.view">
+        <field name="name">messob.fms.gps.device.search</field>
+        <field name="model">messob.fms.gps.device</field>
+        <field name="arch" type="xml">
+            <search string="GPS Devices">
+                <field name="name"/>
+                <field name="device_id"/>
+                <field name="vehicle_id"/>
+                
+                <filter name="filter_active" string="Active" domain="[('status', '=', 'active')]"/>
+                <filter name="filter_inactive" string="Inactive" domain="[('status', '=', 'inactive')]"/>
+                <separator/>
+                <filter name="filter_connected" string="Connected" domain="[('connection_status', '=', 'connected')]"/>
+                <filter name="filter_disconnected" string="Disconnected" domain="[('connection_status', '=', 'disconnected')]"/>
+                <separator/>
+                <filter name="filter_assigned" string="Assigned to Vehicle" domain="[('vehicle_id', '!=', False)]"/>
+                <filter name="filter_unassigned" string="Unassigned" domain="[('vehicle_id', '=', False)]"/>
+                
+                <group expand="0" string="Group By">
+                    <filter name="group_status" string="Status" context="{'group_by': 'status'}"/>
+                    <filter name="group_type" string="Device Type" context="{'group_by': 'device_type'}"/>
+                    <filter name="group_vehicle" string="Vehicle" context="{'group_by': 'vehicle_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+    
+    <!-- Action -->
+    <record id="action_gps_device" model="ir.actions.act_window">
+        <field name="name">GPS Devices</field>
+        <field name="res_model">messob.fms.gps.device</field>
+        <field name="view_mode">list,form</field>
+        <field name="context">{'search_default_filter_active': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">No GPS devices configured</p>
+            <p>Click <b>New</b> to register a GPS tracking device.</p>
+        </field>
+    </record>
+
+    <!-- ================================================================
+         GPS POSITION VIEWS
+    ================================================================ -->
+    
+    <!-- List View -->
+    <record id="view_gps_position_list" model="ir.ui.view">
+        <field name="name">messob.fms.gps.position.list</field>
+        <field name="model">messob.fms.gps.position</field>
+        <field name="arch" type="xml">
+            <list string="GPS Positions" create="false" edit="false"
+                  decoration-success="status == 'moving'"
+                  decoration-muted="status == 'stopped'">
+                <field name="timestamp" widget="datetime"/>
+                <field name="device_id"/>
+                <field name="vehicle_id"/>
+                <field name="latitude"/>
+                <field name="longitude"/>
+                <field name="speed"/>
+                <field name="heading"/>
+                <field name="status" widget="badge"/>
+                <field name="ignition" widget="boolean"/>
+                <field name="trip_id" optional="show"/>
+            </list>
+        </field>
+    </record>
+    
+    <!-- Form View -->
+    <record id="view_gps_position_form" model="ir.ui.view">
+        <field name="name">messob.fms.gps.position.form</field>
+        <field name="model">messob.fms.gps.position</field>
+        <field name="arch" type="xml">
+            <form string="GPS Position" create="false" edit="false">
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_view_on_map" type="object"
+                                class="oe_stat_button" icon="fa-map">
+                            <div class="o_field_widget o_stat_info">
+                                <span class="o_stat_text">View on Map</span>
+                            </div>
+                        </button>
+                    </div>
+                    
+                    <group>
+                        <group string="Device &amp; Vehicle">
+                            <field name="device_id"/>
+                            <field name="vehicle_id"/>
+                            <field name="trip_id"/>
+                            <field name="timestamp" widget="datetime"/>
+                        </group>
+                        
+                        <group string="Location">
+                            <field name="latitude"/>
+                            <field name="longitude"/>
+                            <field name="altitude"/>
+                            <field name="accuracy"/>
+                        </group>
+                    </group>
+                    
+                    <group>
+                        <group string="Motion">
+                            <field name="speed"/>
+                            <field name="heading"/>
+                            <field name="status" widget="badge"/>
+                            <field name="distance_from_previous"/>
+                        </group>
+                        
+                        <group string="Telemetry">
+                            <field name="ignition" widget="boolean"/>
+                            <field name="odometer"/>
+                            <field name="fuel_level" widget="progressbar"/>
+                            <field name="battery_voltage"/>
+                        </group>
+                    </group>
+                    
+                    <group string="Geofence" invisible="not inside_geofence">
+                        <field name="inside_geofence" widget="boolean"/>
+                        <field name="geofence_id"/>
+                    </group>
+                    
+                    <notebook>
+                        <page string="Raw Data" invisible="not raw_data">
+                            <field name="raw_data" widget="text"/>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+    
+    <!-- Search View -->
+    <record id="view_gps_position_search" model="ir.ui.view">
+        <field name="name">messob.fms.gps.position.search</field>
+        <field name="model">messob.fms.gps.position</field>
+        <field name="arch" type="xml">
+            <search string="GPS Positions">
+                <field name="device_id"/>
+                <field name="vehicle_id"/>
+                <field name="trip_id"/>
+                
+                <filter name="filter_today" string="Today"
+                        domain="[('timestamp', '&gt;=', datetime.datetime.now().replace(hour=0, minute=0, second=0))]"/>
+                <filter name="filter_week" string="This Week"
+                        domain="[('timestamp', '&gt;=', (datetime.datetime.now() - datetime.timedelta(days=7)).strftime('%Y-%m-%d'))]"/>
+                <separator/>
+                <filter name="filter_moving" string="Moving" domain="[('status', '=', 'moving')]"/>
+                <filter name="filter_stopped" string="Stopped" domain="[('status', '=', 'stopped')]"/>
+                <separator/>
+                <filter name="filter_ignition_on" string="Ignition On" domain="[('ignition', '=', True)]"/>
+                
+                <group expand="0" string="Group By">
+                    <filter name="group_device" string="Device" context="{'group_by': 'device_id'}"/>
+                    <filter name="group_vehicle" string="Vehicle" context="{'group_by': 'vehicle_id'}"/>
+                    <filter name="group_trip" string="Trip" context="{'group_by': 'trip_id'}"/>
+                    <filter name="group_date" string="Date" context="{'group_by': 'timestamp:day'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+    
+    <!-- Action -->
+    <record id="action_gps_position" model="ir.actions.act_window">
+        <field name="name">GPS Positions</field>
+        <field name="res_model">messob.fms.gps.position</field>
+        <field name="view_mode">list,form</field>
+        <field name="context">{'search_default_filter_today': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">No GPS positions recorded</p>
+            <p>GPS positions will appear here once devices start sending data.</p>
+        </field>
+    </record>
+
+    <!-- ================================================================
+         GEOFENCE VIEWS
+    ================================================================ -->
+    
+    <!-- List View -->
+    <record id="view_geofence_list" model="ir.ui.view">
+        <field name="name">messob.fms.geofence.list</field>
+        <field name="model">messob.fms.geofence</field>
+        <field name="arch" type="xml">
+            <list string="Geofences"
+                  decoration-muted="not active">
+                <field name="name"/>
+                <field name="geofence_type" widget="badge"/>
+                <field name="alert_on_entry" widget="boolean"/>
+                <field name="alert_on_exit" widget="boolean"/>
+                <field name="speed_limit"/>
+                <field name="entry_count"/>
+                <field name="exit_count"/>
+                <field name="active" widget="boolean_toggle"/>
+            </list>
+        </field>
+    </record>
+    
+    <!-- Form View -->
+    <record id="view_geofence_form" model="ir.ui.view">
+        <field name="name">messob.fms.geofence.form</field>
+        <field name="model">messob.fms.geofence</field>
+        <field name="arch" type="xml">
+            <form string="Geofence">
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_view_on_map" type="object"
+                                class="oe_stat_button" icon="fa-map-o">
+                            <div class="o_field_widget o_stat_info">
+                                <span class="o_stat_text">View on Map</span>
+                            </div>
+                        </button>
+                    </div>
+                    
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" placeholder="Geofence Name"/>
+                        </h1>
+                    </div>
+                    
+                    <group>
+                        <group string="Basic Information">
+                            <field name="geofence_type"/>
+                            <field name="active" widget="boolean_toggle"/>
+                            <field name="color" widget="color"/>
+                        </group>
+                        
+                        <group string="Statistics">
+                            <field name="entry_count"/>
+                            <field name="exit_count"/>
+                        </group>
+                    </group>
+                    
+                    <group string="Circular Geofence" invisible="geofence_type != 'circle'">
+                        <group>
+                            <field name="center_latitude"/>
+                            <field name="center_longitude"/>
+                        </group>
+                        <group>
+                            <field name="radius"/>
+                        </group>
+                    </group>
+                    
+                    <group string="Polygon Geofence" invisible="geofence_type != 'polygon'">
+                        <field name="polygon_points" widget="text"/>
+                    </group>
+                    
+                    <group>
+                        <group string="Alert Configuration">
+                            <field name="alert_on_entry" widget="boolean"/>
+                            <field name="alert_on_exit" widget="boolean"/>
+                            <field name="alert_on_speeding" widget="boolean"/>
+                            <field name="speed_limit" invisible="not alert_on_speeding"/>
+                        </group>
+                        
+                        <group string="Monitored Vehicles">
+                            <field name="vehicle_ids" widget="many2many_tags"
+                                   placeholder="Leave empty to monitor all vehicles"/>
+                        </group>
+                    </group>
+                    
+                    <group string="Description">
+                        <field name="description" nolabel="1" placeholder="Description of this geofence..."/>
+                    </group>
+                </sheet>
+                
+                <div class="oe_chatter">
+                    <field name="message_follower_ids"/>
+                    <field name="activity_ids"/>
+                    <field name="message_ids"/>
+                </div>
+            </form>
+        </field>
+    </record>
+    
+    <!-- Search View -->
+    <record id="view_geofence_search" model="ir.ui.view">
+        <field name="name">messob.fms.geofence.search</field>
+        <field name="model">messob.fms.geofence</field>
+        <field name="arch" type="xml">
+            <search string="Geofences">
+                <field name="name"/>
+                
+                <filter name="filter_active" string="Active" domain="[('active', '=', True)]"/>
+                <filter name="filter_inactive" string="Inactive" domain="[('active', '=', False)]"/>
+                <separator/>
+                <filter name="filter_circle" string="Circular" domain="[('geofence_type', '=', 'circle')]"/>
+                <filter name="filter_polygon" string="Polygon" domain="[('geofence_type', '=', 'polygon')]"/>
+                
+                <group expand="0" string="Group By">
+                    <filter name="group_type" string="Type" context="{'group_by': 'geofence_type'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+    
+    <!-- Action -->
+    <record id="action_geofence" model="ir.actions.act_window">
+        <field name="name">Geofences</field>
+        <field name="res_model">messob.fms.geofence</field>
+        <field name="view_mode">list,form</field>
+        <field name="context">{'search_default_filter_active': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">No geofences defined</p>
+            <p>Click <b>New</b> to create a geofence for location-based monitoring.</p>
+        </field>
+    </record>
+
+    <!-- ================================================================
+         MENU ITEMS
+    ================================================================ -->
+    
+    <menuitem id="menu_gps_root"
+              name="GPS Tracking"
+              parent="menu_fms_admin_root"
+              sequence="60"
+              groups="messob_fleet.group_fms_admin,messob_fleet.group_fms_dispatcher"/>
+    
+    <menuitem id="menu_gps_devices"
+              name="GPS Devices"
+              parent="menu_gps_root"
+              action="action_gps_device"
+              sequence="10"/>
+    
+    <menuitem id="menu_gps_positions"
+              name="GPS Positions"
+              parent="menu_gps_root"
+              action="action_gps_position"
+              sequence="20"/>
+    
+    <menuitem id="menu_geofences"
+              name="Geofences"
+              parent="menu_gps_root"
+              action="action_geofence"
+              sequence="30"/>
+
+</odoo>

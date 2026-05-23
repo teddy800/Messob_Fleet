@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    MESSOB Fleet Management System
+    Data: GPS Device Sync Cron Jobs (HW-1)
+    
+    Scheduled Actions:
+    - GPS Position Sync: Every 5 minutes
+    - Device Health Check: Every 15 minutes
+-->
+<odoo>
+    <data noupdate="1">
+        
+        <!-- GPS Position Sync Cron Job -->
+        <record id="ir_cron_gps_sync" model="ir.cron">
+            <field name="name">GPS Devices Position Sync</field>
+            <field name="model_id" ref="model_messob_fms_gps_device"/>
+            <field name="state">code</field>
+            <field name="code">model._cron_sync_all_devices()</field>
+            <field name="interval_number">5</field>
+            <field name="interval_type">minutes</field>
+            <field name="active" eval="True"/>
+            <field name="priority">5</field>
+        </record>
+        
+        <!-- GPS Device Health Check Cron Job -->
+        <record id="ir_cron_gps_health_check" model="ir.cron">
+            <field name="name">GPS Device Health Check</field>
+            <field name="model_id" ref="model_messob_fms_gps_device"/>
+            <field name="state">code</field>
+            <field name="code">model._cron_check_device_health()</field>
+            <field name="interval_number">15</field>
+            <field name="interval_type">minutes</field>
+            <field name="active" eval="True"/>
+            <field name="priority">10</field>
+        </record>
+        
+    </data>
+</odoo>

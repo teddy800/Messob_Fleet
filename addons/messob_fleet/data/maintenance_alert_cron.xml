@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    MESSOB Fleet Management System
+    Cron Jobs: Maintenance Alert System (FR-4.3)
+    
+    Automated jobs for:
+    - Generating maintenance alerts
+    - Sending daily summaries
+    - Updating alert statuses
+-->
+<odoo>
+
+    <!-- ================================================================
+         Cron Job: Generate Maintenance Alerts
+         Runs every 6 hours to check for upcoming maintenance
+    ================================================================ -->
+    <record id="cron_generate_maintenance_alerts" model="ir.cron">
+        <field name="name">MESSOB Fleet: Generate Maintenance Alerts</field>
+        <field name="model_id" ref="model_messob_fms_maintenance_alert"/>
+        <field name="state">code</field>
+        <field name="code">model._cron_generate_maintenance_alerts()</field>
+        <field name="interval_number">6</field>
+        <field name="interval_type">hours</field>
+        <field name="active">True</field>
+        <field name="priority">5</field>
+        <field name="user_id" ref="base.user_admin"/>
+    </record>
+
+    <!-- ================================================================
+         Cron Job: Send Daily Maintenance Summary
+         Runs every day at 8:00 AM to send summary emails
+    ================================================================ -->
+    <record id="cron_daily_maintenance_summary" model="ir.cron">
+        <field name="name">MESSOB Fleet: Daily Maintenance Summary</field>
+        <field name="model_id" ref="model_messob_fms_maintenance_alert"/>
+        <field name="state">code</field>
+        <field name="code">model._cron_send_daily_alert_summary()</field>
+        <field name="interval_number">1</field>
+        <field name="interval_type">days</field>
+        <field name="active">True</field>
+        <field name="priority">10</field>
+        <field name="user_id" ref="base.user_admin"/>
+        <field name="nextcall" eval="(DateTime.now() + timedelta(days=1)).replace(hour=8, minute=0, second=0)"/>
+    </record>
+
+    <!-- ================================================================
+         Cron Job: Update Vehicle Odometer Readings
+         Runs every 2 hours to update current odometer for alerts
+    ================================================================ -->
+    <record id="cron_update_vehicle_odometer" model="ir.cron">
+        <field name="name">MESSOB Fleet: Update Vehicle Odometer for Alerts</field>
+        <field name="model_id" ref="model_messob_fms_maintenance_alert"/>
+        <field name="state">code</field>
+        <field name="code">
+# Update current odometer readings for active alerts
+alerts = model.search([('status', 'in', ['pending', 'sent']), ('alert_type', 'in', ['odometer_based', 'combined'])])
+for alert in alerts:
+    if alert.vehicle_id:
+        # Get latest odometer reading from vehicle or trip logs
+        current_odometer = alert.vehicle_id.odometer or 0
+        if current_odometer != alert.current_odometer:
+            alert.write({'current_odometer': current_odometer})
+        </field>
+        <field name="interval_number">2</field>
+        <field name="interval_type">hours</field>
+        <field name="active">True</field>
+        <field name="priority">15</field>
+        <field name="user_id" ref="base.user_admin"/>
+    </record>
+
+    <!-- ================================================================
+         Cron Job: Send Urgent Alert Notifications
+         Runs every hour to send notifications for critical alerts
+    ================================================================ -->
+    <record id="cron_send_urgent_notifications" model="ir.cron">
+        <field name="name">MESSOB Fleet: Send Urgent Alert Notifications</field>
+        <field name="model_id" ref="model_messob_fms_maintenance_alert"/>
+        <field name="state">code</field>
+        <field name="code">
+# Send notifications for critical and high priority alerts that haven't been sent
+urgent_alerts = model.search([
+    ('status', '=', 'pending'),
+    ('priority', 'in', ['critical', 'high']),
+    ('email_sent', '=', False)
+])
+for alert in urgent_alerts:
+    try:
+        alert.action_send_notifications()
+    except Exception as e:
+        log(f"Failed to send urgent notification for alert {alert.id}: {e}")
+        </field>
+        <field name="interval_number">1</field>
+        <field name="interval_type">hours</field>
+        <field name="active">True</field>
+        <field name="priority">5</field>
+        <field name="user_id" ref="base.user_admin"/>
+    </record>
+
+    <!-- ================================================================
+         Cron Job: Cleanup Old Alerts
+         Runs weekly to clean up completed and dismissed alerts older than 90 days
+    ================================================================ -->
+    <record id="cron_cleanup_old_alerts" model="ir.cron">
+        <field name="name">MESSOB Fleet: Cleanup Old Maintenance Alerts</field>
+        <field name="model_id" ref="model_messob_fms_maintenance_alert"/>
+        <field name="state">code</field>
+        <field name="code">
+# Delete completed and dismissed alerts older than 90 days
+cutoff_date = datetime.now() - timedelta(days=90)
+old_alerts = model.search([
+    ('status', 'in', ['completed', 'dismissed']),
+    ('alert_date', '&lt;', cutoff_date)
+])
+if old_alerts:
+    count = len(old_alerts)
+    old_alerts.unlink()
+    log(f"Cleaned up {count} old maintenance alerts")
+        </field>
+        <field name="interval_number">1</field>
+        <field name="interval_type">weeks</field>
+        <field name="active">True</field>
+        <field name="priority">20</field>
+        <field name="user_id" ref="base.user_admin"/>
+        <field name="nextcall" eval="(DateTime.now() + timedelta(days=7)).replace(hour=2, minute=0, second=0)"/>
+    </record>
+
+</odoo>

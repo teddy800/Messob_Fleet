@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    MESSOB Fleet Management System
+    Data: Audit Log Retention Policy Cron Job (FR-5.3)
+    
+    Scheduled Action:
+    - Runs daily at 2:00 AM
+    - Cleans up old audit logs based on severity:
+      * Critical: 7 years retention
+      * High: 3 years retention
+      * Medium: 1 year retention
+      * Low: 6 months retention
+-->
+<odoo>
+    <data noupdate="1">
+        
+        <!-- Audit Log Cleanup Cron Job -->
+        <record id="ir_cron_audit_log_cleanup" model="ir.cron">
+            <field name="name">Audit Log Retention Policy Cleanup</field>
+            <field name="model_id" ref="model_messob_fms_audit_log"/>
+            <field name="state">code</field>
+            <field name="code">model._cron_cleanup_old_logs()</field>
+            <field name="interval_number">1</field>
+            <field name="interval_type">days</field>
+            <field name="active" eval="True"/>
+            <field name="nextcall" eval="(DateTime.now() + timedelta(days=1)).replace(hour=2, minute=0, second=0)"/>
+            <field name="priority">10</field>
+        </record>
+        
+    </data>
+</odoo>

@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { searchRead, writeRecord } from "@/lib/odooApi";
+import MaintenanceNotifications from "@/components/shared/MaintenanceNotifications";
 
 const statusConfig = {
   active:   { cls: "bg-green-100 text-green-700 border-green-200",  label: "Active" },
@@ -45,6 +46,9 @@ export default function MechanicDashboard() {
         <h1 className="text-2xl font-black text-brand-blue">Maintenance Dashboard</h1>
         <span className="text-xs font-bold uppercase tracking-widest text-gray-400 dark:text-gray-500">{records.length} records</span>
       </div>
+
+      {/* Maintenance Alerts Notification */}
+      <MaintenanceNotifications className="mb-6" />
 
       {loading ? <p className="text-sm text-gray-400">Loading...</p> : (
         <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-x-auto dark:bg-gray-800 dark:border-gray-700">
