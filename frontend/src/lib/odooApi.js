@@ -75,12 +75,24 @@ async function rpc(url, params = {}, options = {}) {
     console.log("📥 RPC Response:", json);
 
     if (json.error) {
-      console.error("❌ RPC Error Details:", {
-        message: json.error.message,
-        data: json.error.data,
-        code: json.error.code,
-        fullError: json.error
-      });
+      // Check if this is an access rights error for internal models
+      const isAccessRightsError = json.error.data?.name === "odoo.exceptions.AccessError";
+      const isInternalModel = params?.model && (
+        params.model.startsWith("ir.") || 
+        params.model === "base"
+      );
+      
+      // Suppress console errors for non-critical access rights issues on internal models
+      if (isAccessRightsError && isInternalModel) {
+        console.warn("⚠️ Access denied to internal model (non-critical):", params?.model);
+      } else {
+        console.error("❌ RPC Error Details:", {
+          message: json.error.message,
+          data: json.error.data,
+          code: json.error.code,
+          fullError: json.error
+        });
+      }
       
       // Extract meaningful error message
       const errorMessage = json.error.data?.message 

@@ -52,16 +52,23 @@ export default function UserManagement() {
     );
     setFmsGroups(groups);
 
-    const baseMeta = await searchRead(
-      "ir.model.data",
-      [
-        ["module", "=", "base"],
-        ["name", "=", "group_user"],
-      ],
-      ["res_id"],
-      1
-    );
-    if (baseMeta[0]?.res_id) setBaseGroupId(baseMeta[0].res_id);
+    // Get base user group without accessing ir.model.data
+    // Search for the group directly by its XML ID pattern
+    try {
+      const baseGroups = await searchRead(
+        "res.groups",
+        [
+          ["name", "=", "Internal User"],
+          ["category_id.name", "=", "User types"]
+        ],
+        ["id"],
+        1
+      );
+      if (baseGroups[0]?.id) setBaseGroupId(baseGroups[0].id);
+    } catch (e) {
+      console.warn("Could not load base user group:", e.message);
+      // Continue without base group - it's optional for FMS groups
+    }
   };
 
   const fetchUsers = async () => {
