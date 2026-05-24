@@ -87,6 +87,34 @@ class MessobFmsFuelLog(models.Model):
         default=fields.Date.today,
     )
 
+    # ── HW-2: Fuel Pump Hardware Interface Fields ──
+    source = fields.Selection(
+        selection=[
+            ('manual', 'Manual Entry'),
+            ('automatic', 'Automatic (Fuel Pump)'),
+        ],
+        string='Source',
+        default='manual',
+        required=True,
+        help='Source of the fuel log entry.',
+    )
+
+    pump_id = fields.Char(
+        string='Pump ID',
+        help='Fuel pump hardware identifier (for automatic entries).',
+    )
+
+    pump_transaction_id = fields.Char(
+        string='Transaction ID',
+        help='Unique transaction ID from fuel pump hardware.',
+        index=True,
+    )
+
+    notes = fields.Text(
+        string='Notes',
+        help='Additional notes or comments about this fuel transaction.',
+    )
+
     # ── Computed ──
     price_per_liter = fields.Float(
         string='Price / Liter',
