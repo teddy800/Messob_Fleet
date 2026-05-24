@@ -709,20 +709,133 @@ class GeocodingService(models.AbstractModel):
 
     def _get_cached_geocode(self, address):
         """Get cached geocoding result."""
-        # TODO: Implement caching with expiry
-        return None
+        try:
+            Cache = self.env['messob.fms.geocode.cache']
+            
+            # Search for cached result
+            cache_entry = Cache.search([
+                ('address', '=', address.lower().strip()),
+                ('cache_type', '=', 'forward'),
+                ('expiry_date', '>', datetime.now())
+            ], limit=1)
+            
+            if cache_entry:
+                _logger.debug(f"Geocode cache hit for: {address}")
+                return {
+                    'success': True,
+                    'latitude': cache_entry.latitude,
+                    'longitude': cache_entry.longitude,
+                    'formatted_address': cache_entry.formatted_address,
+                    'provider': cache_entry.provider,
+                    'confidence': cache_entry.confidence,
+                    'cached': True
+                }
+            
+            return None
+            
+        except Exception as e:
+            _logger.warning(f"Cache lookup failed: {e}")
+            return None
 
     def _cache_geocode(self, address, result):
         """Cache geocoding result."""
-        # TODO: Implement caching
-        pass
+        try:
+            Cache = self.env['messob.fms.geocode.cache']
+            
+            # Cache for 30 days
+            expiry = datetime.now() + timedelta(days=30)
+            
+            # Check if already cached
+            existing = Cache.search([
+                ('address', '=', address.lower().strip()),
+                ('cache_type', '=', 'forward')
+            ], limit=1)
+            
+            vals = {
+                'address': address.lower().strip(),
+                'cache_type': 'forward',
+                'latitude': result.get('latitude'),
+                'longitude': result.get('longitude'),
+                'formatted_address': result.get('formatted_address'),
+                'provider': result.get('provider'),
+                'confidence': result.get('confidence', 0.9),
+                'expiry_date': expiry
+            }
+            
+            if existing:
+                existing.write(vals)
+            else:
+                Cache.create(vals)
+                
+            _logger.debug(f"Cached geocode result for: {address}")
+            
+        except Exception as e:
+            _logger.warning(f"Failed to cache geocode result: {e}")
 
     def _get_cached_reverse_geocode(self, cache_key):
         """Get cached reverse geocoding result."""
-        # TODO: Implement caching
-        return None
+        try:
+            Cache = self.env['messob.fms.geocode.cache']
+            
+            # Search for cached result
+            cache_entry = Cache.search([
+                ('cache_key', '=', cache_key),
+                ('cache_type', '=', 'reverse'),
+                ('expiry_date', '>', datetime.now())
+            ], limit=1)
+            
+            if cache_entry:
+                _logger.debug(f"Reverse geocode cache hit for: {cache_key}")
+                return {
+                    'success': True,
+                    'address': cache_entry.formatted_address,
+                    'city': cache_entry.city,
+                    'country': cache_entry.country,
+                    'provider': cache_entry.provider,
+                    'cached': True
+                }
+            
+            return None
+            
+        except Exception as e:
+            _logger.warning(f"Cache lookup failed: {e}")
+            return None
 
     def _cache_reverse_geocode(self, cache_key, result):
         """Cache reverse geocoding result."""
-        # TODO: Implement caching
-        pass
+        try:
+            Cache = self.env['messob.fms.geocode.cache']
+            
+            # Cache for 30 days
+            expiry = datetime.now() + timedelta(days=30)
+            
+            # Parse coordinates from cache_key
+            lat, lng = cache_key.split(',')
+            
+            # Check if already cached
+            existing = Cache.search([
+                ('cache_key', '=', cache_key),
+                ('cache_type', '=', 'reverse')
+            ], limit=1)
+            
+            vals = {
+                'cache_key': cache_key,
+                'cache_type': 'reverse',
+                'latitude': float(lat),
+                'longitude': float(lng),
+                'formatted_address': result.get('address'),
+                'city': result.get('city'),
+                'country': result.get('country'),
+                'provider': result.get('provider'),
+                'expiry_date': expiry
+            }
+            
+            if existing:
+                existing.write(vals)
+            else:
+                Cache.create(vals)
+                
+            _logger.debug(f"Cached reverse geocode result for: {cache_key}")
+            
+        except Exception as e:
+            _logger.warning(f"Failed to cache reverse geocode result: {e}")

@@ -53,6 +53,7 @@ Covers:
         'data/maintenance_alert_cron.xml',
         'data/audit_log_cron.xml',
         'data/gps_cron.xml',
+        'data/geocode_cache_cron.xml',
 
         # 3. Views: model views, then wizard, then menus last
         'views/trip_views.xml',

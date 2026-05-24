@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        
+        <!-- Geocode Cache Cleanup Cron Job -->
+        <record id="ir_cron_geocode_cache_cleanup" model="ir.cron">
+            <field name="name">MESSOB FMS: Cleanup Expired Geocode Cache</field>
+            <field name="model_id" ref="model_messob_fms_geocode_cache"/>
+            <field name="state">code</field>
+            <field name="code">model.cleanup_expired()</field>
+            <field name="interval_number">1</field>
+            <field name="interval_type">days</field>
+            <field name="numbercall">-1</field>
+            <field name="active" eval="True"/>
+            <field name="doall" eval="False"/>
+        </record>
+
+    </data>
+</odoo>
