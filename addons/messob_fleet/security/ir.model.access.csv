@@ -37,7 +37,3 @@ access_messob_fms_gps_position_dispatcher,messob.fms.gps.position.dispatcher,mod
 access_messob_fms_gps_position_user,messob.fms.gps.position.user,model_messob_fms_gps_position,messob_fleet.group_fms_user,1,0,0,0
 access_messob_fms_geofence_admin,messob.fms.geofence.admin,model_messob_fms_geofence,messob_fleet.group_fms_admin,1,1,1,1
 access_messob_fms_geofence_dispatcher,messob.fms.geofence.dispatcher,model_messob_fms_geofence,messob_fleet.group_fms_dispatcher,1,1,1,0
-access_messob_fms_geocode_cache_admin,messob.fms.geocode.cache.admin,model_messob_fms_geocode_cache,messob_fleet.group_fms_admin,1,1,1,1
-access_messob_fms_geocode_cache_dispatcher,messob.fms.geocode.cache.dispatcher,model_messob_fms_geocode_cache,messob_fleet.group_fms_dispatcher,1,0,0,0
-access_messob_fms_sms_log_admin,messob.fms.sms.log.admin,model_messob_fms_sms_log,messob_fleet.group_fms_admin,1,1,1,1
-access_messob_fms_sms_log_dispatcher,messob.fms.sms.log.dispatcher,model_messob_fms_sms_log,messob_fleet.group_fms_dispatcher,1,0,0,0

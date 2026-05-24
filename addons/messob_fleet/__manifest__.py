@@ -38,7 +38,8 @@ Covers:
 
     # -----------------------------------------------------------------------
     # Data files are loaded in this exact order.
-    # Security must come before views (Odoo requirement).
+    # Models are loaded automatically from Python files.
+    # Security must come after models are registered.
     # -----------------------------------------------------------------------
     'data': [
         # 1. Security: groups → ACL → record rules
