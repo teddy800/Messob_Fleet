@@ -33,7 +33,7 @@ Covers:
     'category': 'Fleet',
     'depends': ['base', 'fleet', 'mail'],
     'external_dependencies': {
-        'python': ['requests'],
+        'python': ['requests', 'paho-mqtt', 'geopy'],
     },
 
     # -----------------------------------------------------------------------

@@ -19,3 +19,8 @@ from . import gps_device
 from . import gps_position
 from . import gps_gateway
 from . import geofence
+
+# Import advanced services
+from ..services import geocoding_service
+from ..services import routing_service
+from ..services import sms_service
