@@ -259,16 +259,17 @@
                 <field name="device_id"/>
                 <field name="vehicle_id"/>
                 <field name="trip_id"/>
+                <field name="timestamp"/>
                 
-                <filter name="filter_today" string="Today"
-                        domain="[('timestamp', '&gt;=', datetime.datetime.now().replace(hour=0, minute=0, second=0))]"/>
-                <filter name="filter_week" string="This Week"
-                        domain="[('timestamp', '&gt;=', (datetime.datetime.now() - datetime.timedelta(days=7)).strftime('%Y-%m-%d'))]"/>
-                <separator/>
                 <filter name="filter_moving" string="Moving" domain="[('status', '=', 'moving')]"/>
                 <filter name="filter_stopped" string="Stopped" domain="[('status', '=', 'stopped')]"/>
                 <separator/>
                 <filter name="filter_ignition_on" string="Ignition On" domain="[('ignition', '=', True)]"/>
+                <separator/>
+                <filter name="filter_last_24h" string="Last 24 Hours" 
+                        domain="[('timestamp', '&gt;=', (context_today() - relativedelta(days=1)).strftime('%Y-%m-%d %H:%M:%S'))]"/>
+                <filter name="filter_last_week" string="Last 7 Days" 
+                        domain="[('timestamp', '&gt;=', (context_today() - relativedelta(days=7)).strftime('%Y-%m-%d %H:%M:%S'))]"/>
                 
                 <group expand="0" string="Group By">
                     <filter name="group_device" string="Device" context="{'group_by': 'device_id'}"/>
@@ -285,7 +286,6 @@
         <field name="name">GPS Positions</field>
         <field name="res_model">messob.fms.gps.position</field>
         <field name="view_mode">list,form</field>
-        <field name="context">{'search_default_filter_today': 1}</field>
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">No GPS positions recorded</p>
             <p>GPS positions will appear here once devices start sending data.</p>
