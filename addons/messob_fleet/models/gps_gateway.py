@@ -339,27 +339,210 @@ class MessobFmsGpsGateway(models.AbstractModel):
 
     def _test_mqtt_connection(self, device):
         """Test MQTT connection to GPS Gateway."""
-        # TODO: Implement MQTT connection test
-        return {
-            'success': False,
-            'error': 'MQTT protocol not yet implemented. Use HTTP protocol.'
-        }
+        try:
+            import paho.mqtt.client as mqtt
+            
+            # Parse MQTT connection details
+            broker = device.gateway_url.replace('mqtt://', '').replace('mqtts://', '')
+            port = int(device.gateway_port or 1883)
+            use_tls = device.gateway_url.startswith('mqtts://')
+            
+            # Connection test result
+            connection_result = {'success': False}
+            
+            def on_connect(client, userdata, flags, rc):
+                if rc == 0:
+                    connection_result['success'] = True
+                    connection_result['message'] = 'MQTT connection successful'
+                else:
+                    connection_result['error'] = f'Connection failed with code {rc}'
+                client.disconnect()
+            
+            # Create MQTT client
+            client = mqtt.Client(client_id=f"messob_test_{device.id}")
+            client.on_connect = on_connect
+            
+            # Set credentials if provided
+            if device.api_key and device.api_secret:
+                client.username_pw_set(device.api_key, device.api_secret)
+            
+            # Enable TLS if needed
+            if use_tls:
+                client.tls_set()
+            
+            # Connect with timeout
+            client.connect(broker, port, keepalive=60)
+            client.loop_start()
+            
+            # Wait for connection (max 10 seconds)
+            import time
+            for _ in range(20):
+                if connection_result.get('success') or connection_result.get('error'):
+                    break
+                time.sleep(0.5)
+            
+            client.loop_stop()
+            
+            if not connection_result.get('success') and not connection_result.get('error'):
+                connection_result['error'] = 'Connection timeout'
+            
+            return connection_result
+            
+        except ImportError:
+            return {
+                'success': False,
+                'error': 'paho-mqtt library not installed. Install with: pip install paho-mqtt'
+            }
+        except Exception as e:
+            return {'success': False, 'error': str(e)}
 
     def _fetch_mqtt_positions(self, device, since, limit):
         """Fetch positions via MQTT."""
-        # TODO: Implement MQTT position fetching
-        return {
-            'success': False,
-            'error': 'MQTT protocol not yet implemented'
-        }
+        try:
+            import paho.mqtt.client as mqtt
+            
+            # Parse MQTT connection details
+            broker = device.gateway_url.replace('mqtt://', '').replace('mqtts://', '')
+            port = int(device.gateway_port or 1883)
+            use_tls = device.gateway_url.startswith('mqtts://')
+            
+            # Topic for device positions
+            topic = f"devices/{device.device_id}/positions"
+            
+            # Store received positions
+            positions = []
+            
+            def on_connect(client, userdata, flags, rc):
+                if rc == 0:
+                    client.subscribe(topic)
+                    _logger.info(f"Subscribed to MQTT topic: {topic}")
+            
+            def on_message(client, userdata, msg):
+                try:
+                    payload = json.loads(msg.payload.decode())
+                    positions.append(payload)
+                    
+                    # Stop after reaching limit
+                    if len(positions) >= limit:
+                        client.disconnect()
+                except Exception as e:
+                    _logger.error(f"Failed to parse MQTT message: {e}")
+            
+            # Create MQTT client
+            client = mqtt.Client(client_id=f"messob_fetch_{device.id}")
+            client.on_connect = on_connect
+            client.on_message = on_message
+            
+            # Set credentials
+            if device.api_key and device.api_secret:
+                client.username_pw_set(device.api_key, device.api_secret)
+            
+            # Enable TLS if needed
+            if use_tls:
+                client.tls_set()
+            
+            # Connect and wait for messages
+            client.connect(broker, port, keepalive=60)
+            client.loop_start()
+            
+            # Wait for messages (max 30 seconds)
+            import time
+            for _ in range(60):
+                if len(positions) >= limit:
+                    break
+                time.sleep(0.5)
+            
+            client.loop_stop()
+            client.disconnect()
+            
+            return {
+                'success': True,
+                'positions': self._normalize_positions(positions, 'mqtt')
+            }
+            
+        except ImportError:
+            return {
+                'success': False,
+                'error': 'paho-mqtt library not installed'
+            }
+        except Exception as e:
+            _logger.error(f"MQTT position fetch failed: {e}")
+            return {'success': False, 'error': str(e)}
 
     def _send_mqtt_command(self, device, command, parameters):
         """Send command via MQTT."""
-        # TODO: Implement MQTT command sending
-        return {
-            'success': False,
-            'error': 'MQTT protocol not yet implemented'
-        }
+        try:
+            import paho.mqtt.client as mqtt
+            
+            # Parse MQTT connection details
+            broker = device.gateway_url.replace('mqtt://', '').replace('mqtts://', '')
+            port = int(device.gateway_port or 1883)
+            use_tls = device.gateway_url.startswith('mqtts://')
+            
+            # Topic for device commands
+            topic = f"devices/{device.device_id}/commands"
+            
+            # Build command payload
+            payload = {
+                'command': command,
+                'parameters': parameters or {},
+                'timestamp': datetime.now().isoformat()
+            }
+            
+            # Command result
+            command_result = {'success': False}
+            
+            def on_connect(client, userdata, flags, rc):
+                if rc == 0:
+                    # Publish command
+                    result = client.publish(topic, json.dumps(payload), qos=1)
+                    if result.rc == mqtt.MQTT_ERR_SUCCESS:
+                        command_result['success'] = True
+                        command_result['message'] = 'Command sent successfully'
+                    else:
+                        command_result['error'] = 'Failed to publish command'
+                    client.disconnect()
+                else:
+                    command_result['error'] = f'Connection failed with code {rc}'
+                    client.disconnect()
+            
+            # Create MQTT client
+            client = mqtt.Client(client_id=f"messob_cmd_{device.id}")
+            client.on_connect = on_connect
+            
+            # Set credentials
+            if device.api_key and device.api_secret:
+                client.username_pw_set(device.api_key, device.api_secret)
+            
+            # Enable TLS if needed
+            if use_tls:
+                client.tls_set()
+            
+            # Connect and send
+            client.connect(broker, port, keepalive=60)
+            client.loop_start()
+            
+            # Wait for command to be sent
+            import time
+            for _ in range(20):
+                if command_result.get('success') or command_result.get('error'):
+                    break
+                time.sleep(0.5)
+            
+            client.loop_stop()
+            
+            if not command_result.get('success') and not command_result.get('error'):
+                command_result['error'] = 'Command timeout'
+            
+            return command_result
+            
+        except ImportError:
+            return {
+                'success': False,
+                'error': 'paho-mqtt library not installed'
+            }
+        except Exception as e:
+            return {'success': False, 'error': str(e)}
 
     # =========================================================================
     # TCP PROTOCOL IMPLEMENTATION (Placeholder)
@@ -367,19 +550,131 @@ class MessobFmsGpsGateway(models.AbstractModel):
 
     def _test_tcp_connection(self, device):
         """Test TCP connection to GPS Gateway."""
-        # TODO: Implement TCP connection test
-        return {
-            'success': False,
-            'error': 'TCP protocol not yet implemented. Use HTTP protocol.'
-        }
+        try:
+            import socket
+            
+            # Parse TCP connection details
+            host = device.gateway_url.replace('tcp://', '')
+            port = int(device.gateway_port or 5000)
+            
+            # Create socket
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            sock.settimeout(10)
+            
+            try:
+                # Attempt connection
+                sock.connect((host, port))
+                
+                # Send test message if authentication required
+                if device.api_key:
+                    test_msg = json.dumps({
+                        'type': 'auth',
+                        'api_key': device.api_key,
+                        'device_id': device.device_id
+                    }) + '\n'
+                    sock.sendall(test_msg.encode())
+                    
+                    # Wait for response
+                    response = sock.recv(1024).decode()
+                    
+                    if 'success' in response.lower() or 'ok' in response.lower():
+                        return {
+                            'success': True,
+                            'message': 'TCP connection successful',
+                            'response': response
+                        }
+                    else:
+                        return {
+                            'success': False,
+                            'error': f'Authentication failed: {response}'
+                        }
+                else:
+                    return {
+                        'success': True,
+                        'message': 'TCP connection successful (no auth)'
+                    }
+                    
+            finally:
+                sock.close()
+                
+        except socket.timeout:
+            return {'success': False, 'error': 'Connection timeout'}
+        except socket.error as e:
+            return {'success': False, 'error': f'Socket error: {e}'}
+        except Exception as e:
+            return {'success': False, 'error': str(e)}
 
     def _fetch_tcp_positions(self, device, since, limit):
         """Fetch positions via TCP."""
-        # TODO: Implement TCP position fetching
-        return {
-            'success': False,
-            'error': 'TCP protocol not yet implemented'
-        }
+        try:
+            import socket
+            
+            # Parse TCP connection details
+            host = device.gateway_url.replace('tcp://', '')
+            port = int(device.gateway_port or 5000)
+            
+            # Create socket
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            sock.settimeout(30)
+            
+            try:
+                # Connect
+                sock.connect((host, port))
+                
+                # Authenticate if needed
+                if device.api_key:
+                    auth_msg = json.dumps({
+                        'type': 'auth',
+                        'api_key': device.api_key
+                    }) + '\n'
+                    sock.sendall(auth_msg.encode())
+                    sock.recv(1024)  # Wait for auth response
+                
+                # Request positions
+                request_msg = json.dumps({
+                    'type': 'get_positions',
+                    'device_id': device.device_id,
+                    'since': since.isoformat() if since else None,
+                    'limit': limit
+                }) + '\n'
+                sock.sendall(request_msg.encode())
+                
+                # Receive response
+                response_data = b''
+                while True:
+                    chunk = sock.recv(4096)
+                    if not chunk:
+                        break
+                    response_data += chunk
+                    
+                    # Check if we have complete JSON
+                    try:
+                        response = json.loads(response_data.decode())
+                        break
+                    except json.JSONDecodeError:
+                        continue
+                
+                if response.get('success') and response.get('positions'):
+                    return {
+                        'success': True,
+                        'positions': self._normalize_positions(response['positions'], 'tcp')
+                    }
+                else:
+                    return {
+                        'success': False,
+                        'error': response.get('error', 'No positions returned')
+                    }
+                    
+            finally:
+                sock.close()
+                
+        except socket.timeout:
+            return {'success': False, 'error': 'Connection timeout'}
+        except socket.error as e:
+            return {'success': False, 'error': f'Socket error: {e}'}
+        except Exception as e:
+            _logger.error(f"TCP position fetch failed: {e}")
+            return {'success': False, 'error': str(e)}
 
     # =========================================================================
     # DATA NORMALIZATION
