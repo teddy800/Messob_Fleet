@@ -33,12 +33,13 @@ Covers:
     'category': 'Fleet',
     'depends': ['base', 'fleet', 'mail'],
     'external_dependencies': {
-        'python': ['requests'],
+        'python': ['requests', 'paho-mqtt', 'geopy'],
     },
 
     # -----------------------------------------------------------------------
     # Data files are loaded in this exact order.
-    # Security must come before views (Odoo requirement).
+    # Models are loaded automatically from Python files.
+    # Security must come after models are registered.
     # -----------------------------------------------------------------------
     'data': [
         # 1. Security: groups → ACL → record rules
@@ -53,6 +54,7 @@ Covers:
         'data/maintenance_alert_cron.xml',
         'data/audit_log_cron.xml',
         'data/gps_cron.xml',
+        'data/geocode_cache_cron.xml',
 
         # 3. Views: model views, then wizard, then menus last
         'views/trip_views.xml',
