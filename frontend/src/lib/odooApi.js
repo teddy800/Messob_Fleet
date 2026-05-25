@@ -304,3 +304,9 @@ export async function callMethod(model, method, args = [], kwargs = {}) {
   
   return result;
 }
+
+/**
+ * Alias for callMethod to maintain backward compatibility
+ * @deprecated Use callMethod instead
+ */
+export const callOdooMethod = callMethod;
