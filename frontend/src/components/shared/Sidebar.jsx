@@ -16,6 +16,7 @@ import {
   AlertTriangle,
   Moon,
   Sun,
+  Activity,
 } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
@@ -71,9 +72,9 @@ const menuItems = [
     roles: ["Dispatcher", "Admin"],
   },
   {
-    name: "Fleet Calendar",
-    path: "/dashboard/dispatch/fleet-calendar",
-    icon: Calendar,
+    name: "Real-Time Dashboard",
+    path: "/dashboard/dispatch/real-time",
+    icon: Activity,
     roles: ["Dispatcher", "Admin"],
   },
   // Admin: full operations menu
@@ -99,7 +100,13 @@ const menuItems = [
     name: "Reports",
     path: "/dashboard/admin/reports",
     icon: FileText,
-    roles: ["Admin"],
+    roles: ["Admin", "Dispatcher"],
+  },
+  {
+    name: "Fuel Analytics",
+    path: "/dashboard/admin/fuel-analytics",
+    icon: Gauge,
+    roles: ["Admin", "Dispatcher"],
   },
   // Maintainer (Mechanic)
   {
