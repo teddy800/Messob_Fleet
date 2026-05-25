@@ -12,14 +12,18 @@ import Profile from "./features/profile/profile";
 import ManageFleet from "./features/fleet/ManageFleet";
 import DriverRequests from "./features/driver/DriverRequests";
 import DriverFuelChange from "./features/driver/DriverFuelChange";
+import DriverMobileApp from "./features/driver/DriverMobileApp";
+import DriverTripStatus from "./features/driver/DriverTripStatus";
 import AdminDashboard from "./features/admin/AdminDashboard";
 import UserManagement from "./features/admin/UserManagement";
 import VehicleManagement from "./features/admin/VehicleManagement";
 import DriverManagement from "./features/admin/DriverManagement";
 import Reports from "./features/admin/Reports";
+import FuelAnalytics from "./features/analytics/FuelAnalytics";
 import MechanicDashboard from "./features/mechanic/MechanicDashboard";
 import RepairLog from "./features/mechanic/RepairLog";
 import FleetCalendarEnhanced from "./features/dispatcher/components/FleetCalendarEnhanced";
+import RealTimeDashboard from "./features/dispatcher/RealTimeDashboard";
 import TripTracking from "./features/tracking/TripTracking";
 import TripSelection from "./features/tracking/TripSelection";
 import MaintenanceAlerts from "./features/maintenance/MaintenanceAlerts";
@@ -48,19 +52,23 @@ export default function App() {
           <Route element={<RoleGuard allowedRoles={["Driver"]} />}>
             <Route path="driver/requests" element={<DriverRequests />} />
             <Route path="driver/fuel" element={<DriverFuelChange />} />
+            <Route path="driver/mobile" element={<DriverMobileApp />} />
+            <Route path="driver/trip-status/:tripId" element={<DriverTripStatus />} />
           </Route>
 
           <Route element={<RoleGuard allowedRoles={["Dispatcher", "Admin"]} />}>
             <Route path="dispatch/approvals" element={<ApprovalQueue />} />
             <Route path="dispatch/fleet-calendar" element={<FleetCalendarEnhanced />} />
+            <Route path="dispatch/real-time" element={<RealTimeDashboard />} />
           </Route>
 
-          <Route element={<RoleGuard allowedRoles={["Admin"]} />}>
+          <Route element={<RoleGuard allowedRoles={["Admin", "Dispatcher"]} />}>
             <Route path="admin" element={<AdminDashboard />} />
             <Route path="admin/users" element={<UserManagement />} />
             <Route path="admin/vehicles" element={<VehicleManagement />} />
             <Route path="admin/drivers" element={<DriverManagement />} />
             <Route path="admin/reports" element={<Reports />} />
+            <Route path="admin/fuel-analytics" element={<FuelAnalytics />} />
             <Route path="fleet" element={<ManageFleet />} />
           </Route>
 
