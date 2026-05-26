@@ -1,5 +1,5 @@
 // Service Worker for MESSOB Fleet Management PWA
-const CACHE_NAME = 'messob-fleet-v2'; // Increment version to force update
+const CACHE_NAME = 'messob-fleet-v3'; // Increment version to force update
 const isDevelopment = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
 
 const urlsToCache = [
@@ -30,17 +30,18 @@ self.addEventListener('fetch', (event) => {
     // For navigation requests (HTML pages), always return index.html for React Router
     if (event.request.mode === 'navigate') {
       event.respondWith(
-        fetch('/index.html').catch(() => caches.match('/index.html'))
+        fetch('/index.html')
+          .then(response => response || caches.match('/index.html'))
+          .catch(() => caches.match('/index.html'))
       );
       return;
     }
     
     // For all other requests, fetch from network
     event.respondWith(
-      fetch(event.request).catch(() => {
-        // If network fails, try cache
-        return caches.match(event.request);
-      })
+      fetch(event.request)
+        .catch(() => caches.match(event.request))
+        .then(response => response || new Response('Not found', { status: 404 }))
     );
     return;
   }
@@ -96,17 +97,18 @@ self.addEventListener('fetch', (event) => {
 
             return response;
           }
-        ).catch(() => {
-          // If fetch fails, return a fallback
-          return new Response('Offline', { status: 503, statusText: 'Service Unavailable' });
-        });
+        );
+      })
+      .catch(() => {
+        // If fetch fails, return a fallback
+        return new Response('Offline', { status: 503, statusText: 'Service Unavailable' });
       })
   );
 });
 
 // Activate event - clean up old caches
 self.addEventListener('activate', (event) => {
-  const cacheWhitelist = ['messob-fleet-v2'];
+  const cacheWhitelist = ['messob-fleet-v3'];
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
