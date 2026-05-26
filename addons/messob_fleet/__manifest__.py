@@ -63,10 +63,10 @@ Covers:
         'views/mechanic_views.xml',
         'views/maintenance_alert_views.xml',
         'views/admin_views.xml',
-        'views/gps_views.xml',
         'views/staff_dashboard_action.xml',
         'views/wizard_views.xml',
         'views/menus.xml',
+        'views/gps_views.xml',
     ],
 
     # -----------------------------------------------------------------------
