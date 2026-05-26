@@ -1,42 +1,92 @@
 // Service Worker for MESSOB Fleet Management PWA
-const CACHE_NAME = 'messob-fleet-v1';
+const CACHE_NAME = 'messob-fleet-v2'; // Increment version to force update
+const isDevelopment = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+
 const urlsToCache = [
   '/',
   '/index.html',
-  '/src/main.jsx',
-  '/src/index.css',
 ];
 
-// Install event - cache resources
+// Install event - cache resources (skip in development)
 self.addEventListener('install', (event) => {
-  event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then((cache) => {
-        console.log('Opened cache');
-        return cache.addAll(urlsToCache);
-      })
-  );
+  if (!isDevelopment) {
+    event.waitUntil(
+      caches.open(CACHE_NAME)
+        .then((cache) => {
+          console.log('Opened cache');
+          return cache.addAll(urlsToCache);
+        })
+    );
+  }
   self.skipWaiting();
 });
 
-// Fetch event - serve from cache, fallback to network
+// Fetch event - serve from network first in development, cache in production
 self.addEventListener('fetch', (event) => {
+  const url = new URL(event.request.url);
+  
+  // Skip caching in development mode
+  if (isDevelopment) {
+    // For navigation requests (HTML pages), always return index.html for React Router
+    if (event.request.mode === 'navigate') {
+      event.respondWith(
+        fetch('/index.html').catch(() => caches.match('/index.html'))
+      );
+      return;
+    }
+    
+    // For all other requests, fetch from network
+    event.respondWith(
+      fetch(event.request).catch(() => {
+        // If network fails, try cache
+        return caches.match(event.request);
+      })
+    );
+    return;
+  }
+
+  // Skip caching for non-GET requests
+  if (event.request.method !== 'GET') {
+    event.respondWith(fetch(event.request));
+    return;
+  }
+
+  // Skip caching for API requests
+  if (url.pathname.includes('/odoo/') || url.pathname.includes('/api/')) {
+    event.respondWith(fetch(event.request));
+    return;
+  }
+
+  // For navigation requests (HTML pages), return index.html for React Router
+  if (event.request.mode === 'navigate') {
+    event.respondWith(
+      fetch('/index.html')
+        .then(response => {
+          const responseToCache = response.clone();
+          caches.open(CACHE_NAME).then(cache => {
+            cache.put('/index.html', responseToCache);
+          });
+          return response;
+        })
+        .catch(() => caches.match('/index.html'))
+    );
+    return;
+  }
+
+  // Production: Cache-first strategy for assets
   event.respondWith(
     caches.match(event.request)
       .then((response) => {
-        // Cache hit - return response
         if (response) {
           return response;
         }
 
         return fetch(event.request).then(
           (response) => {
-            // Check if valid response
             if (!response || response.status !== 200 || response.type !== 'basic') {
               return response;
             }
 
-            // Clone the response
             const responseToCache = response.clone();
 
             caches.open(CACHE_NAME)
@@ -46,19 +96,23 @@ self.addEventListener('fetch', (event) => {
 
             return response;
           }
-        );
+        ).catch(() => {
+          // If fetch fails, return a fallback
+          return new Response('Offline', { status: 503, statusText: 'Service Unavailable' });
+        });
       })
   );
 });
 
 // Activate event - clean up old caches
 self.addEventListener('activate', (event) => {
-  const cacheWhitelist = [CACHE_NAME];
+  const cacheWhitelist = ['messob-fleet-v2'];
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames.map((cacheName) => {
           if (cacheWhitelist.indexOf(cacheName) === -1) {
+            console.log('Deleting old cache:', cacheName);
             return caches.delete(cacheName);
           }
         })

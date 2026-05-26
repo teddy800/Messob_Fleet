@@ -44,36 +44,58 @@ export default function RealTimeDashboard() {
       );
       setActiveTrips(trips);
 
-      // Load vehicle positions
+      // Load vehicle positions - get latest GPS positions for assigned vehicles
       const vehicleIds = trips
         .filter(t => t.assigned_vehicle_id)
         .map(t => Array.isArray(t.assigned_vehicle_id) ? t.assigned_vehicle_id[0] : t.assigned_vehicle_id);
       
       if (vehicleIds.length > 0) {
-        const positions = await callOdooMethod(
-          'messob.fms.websocket',
-          'get_latest_positions',
-          [vehicleIds]
-        );
-        
-        if (positions.success) {
+        try {
+          // Get latest GPS positions for each vehicle
+          const positions = await searchRead(
+            'messob.fms.gps.position',
+            [['vehicle_id', 'in', vehicleIds]],
+            ['vehicle_id', 'latitude', 'longitude', 'speed', 'heading', 'timestamp'],
+            vehicleIds.length
+          );
+          
+          // Create a map of vehicle_id to latest position
           const positionMap = {};
-          positions.positions.forEach(pos => {
-            positionMap[pos.vehicle_id] = pos;
+          positions.forEach(pos => {
+            const vId = Array.isArray(pos.vehicle_id) ? pos.vehicle_id[0] : pos.vehicle_id;
+            // Keep only the latest position for each vehicle
+            if (!positionMap[vId] || new Date(pos.timestamp) > new Date(positionMap[vId].timestamp)) {
+              positionMap[vId] = pos;
+            }
           });
           setVehiclePositions(positionMap);
+        } catch (posError) {
+          console.warn('Could not load GPS positions:', posError);
+          setVehiclePositions({});
         }
       }
 
-      // Load alerts
-      const alertData = await callOdooMethod(
-        'messob.fms.maintenance.alert',
-        'get_active_alerts',
-        []
-      );
-      
-      if (alertData.success) {
-        setAlerts(alertData.alerts);
+      // Load maintenance alerts
+      try {
+        const alertData = await searchRead(
+          'messob.fms.maintenance.alert',
+          [['status', 'in', ['pending', 'sent']]],
+          ['vehicle_id', 'alert_type', 'priority', 'alert_message', 'alert_date'],
+          10
+        );
+        
+        // Format alerts for display
+        const formattedAlerts = alertData.map(alert => ({
+          title: `${alert.alert_type || 'Maintenance'} Alert`,
+          message: alert.alert_message || 'Maintenance required',
+          created_at: alert.alert_date,
+          priority: alert.priority
+        }));
+        
+        setAlerts(formattedAlerts);
+      } catch (alertError) {
+        console.warn('Could not load alerts:', alertError);
+        setAlerts([]);
       }
 
       setLastUpdate(new Date());

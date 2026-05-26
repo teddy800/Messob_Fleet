@@ -5,12 +5,12 @@ import App from './App.jsx'
 import './index.css'
 import { useUserStore } from './store/useUserStore'
 
-// Initialize authentication state from localStorage
-useUserStore.getState().initializeAuth();
-
 // Theme Provider Component (UI-3: Dark Mode Support)
 function ThemeProvider({ children }) {
   useEffect(() => {
+    // Initialize authentication state from localStorage on mount
+    useUserStore.getState().initializeAuth();
+    
     // Check system preference or localStorage
     const savedTheme = localStorage.getItem('theme');
     const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
