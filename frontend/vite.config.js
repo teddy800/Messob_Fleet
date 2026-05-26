@@ -16,6 +16,7 @@ export default defineConfig({
       protocol: 'ws',
       host: 'localhost',
       port: 3000,
+      overlay: false, // Disable error overlay for WebSocket issues
     },
     proxy: {
       '/odoo': {

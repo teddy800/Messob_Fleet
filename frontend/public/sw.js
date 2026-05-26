@@ -21,6 +21,18 @@ self.addEventListener('install', (event) => {
 
 // Fetch event - serve from cache, fallback to network
 self.addEventListener('fetch', (event) => {
+  // Skip caching for POST, PUT, DELETE requests
+  if (event.request.method !== 'GET') {
+    event.respondWith(fetch(event.request));
+    return;
+  }
+
+  // Skip caching for API requests (they should always be fresh)
+  if (event.request.url.includes('/odoo/') || event.request.url.includes('/api/')) {
+    event.respondWith(fetch(event.request));
+    return;
+  }
+
   event.respondWith(
     caches.match(event.request)
       .then((response) => {
@@ -74,8 +86,8 @@ self.addEventListener('push', (event) => {
   const title = data.title || 'MESSOB Fleet';
   const options = {
     body: data.body || 'New notification',
-    icon: '/icon-192.png',
-    badge: '/icon-192.png',
+    icon: '/vite.svg',
+    badge: '/vite.svg',
     vibrate: [200, 100, 200],
     data: data.data || {},
     actions: data.actions || []
