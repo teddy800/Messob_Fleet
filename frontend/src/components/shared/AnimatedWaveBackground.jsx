@@ -16,12 +16,13 @@ const AnimatedWaveBackground = ({ className = "" }) => {
     let dpr = window.devicePixelRatio || 1;
     let time = 0;
 
+    // Optimized settings for better performance
     const settings = {
-      spacing: 35, // Increased spacing = fewer particles
-      amplitude: 28, // Reduced amplitude to keep waves lower
+      spacing: 40, // Slightly increased for fewer particles
+      amplitude: 25, // Optimized amplitude
       scaleX: 120,
       scaleZ: 140,
-      focalLength: 450, // Camera focal length for 3D-to-2D projection
+      focalLength: 450,
       depth: 720,
     };
 
@@ -31,7 +32,7 @@ const AnimatedWaveBackground = ({ className = "" }) => {
 
     const buildGrid = () => {
       points.length = 0;
-      const cols = Math.ceil(width / settings.spacing) + 4; // Reduced from +6
+      const cols = Math.ceil(width / settings.spacing) + 3; // Reduced for performance
       const rows = Math.ceil(settings.depth / settings.spacing);
       const xStart = -((cols - 1) * settings.spacing) / 2;
 
@@ -57,16 +58,14 @@ const AnimatedWaveBackground = ({ className = "" }) => {
       canvas.style.height = `${height}px`;
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       centerX = width / 2;
-      centerY = height * 0.85; // Position horizon lower to keep waves in bottom half
+      centerY = height * 0.85;
       settings.depth = height * 0.85 + 180;
       buildGrid();
     };
 
-    // 3D-to-2D Camera Projection with proper perspective
+    // Optimized 3D-to-2D projection
     const projectPoint = (x, y, z) => {
-      // Ensure z is always positive and add minimum distance to prevent division by zero
       const zDistance = Math.max(z + 50, 1);
-      // True 3D-to-2D projection: x' = (x / z) * focalLength + centerX
       const projectedX = (x / zDistance) * settings.focalLength + centerX;
       const projectedY = (y / zDistance) * settings.focalLength + centerY;
       return {
@@ -78,74 +77,71 @@ const AnimatedWaveBackground = ({ className = "" }) => {
 
     const render = () => {
       ctx.clearRect(0, 0, width, height);
-      time += 0.006; // Reduced from 0.012 for slower motion
+      time += 0.005; // Slightly slower for smoother performance
 
       const freqX = 1 / settings.scaleX;
       const freqZ = 1 / settings.scaleZ;
       const freqMix = 1 / 200;
       const ampPrimary = settings.amplitude;
-      const ampSecondary = settings.amplitude * 0.6; // Reduced secondary wave
-      const ampTertiary = settings.amplitude * 0.35; // Reduced tertiary wave
+      const ampSecondary = settings.amplitude * 0.6;
+      const ampTertiary = settings.amplitude * 0.35;
 
+      // Performance optimization: batch similar operations
+      const visiblePoints = [];
+      
       points.forEach((point) => {
-        // Calculate wave height with multiple frequencies
+        // Calculate wave height
         const wavePrimary = Math.sin(point.x * freqX + time) * ampPrimary;
         const waveSecondary = Math.sin(point.z * freqZ + time * 0.9) * ampSecondary;
         const waveTertiary =
           Math.sin((point.x + point.z) * freqMix + time * 1.1 + point.phase) *
           ampTertiary;
 
-        // Z-Buffer Logic: Increase vertical dispersion for foreground particles
         const depthFactor = 1 - (point.z / settings.depth);
-        const foregroundBoost = Math.pow(depthFactor, 2) * 1.5; // Reduced from 2.5
+        const foregroundBoost = Math.pow(depthFactor, 2) * 1.3;
         const y = (wavePrimary + waveSecondary + waveTertiary) * (1 + foregroundBoost);
 
-        // Apply 3D-to-2D projection
         const projection = projectPoint(point.x, y, point.z);
 
-        // Skip particles that would appear above the center line
-        if (projection.y < height * 0.5) {
+        // Early culling for performance
+        if (projection.y < height * 0.5 ||
+            projection.x < -30 ||
+            projection.x > width + 30 ||
+            projection.y < -30 ||
+            projection.y > height + 30) {
           return;
         }
 
-        // Dynamic Scaling & Opacity based on Z-depth
         const normalizedZ = point.z / settings.depth;
+        
+        visiblePoints.push({
+          x: projection.x,
+          y: projection.y,
+          normalizedZ,
+          size: normalizedZ < 0.2 
+            ? 5 + Math.random() * 2
+            : normalizedZ < 0.5
+            ? 2.5 + (1 - (normalizedZ - 0.2) / 0.3) * 2.5
+            : 0.5 + (1 - (normalizedZ - 0.5) / 0.5) * 2,
+          opacity: normalizedZ < 0.2
+            ? 0.75 + Math.random() * 0.05
+            : normalizedZ < 0.5
+            ? 0.4 + (1 - (normalizedZ - 0.2) / 0.3) * 0.35
+            : 0.1 + (1 - (normalizedZ - 0.5) / 0.5) * 0.3
+        });
+      });
 
-        // Foreground particles (low z): 6-8px, opacity 0.85
-        // Background particles (high z): 0.5px, opacity 0.1
-        const size = normalizedZ < 0.2 
-          ? 6 + Math.random() * 2  // Foreground: 6-8px (reduced from 8-10px)
-          : normalizedZ < 0.5
-          ? 3 + (1 - (normalizedZ - 0.2) / 0.3) * 3  // Mid-range: 3-6px
-          : 0.5 + (1 - (normalizedZ - 0.5) / 0.5) * 2.5;  // Background: 0.5-3px
-
-        const opacity = normalizedZ < 0.2
-          ? 0.8 + Math.random() * 0.05  // Foreground: 0.8-0.85
-          : normalizedZ < 0.5
-          ? 0.45 + (1 - (normalizedZ - 0.2) / 0.3) * 0.35  // Mid-range: 0.45-0.8
-          : 0.1 + (1 - (normalizedZ - 0.5) / 0.5) * 0.35;  // Background: 0.1-0.45
-
-        // Cull particles outside viewport
-        if (
-          projection.x < -20 ||
-          projection.x > width + 20 ||
-          projection.y < -20 ||
-          projection.y > height + 20
-        ) {
-          return;
-        }
-
-        // Render particle with subtle glow effect for foreground
-        if (normalizedZ < 0.3) {
-          // Add subtle glow for foreground particles
-          ctx.shadowBlur = 6; // Reduced from 8
-          ctx.shadowColor = `rgba(235, 242, 255, ${opacity * 0.5})`;
+      // Batch render all visible points
+      visiblePoints.forEach(point => {
+        if (point.normalizedZ < 0.3) {
+          ctx.shadowBlur = 5;
+          ctx.shadowColor = `rgba(235, 242, 255, ${point.opacity * 0.4})`;
         } else {
           ctx.shadowBlur = 0;
         }
 
-        ctx.fillStyle = `rgba(235, 242, 255, ${opacity})`;
-        ctx.fillRect(projection.x - size / 2, projection.y - size / 2, size, size);
+        ctx.fillStyle = `rgba(235, 242, 255, ${point.opacity})`;
+        ctx.fillRect(point.x - point.size / 2, point.y - point.size / 2, point.size, point.size);
       });
 
       animationId = requestAnimationFrame(render);
@@ -171,6 +167,9 @@ const AnimatedWaveBackground = ({ className = "" }) => {
         width: "100%",
         height: "100%",
         pointerEvents: "none",
+        // Performance optimization
+        willChange: "transform",
+        transform: "translateZ(0)",
       }}
     />
   );
