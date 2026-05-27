@@ -7,22 +7,34 @@ import { useUserStore } from "@/store/useUserStore";
 import { odooLogin, searchRead } from "@/lib/odooApi";
 
 // UI Components
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Eye, EyeOff, Lock, Mail } from "lucide-react";
+import { Eye, EyeOff, Lock, User } from "lucide-react";
 
 // Utilities
 import { cn } from "@/lib/utils";
 import { getRedirectPathByRole } from "@/lib/authRedirect";
 import { isFmsGroup, resolveUserRole } from "@/lib/resolveUserRole";
+import AnimatedWaveBackground from "@/components/shared/AnimatedWaveBackground";
 import logo from "@/assets/logo.png";
 
+// Styles
+import "./login.css";
+
 const loginSchema = z.object({
-  email: z.string().email("Please enter a valid MESSOB email"),
+  email: z.string().min(1, "Email is required").email("Please enter a valid email address"),
   password: z.string().min(6, "Password must be at least 6 characters"),
 });
+
+// Key for localStorage
+const CACHED_CREDENTIALS_KEY = 'messob_fms_cached_credentials';
+
+// Default test credentials
+const DEFAULT_CREDENTIALS = {
+  "staff@mesobcenter.et": "staff123",
+  "dispatcher@mesobcenter.et": "dispatcher123",
+  "driver@mesobcenter.et": "driver123",
+  "maintainer@mesobcenter.et": "maintainer123",
+  "admin@mesobcenter.et": "admin123",
+};
 
 async function fetchFmsGroupsForUser(uid) {
   const groupFields = ["name", "full_name", "category_id"];
@@ -53,6 +65,7 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [sessionChecked, setSessionChecked] = useState(false);
   const [resolvedRole, setResolvedRole] = useState(null);
+  const [cachedCredentials, setCachedCredentials] = useState({});
   const navigate = useNavigate();
   
   // Get functions from your Zustand store
@@ -61,13 +74,55 @@ export default function Login() {
   const user = useUserStore((state) => state.user);
   const currentUserRole = user?.role;
 
-  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm({
+  const { register, handleSubmit, formState: { errors, isSubmitting }, setValue, watch } = useForm({
     resolver: zodResolver(loginSchema),
     defaultValues: {
       email: "",
       password: ""
     }
   });
+
+  const emailValue = watch("email");
+
+  // Load cached credentials on mount
+  useEffect(() => {
+    try {
+      const cached = localStorage.getItem(CACHED_CREDENTIALS_KEY);
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        setCachedCredentials({ ...DEFAULT_CREDENTIALS, ...parsed });
+      } else {
+        setCachedCredentials(DEFAULT_CREDENTIALS);
+      }
+    } catch (error) {
+      console.error('Error loading cached credentials:', error);
+      setCachedCredentials(DEFAULT_CREDENTIALS);
+    }
+  }, []);
+
+  // Auto-fill password when email matches cached credentials
+  useEffect(() => {
+    if (emailValue) {
+      const emailLower = emailValue.trim().toLowerCase();
+      const cachedPassword = cachedCredentials[emailLower];
+      if (cachedPassword) {
+        setValue("password", cachedPassword);
+      }
+    }
+  }, [emailValue, cachedCredentials, setValue]);
+
+  // Save credentials to cache
+  const cacheCredentials = (email, password) => {
+    try {
+      const cached = localStorage.getItem(CACHED_CREDENTIALS_KEY);
+      const existing = cached ? JSON.parse(cached) : {};
+      const updated = { ...existing, [email.toLowerCase()]: password };
+      localStorage.setItem(CACHED_CREDENTIALS_KEY, JSON.stringify(updated));
+      setCachedCredentials({ ...DEFAULT_CREDENTIALS, ...updated });
+    } catch (error) {
+      console.error('Error caching credentials:', error);
+    }
+  };
 
   const onSubmit = async (data) => {
     setLoginError(null);
@@ -83,6 +138,9 @@ export default function Login() {
         role,
         uid: session.uid,
       };
+
+      // Cache credentials on successful login
+      cacheCredentials(data.email, data.password);
 
       loginUser(userData, session.session_id);
       navigate(getRedirectPathByRole(role));
@@ -136,95 +194,112 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center bg-gray-50 p-4">
-      <Card className="w-full max-w-md shadow-2xl border-t-8 border-brand-blue bg-white rounded-2xl overflow-hidden">
-        <CardHeader className="space-y-2 flex flex-col items-center pb-8">
-          <div className="bg-white p-3 rounded-full shadow-md border-2 border-gray-100 mb-2">
-            <img src={logo} alt="MESSOB Logo" className="h-16 w-16 object-contain rounded-full" />
+    <div className="messob-fms-auth-wrapper">
+      <AnimatedWaveBackground className="absolute inset-0 z-20" />
+      
+      <div className="messob-fms-auth-container">
+        <div className="messob-fms-auth-card">
+          
+          {/* Header Logo */}
+          <div className="messob-fms-header-image">
+            <img src={logo} alt="MESSOB Fleet Management" />
           </div>
-          <CardTitle className="text-2xl font-black text-brand-blue tracking-tight">MESSOB-FMS</CardTitle>
-          <CardDescription className="text-center font-medium text-gray-500">
-            Fleet Management & Logistics Portal
-          </CardDescription>
-        </CardHeader>
 
-        <form onSubmit={handleSubmit(onSubmit)}>
-          <CardContent className="grid gap-6 pb-2">
+          {/* Welcome Section */}
+          <div className="messob-fms-welcome-section">
+            <div className="messob-fms-welcome">Welcome</div>
+            <div className="messob-fms-subtitle">MESSOB Fleet Management System</div>
+          </div>
+
+          {/* Error Alert */}
+          {loginError && (
+            <div className="messob-fms-alert messob-fms-alert-error" role="alert">
+              {loginError}
+            </div>
+          )}
+
+          {/* Login Form */}
+          <form onSubmit={handleSubmit(onSubmit)} className="messob-fms-form" noValidate>
             
             {/* Email Input */}
-            <div className="grid gap-2">
-              <Label htmlFor="email" className="text-sm font-bold text-gray-700 ml-1">
-                Official Email
-              </Label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
-                <Input 
-                  id="email" 
-                  type="email" 
-                  placeholder="name@mesobcenter.et" 
+            <div className="messob-fms-form-group">
+              <div className="messob-fms-input-wrapper">
+                <User className="messob-fms-input-icon" style={{ width: '20px', height: '20px' }} />
+                <input
+                  type="email"
                   {...register("email")}
+                  placeholder="Username"
+                  disabled={isSubmitting}
+                  autoComplete="username email"
+                  list="messob-fms-email-suggestions"
                   className={cn(
-                    "pl-10 h-12 border-2 transition-all duration-200 outline-none rounded-xl",
-                    "focus-visible:ring-2 focus-visible:ring-brand-blue focus-visible:ring-offset-0",
-                    errors.email 
-                      ? "border-red-500" 
-                      : "border-gray-200 focus:border-brand-blue"
+                    "messob-fms-form-input messob-fms-form-input--with-icon",
+                    errors.email && "error",
+                    isSubmitting && "opacity-60"
                   )}
                 />
               </div>
-              {errors.email && <p className="text-xs font-semibold text-red-500 ml-1">{errors.email.message}</p>}
+              <datalist id="messob-fms-email-suggestions">
+                {Object.keys(cachedCredentials).map((email) => (
+                  <option key={email} value={email} />
+                ))}
+              </datalist>
+              {errors.email && (
+                <span className="messob-fms-form-error">{errors.email.message}</span>
+              )}
             </div>
 
             {/* Password Input */}
-            <div className="grid gap-2">
-              <div className="flex items-center justify-between ml-1">
-                <Label htmlFor="password" className="text-sm font-bold text-gray-700">Password</Label>
-                <a href="#" className="text-xs text-brand-blue hover:underline font-bold">Forgot?</a>
-              </div>
-              <div className="relative">
-                <Lock className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
-                <Input 
-                  id="password" 
-                  type={showPassword ? "text" : "password"} 
+            <div className="messob-fms-form-group">
+              <div className="messob-fms-input-wrapper messob-fms-password-wrapper">
+                <Lock className="messob-fms-input-icon" style={{ width: '20px', height: '20px' }} />
+                <input
+                  type={showPassword ? "text" : "password"}
                   {...register("password")}
+                  placeholder="Password"
+                  disabled={isSubmitting}
+                  autoComplete="current-password"
                   className={cn(
-                    "pl-10 pr-10 h-12 border-2 transition-all duration-200 outline-none rounded-xl",
-                    "focus-visible:ring-2 focus-visible:ring-brand-blue focus-visible:ring-offset-0",
-                    errors.password 
-                      ? "border-red-500" 
-                      : "border-gray-200 focus:border-brand-blue"
+                    "messob-fms-form-input messob-fms-form-input--with-icon",
+                    errors.password && "error",
+                    isSubmitting && "opacity-60"
                   )}
                 />
                 <button
                   type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-3 text-gray-400 hover:text-brand-blue"
+                  onClick={() => setShowPassword((prev) => !prev)}
+                  disabled={isSubmitting}
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                  className="messob-fms-password-toggle"
                 >
-                  {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                  {showPassword ? (
+                    <EyeOff style={{ width: '20px', height: '20px' }} />
+                  ) : (
+                    <Eye style={{ width: '20px', height: '20px' }} />
+                  )}
                 </button>
               </div>
-              {errors.password && <p className="text-xs font-semibold text-red-500 ml-1">{errors.password.message}</p>}
+              {errors.password && (
+                <span className="messob-fms-form-error">{errors.password.message}</span>
+              )}
             </div>
-          </CardContent>
 
-          <CardFooter className="flex flex-col gap-4 pt-4">
-            {loginError && (
-              <p className="text-sm font-semibold text-red-500 text-center w-full">{loginError}</p>
-            )}
-            <Button 
-              type="submit" 
-              className="w-full bg-brand-blue hover:bg-blue-800 text-white h-14 text-lg font-bold shadow-lg transition-transform active:scale-95 rounded-xl"
+            {/* Submit Button */}
+            <button
+              type="submit"
               disabled={isSubmitting}
+              className="messob-fms-btn messob-fms-btn-primary"
             >
-              {isSubmitting ? "Authenticating..." : "Login"}
-            </Button>
-            
-            <p className="text-xs text-gray-400 font-medium text-center mt-2">
-              &copy; {new Date().getFullYear()} MESSOB Center Logistics.
-            </p>
-          </CardFooter>
-        </form>
-      </Card>
+              {isSubmitting ? "Signing in..." : "Login"}
+            </button>
+          </form>
+
+          {/* Footer */}
+          <div className="messob-fms-footer">
+            <div className="messob-fms-footer-brand">Fleet Management</div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
