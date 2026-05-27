@@ -114,10 +114,10 @@
 @keyframes cardEntrance {
   0% {
     opacity: 0;
-    transform: translateY(30px) scaleX(0.95);
+    transform: translateY(30px) scaleX(0.98);
   }
-  60% {
-    transform: translateY(-5px) scaleX(1.01);
+  70% {
+    transform: translateY(-3px) scaleX(1.005);
   }
   100% {
     opacity: 1;
