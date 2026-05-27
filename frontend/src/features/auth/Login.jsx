@@ -208,7 +208,7 @@ export default function Login() {
           {/* Welcome Section */}
           <div className="messob-fms-welcome-section">
             <div className="messob-fms-welcome">Welcome</div>
-            <div className="messob-fms-subtitle">Access the MESSOB Fleet Management System</div>
+            <div className="messob-fms-subtitle">MESSOB Fleet Management System</div>
           </div>
 
           {/* Error Alert */}
@@ -297,9 +297,6 @@ export default function Login() {
           {/* Footer */}
           <div className="messob-fms-footer">
             <div className="messob-fms-footer-brand">Fleet Management</div>
-            <div className="messob-fms-footer-copyright">
-              &copy; {new Date().getFullYear()} MESSOB Center Logistics
-            </div>
           </div>
         </div>
       </div>
