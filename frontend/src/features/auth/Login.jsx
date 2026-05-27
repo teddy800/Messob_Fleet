@@ -228,7 +228,7 @@ export default function Login() {
                 <input
                   type="email"
                   {...register("email")}
-                  placeholder="Username"
+                  placeholder="Email Address"
                   disabled={isSubmitting}
                   autoComplete="username email"
                   list="messob-fms-email-suggestions"

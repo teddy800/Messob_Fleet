@@ -138,20 +138,20 @@
 @keyframes cardEntrance {
   0% {
     opacity: 0;
-    transform: translateY(40px) scaleX(0.75) translateZ(0);
+    transform: translateY(40px) scale(1) translateZ(0);
   }
   40% {
-    transform: translateY(-12px) scaleX(1.08) translateZ(0);
+    transform: translateY(-12px) scale(1) translateZ(0);
   }
   70% {
-    transform: translateY(3px) scaleX(0.95) translateZ(0);
+    transform: translateY(3px) scale(1) translateZ(0);
   }
   85% {
-    transform: translateY(-2px) scaleX(1.02) translateZ(0);
+    transform: translateY(-2px) scale(1) translateZ(0);
   }
   100% {
     opacity: 1;
-    transform: translateY(0) scaleX(1) translateZ(0);
+    transform: translateY(0) scale(1) translateZ(0);
   }
 }
 
