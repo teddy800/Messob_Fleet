@@ -256,22 +256,15 @@ export default function RequestWizard() {
   };
 
   return (
-    <div className="relative -m-4 md:-m-8 min-h-screen overflow-hidden bg-brand-blue">
-      <div
-        className="absolute inset-0 z-0"
-        style={{
-          backgroundImage: `url(${BG_URL})`,
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-          backgroundRepeat: "no-repeat",
-        }}
-      >
-        <div className="absolute inset-0 backdrop-blur-[2px]" />
+    <div className="relative -m-4 md:-m-8 min-h-screen overflow-hidden bg-white">
+      {/* Clean white background with subtle gradient */}
+      <div className="absolute inset-0 z-0 bg-gradient-to-br from-white via-gray-50 to-blue-50">
+        <div className="absolute inset-0 bg-white/90" />
       </div>
 
       <div className="relative z-10 max-w-4xl mx-auto py-12 px-4 animate-in fade-in duration-700 dark:text-gray-100">
         <div className="flex items-center justify-between my-12 relative">
-          <div className="absolute top-1/2 left-0 w-full h-1 bg-white/20 -translate-y-1/2 z-0 dark:bg-gray-600" />
+          <div className="absolute top-1/2 left-0 w-full h-1 bg-gray-200 -translate-y-1/2 z-0 dark:bg-gray-600" />
           <div
             className="absolute top-1/2 left-0 h-1 bg-brand-gold -translate-y-1/2 z-0 transition-all duration-500 dark:bg-yellow-400"
             style={{ width: `${((step - 1) / (TOTAL_STEPS - 1)) * 100}%` }}
@@ -291,8 +284,8 @@ export default function RequestWizard() {
               </div>
               <span
                 className={cn(
-                  "text-[10px] mt-2 font-black uppercase tracking-widest hidden sm:block dark:text-gray-300",
-                  step >= item ? "text-white" : "text-blue-300 dark:text-gray-500"
+                  "text-[10px] mt-2 font-black uppercase tracking-widest hidden sm:block",
+                  step >= item ? "text-brand-blue" : "text-gray-400 dark:text-gray-500"
                 )}
               >
                 {STEP_LABELS[item - 1]}
@@ -301,7 +294,7 @@ export default function RequestWizard() {
           ))}
         </div>
 
-        <Card className="border-none shadow-[0_30px_60px_rgba(0,0,0,0.4)] overflow-hidden rounded-[2rem] dark:bg-gray-800">
+        <Card className="border-none shadow-[0_20px_40px_rgba(59,90,166,0.15)] overflow-hidden rounded-[2rem] bg-white dark:bg-gray-800">
           <div className="bg-brand-blue p-8 text-white border-b-4 border-brand-gold dark:border-yellow-400">
             <h2 className="text-2xl font-black flex items-center gap-3 tracking-tight dark:text-gray-100">
               {step === 1 && <Car className="text-brand-gold dark:text-yellow-400" />}
