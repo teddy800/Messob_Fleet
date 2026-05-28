@@ -116,14 +116,14 @@ function ReviewSummary({ data, onEdit }) {
   ];
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       {rows.map((section) => (
         <div
           key={section.title}
-          className="rounded-2xl border-2 border-brand-blue/10 bg-white overflow-hidden dark:bg-gray-800 dark:border-gray-700"
+          className="rounded-xl border border-brand-blue/10 bg-white overflow-hidden dark:bg-gray-800 dark:border-gray-700"
         >
-          <div className="flex items-center justify-between px-5 py-3 bg-brand-blue/5 border-b border-brand-blue/10 dark:bg-gray-700/30 dark:border-gray-600">
-            <h4 className="text-xs font-black uppercase tracking-widest text-brand-blue dark:text-gray-300">
+          <div className="flex items-center justify-between px-4 py-2.5 bg-brand-blue/5 border-b border-brand-blue/10 dark:bg-gray-700/30 dark:border-gray-600">
+            <h4 className="text-[10px] font-black uppercase tracking-widest text-brand-blue dark:text-gray-300">
               {section.title}
             </h4>
             {onEdit && (
@@ -132,20 +132,20 @@ function ReviewSummary({ data, onEdit }) {
                 variant="ghost"
                 size="sm"
                 onClick={() => onEdit(section.step)}
-                className="h-8 text-xs font-bold text-brand-blue hover:text-brand-gold"
+                className="h-7 text-[10px] font-bold text-brand-blue hover:text-brand-gold px-2"
               >
-                <Pencil className="h-3.5 w-3.5 mr-1" />
+                <Pencil className="h-3 w-3 mr-1" />
                 Edit
               </Button>
             )}
           </div>
-          <div className="px-5 py-4 grid gap-4 sm:grid-cols-2">
+          <div className="px-4 py-3 grid gap-3 sm:grid-cols-2">
             {section.items.map((item) => (
-              <div key={item.label} className="flex flex-col gap-1">
-                <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400 dark:text-gray-400">
+              <div key={item.label} className="flex flex-col gap-0.5">
+                <span className="text-[9px] font-bold uppercase tracking-widest text-gray-400 dark:text-gray-400">
                   {item.label}
                 </span>
-                <span className="font-bold text-brand-blue text-base dark:text-gray-300">
+                <span className="font-bold text-brand-blue text-sm dark:text-gray-300">
                   {item.value || <span className="text-red-400">Not provided</span>}
                 </span>
               </div>
@@ -256,17 +256,18 @@ export default function RequestWizard() {
   };
 
   return (
-    <div className="relative -m-4 md:-m-8 min-h-screen overflow-hidden bg-white">
+    <div className="relative -m-4 md:-m-8 h-screen overflow-hidden bg-white">
       {/* Clean white background with subtle gradient */}
       <div className="absolute inset-0 z-0 bg-gradient-to-br from-white via-gray-50 to-blue-50">
         <div className="absolute inset-0 bg-white/90" />
       </div>
 
-      <div className="relative z-10 max-w-4xl mx-auto py-12 px-4 animate-in fade-in duration-700 dark:text-gray-100">
-        <div className="flex items-center justify-between my-12 relative">
-          <div className="absolute top-1/2 left-0 w-full h-1 bg-gray-200 -translate-y-1/2 z-0 dark:bg-gray-600" />
+      <div className="relative z-10 max-w-4xl mx-auto h-full flex flex-col py-6 px-4 animate-in fade-in duration-700 dark:text-gray-100">
+        {/* Compact Progress Steps */}
+        <div className="flex items-center justify-between my-6 relative">
+          <div className="absolute top-1/2 left-0 w-full h-0.5 bg-gray-200 -translate-y-1/2 z-0 dark:bg-gray-600" />
           <div
-            className="absolute top-1/2 left-0 h-1 bg-brand-gold -translate-y-1/2 z-0 transition-all duration-500 dark:bg-yellow-400"
+            className="absolute top-1/2 left-0 h-0.5 bg-brand-gold -translate-y-1/2 z-0 transition-all duration-500 dark:bg-yellow-400"
             style={{ width: `${((step - 1) / (TOTAL_STEPS - 1)) * 100}%` }}
           />
 
@@ -274,17 +275,17 @@ export default function RequestWizard() {
             <div key={item} className="z-10 flex flex-col items-center">
               <div
                 className={cn(
-                  "w-10 h-10 rounded-full flex items-center justify-center font-black transition-all border-4 shadow-xl dark:border-gray-700",
+                  "w-8 h-8 rounded-full flex items-center justify-center font-black transition-all border-2 shadow-lg text-sm dark:border-gray-700",
                   step >= item
-                    ? "bg-brand-gold text-brand-blue border-white scale-110 dark:bg-yellow-400 dark:text-gray-800 dark:border-gray-300"
+                    ? "bg-brand-gold text-brand-blue border-white scale-105 dark:bg-yellow-400 dark:text-gray-800 dark:border-gray-300"
                     : "bg-brand-blue text-blue-200 border-blue-800 dark:bg-gray-700 dark:text-gray-500 dark:border-gray-600"
                 )}
               >
-                {step > item ? <CheckCircle2 className="h-6 w-6" /> : item}
+                {step > item ? <CheckCircle2 className="h-4 w-4" /> : item}
               </div>
               <span
                 className={cn(
-                  "text-[10px] mt-2 font-black uppercase tracking-widest hidden sm:block",
+                  "text-[9px] mt-1.5 font-black uppercase tracking-widest hidden sm:block",
                   step >= item ? "text-brand-blue" : "text-gray-400 dark:text-gray-500"
                 )}
               >
@@ -294,14 +295,16 @@ export default function RequestWizard() {
           ))}
         </div>
 
-        <Card className="border-none shadow-[0_20px_40px_rgba(59,90,166,0.15)] overflow-hidden rounded-[2rem] bg-white dark:bg-gray-800">
-          <div className="bg-brand-blue p-8 text-white border-b-4 border-brand-gold dark:border-yellow-400">
-            <h2 className="text-2xl font-black flex items-center gap-3 tracking-tight dark:text-gray-100">
-              {step === 1 && <Car className="text-brand-gold dark:text-yellow-400" />}
-              {step === 2 && <MapPin className="text-brand-gold dark:text-yellow-400" />}
-              {step === 3 && <Users className="text-brand-gold dark:text-yellow-400" />}
-              {step === 4 && <ClipboardCheck className="text-brand-gold dark:text-yellow-400" />}
-              {step === 5 && <CheckCircle2 className="text-brand-gold dark:text-yellow-400" />}
+        {/* Compact Card - Flex grow to fill available space */}
+        <Card className="border-none shadow-[0_10px_30px_rgba(59,90,166,0.12)] overflow-hidden rounded-3xl bg-white dark:bg-gray-800 flex-1 flex flex-col">
+          {/* Compact Header */}
+          <div className="bg-brand-blue px-6 py-4 text-white border-b-2 border-brand-gold dark:border-yellow-400">
+            <h2 className="text-xl font-black flex items-center gap-2.5 tracking-tight dark:text-gray-100">
+              {step === 1 && <Car className="text-brand-gold dark:text-yellow-400 h-5 w-5" />}
+              {step === 2 && <MapPin className="text-brand-gold dark:text-yellow-400 h-5 w-5" />}
+              {step === 3 && <Users className="text-brand-gold dark:text-yellow-400 h-5 w-5" />}
+              {step === 4 && <ClipboardCheck className="text-brand-gold dark:text-yellow-400 h-5 w-5" />}
+              {step === 5 && <CheckCircle2 className="text-brand-gold dark:text-yellow-400 h-5 w-5" />}
               Step {step}:{" "}
               {step === 1
                 ? "Trip Basics"
@@ -313,7 +316,7 @@ export default function RequestWizard() {
                       ? "Review Your Request"
                       : "Confirm & Submit"}
             </h2>
-            <p className="text-blue-100 text-sm opacity-80 mt-1 font-medium dark:text-gray-300">
+            <p className="text-blue-100 text-xs opacity-80 mt-0.5 font-medium dark:text-gray-300">
               {step === 4
                 ? "Check every detail below. Use Edit to change anything before continuing."
                 : step === 5
@@ -322,32 +325,33 @@ export default function RequestWizard() {
             </p>
           </div>
 
-          <form onSubmit={handleSubmit(onSubmit, onInvalid)} noValidate>
-            <CardContent className="p-10 bg-white min-h-[350px] dark:bg-gray-800">
+          <form onSubmit={handleSubmit(onSubmit, onInvalid)} noValidate className="flex-1 flex flex-col overflow-hidden">
+            {/* Scrollable Content Area */}
+            <CardContent className="p-6 bg-white flex-1 overflow-y-auto dark:bg-gray-800">
               {step === 1 && (
-                <div className="grid gap-8 animate-in fade-in slide-in-from-right-4 duration-500">
-                  <div className="grid gap-3">
-                    <Label className="text-brand-blue font-black uppercase text-xs tracking-widest">
+                <div className="grid gap-5 animate-in fade-in slide-in-from-right-4 duration-500">
+                  <div className="grid gap-2">
+                    <Label className="text-brand-blue font-black uppercase text-[10px] tracking-widest">
                       Trip Purpose <span className="text-red-500">*</span>
                     </Label>
                     <input
                       {...register("purpose")}
                       placeholder="Briefly describe the purpose of your trip"
                       className={cn(
-                        "h-14 border-2 rounded-xl text-lg px-4 w-full outline-none focus:border-brand-blue",
+                        "h-11 border-2 rounded-xl text-sm px-3.5 w-full outline-none focus:border-brand-blue transition-colors",
                         errors.purpose ? "border-red-400" : "border-gray-100"
                       )}
                     />
                     <FieldError message={errors.purpose?.message} />
                   </div>
-                  <div className="grid gap-3">
-                    <Label className="text-brand-blue font-black uppercase text-xs tracking-widest dark:text-gray-400">
+                  <div className="grid gap-2">
+                    <Label className="text-brand-blue font-black uppercase text-[10px] tracking-widest dark:text-gray-400">
                       Vehicle Category <span className="text-red-500 dark:text-red-400">*</span>
                     </Label>
                     <select
                       {...register("vehicleCategory")}
                       className={cn(
-                        "h-14 border-2 rounded-xl text-lg px-4 w-full outline-none focus:border-brand-blue dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300",
+                        "h-11 border-2 rounded-xl text-sm px-3.5 w-full outline-none focus:border-brand-blue transition-colors dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300",
                         errors.vehicleCategory ? "border-red-400" : "border-gray-100 hover:border-brand-blue dark:border-gray-600 dark:hover:border-yellow-400"
                       )}
                     >
@@ -364,9 +368,9 @@ export default function RequestWizard() {
               )}
 
               {step === 2 && (
-                <div className="grid gap-8 animate-in fade-in slide-in-from-right-4">
-                  <div className="grid gap-3">
-                    <Label className="text-brand-blue font-black uppercase text-xs tracking-widest">
+                <div className="grid gap-5 animate-in fade-in slide-in-from-right-4">
+                  <div className="grid gap-2">
+                    <Label className="text-brand-blue font-black uppercase text-[10px] tracking-widest">
                       Departure Date <span className="text-red-500">*</span>
                     </Label>
                     <Controller
@@ -379,11 +383,11 @@ export default function RequestWizard() {
                               type="button"
                               variant="outline"
                               className={cn(
-                                "w-full h-14 justify-start border-2 rounded-xl text-lg font-bold dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300",
+                                "w-full h-11 justify-start border-2 rounded-xl text-sm font-bold transition-colors dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300",
                                 errors.departureDate ? "border-red-400" : "border-gray-100 hover:border-brand-blue dark:border-gray-600 dark:hover:border-yellow-400"
                               )}
                             >
-                              <CalendarIcon className="mr-3 h-5 w-5 text-brand-gold dark:text-yellow-400" />
+                              <CalendarIcon className="mr-2.5 h-4 w-4 text-brand-gold dark:text-yellow-400" />
                               {field.value ? format(field.value, "PPP") : <span>Pick a date</span>}
                             </Button>
                           </PopoverTrigger>
@@ -401,8 +405,8 @@ export default function RequestWizard() {
                     />
                     <FieldError message={errors.departureDate?.message} />
                   </div>
-                  <div className="grid gap-3">
-                    <Label className="text-brand-blue font-black uppercase text-xs tracking-widest">
+                  <div className="grid gap-2">
+                    <Label className="text-brand-blue font-black uppercase text-[10px] tracking-widest">
                       Arrival Date <span className="text-red-500">*</span>
                     </Label>
                     <Controller
@@ -415,11 +419,11 @@ export default function RequestWizard() {
                               type="button"
                               variant="outline"
                               className={cn(
-                                "w-full h-14 justify-start border-2 rounded-xl text-lg font-bold dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300",
+                                "w-full h-11 justify-start border-2 rounded-xl text-sm font-bold transition-colors dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300",
                                 errors.arrivalDate ? "border-red-400" : "border-gray-100 hover:border-brand-blue dark:border-gray-600 dark:hover:border-yellow-400"
                               )}
                             >
-                              <CalendarIcon className="mr-3 h-5 w-5 text-brand-gold dark:text-yellow-400" />
+                              <CalendarIcon className="mr-2.5 h-4 w-4 text-brand-gold dark:text-yellow-400" />
                               {field.value ? format(field.value, "PPP") : <span>Pick a date</span>}
                             </Button>
                           </PopoverTrigger>
@@ -441,7 +445,7 @@ export default function RequestWizard() {
               )}
 
               {step === 3 && (
-                <div className="space-y-6 animate-in fade-in slide-in-from-right-4">
+                <div className="space-y-4 animate-in fade-in slide-in-from-right-4">
                   {/* Interactive Map */}
                   <LocationPicker
                     startPoint={formData.startPoint}
@@ -454,31 +458,31 @@ export default function RequestWizard() {
                     }}
                   />
 
-                  {/* Text Inputs (Hidden but still functional for form validation) */}
-                  <div className="grid gap-4 pt-4 border-t-2 border-gray-100">
-                    <div className="grid gap-2">
-                      <Label className="text-brand-blue font-black uppercase text-xs tracking-widest dark:text-gray-400">
+                  {/* Text Inputs */}
+                  <div className="grid gap-3 pt-3 border-t border-gray-100">
+                    <div className="grid gap-1.5">
+                      <Label className="text-brand-blue font-black uppercase text-[10px] tracking-widest dark:text-gray-400">
                         From (Starting Point) <span className="text-red-500 dark:text-red-400">*</span>
                       </Label>
                       <Input
                         {...register("startPoint")}
                         className={cn(
-                          "h-12 border-2 rounded-xl text-base font-bold dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300",
+                          "h-10 border-2 rounded-xl text-sm font-bold transition-colors dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300",
                           errors.startPoint ? "border-red-400" : "border-gray-100 focus:border-brand-blue dark:border-gray-600 dark:focus:border-yellow-400"
                         )}
                         placeholder="Select from map or type manually"
                       />
                       <FieldError message={errors.startPoint?.message} />
                     </div>
-                    <div className="grid gap-2">
-                      <Label className="text-brand-blue font-black uppercase text-xs tracking-widest dark:text-gray-400">
+                    <div className="grid gap-1.5">
+                      <Label className="text-brand-blue font-black uppercase text-[10px] tracking-widest dark:text-gray-400">
                         To (Destination) <span className="text-red-500 dark:text-red-400">*</span>
                       </Label>
                       <Input
                         {...register("destination")}
                         placeholder="Select from map or type manually"
                         className={cn(
-                          "h-12 border-2 rounded-xl text-base font-bold dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300",
+                          "h-10 border-2 rounded-xl text-sm font-bold transition-colors dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300",
                           errors.destination ? "border-red-400" : "border-gray-100 focus:border-brand-blue dark:border-gray-600 dark:focus:border-yellow-400"
                         )}
                       />
@@ -489,11 +493,11 @@ export default function RequestWizard() {
               )}
 
               {step === 4 && (
-                <div className="space-y-6 animate-in fade-in slide-in-from-right-4">
+                <div className="space-y-4 animate-in fade-in slide-in-from-right-4">
                   <ReviewSummary data={formData} onEdit={goToStep} />
-                  <div className="flex items-start gap-3 p-4 bg-blue-50 rounded-xl border border-blue-100 dark:bg-gray-700/30 dark:border-gray-600">
-                    <ClipboardCheck className="h-5 w-5 text-brand-blue shrink-0 mt-0.5 dark:text-yellow-400" />
-                    <p className="text-sm text-brand-blue font-medium dark:text-gray-300 dark:bg-gray-700/30">
+                  <div className="flex items-start gap-2.5 p-3 bg-blue-50 rounded-xl border border-blue-100 dark:bg-gray-700/30 dark:border-gray-600">
+                    <ClipboardCheck className="h-4 w-4 text-brand-blue shrink-0 mt-0.5 dark:text-yellow-400" />
+                    <p className="text-xs text-brand-blue font-medium dark:text-gray-300 dark:bg-gray-700/30">
                       When everything looks correct, continue to the final step to confirm and
                       submit your request to the dispatcher.
                     </p>
@@ -502,11 +506,11 @@ export default function RequestWizard() {
               )}
 
               {step === 5 && (
-                <div className="space-y-6 animate-in fade-in slide-in-from-right-4">
+                <div className="space-y-4 animate-in fade-in slide-in-from-right-4">
                   <ReviewSummary data={formData} />
                   <label
                     className={cn(
-                      "flex items-start gap-3 p-5 rounded-2xl border-2 cursor-pointer transition-colors dark:bg-gray-700/30",
+                      "flex items-start gap-2.5 p-4 rounded-xl border-2 cursor-pointer transition-colors dark:bg-gray-700/30",
                       confirmed
                         ? "border-brand-gold bg-brand-gold/10 hover:bg-brand-gold/20 dark:border-yellow-400 dark:bg-yellow-400/10 dark:hover:bg-yellow-400/20"
                         : "border-gray-200 bg-gray-50 hover:border-brand-blue/30 dark:border-gray-600 dark:bg-gray-700/30 dark:hover:border-yellow-400"
@@ -516,17 +520,17 @@ export default function RequestWizard() {
                       type="checkbox"
                       checked={confirmed}
                       onChange={(e) => setConfirmed(e.target.checked)}
-                      className="mt-1 h-5 w-5 rounded border-gray-300 text-brand-blue focus:ring-brand-blue dark:border-gray-600 dark:bg-gray-700 dark:ring-yellow-400 dark:focus:ring-yellow-400"
+                      className="mt-0.5 h-4 w-4 rounded border-gray-300 text-brand-blue focus:ring-brand-blue dark:border-gray-600 dark:bg-gray-700 dark:ring-yellow-400 dark:focus:ring-yellow-400"
                     />
-                    <span className="text-sm font-medium text-gray-800 leading-relaxed dark:text-gray-300 dark:bg-gray-700/30">
+                    <span className="text-xs font-medium text-gray-800 leading-relaxed dark:text-gray-300 dark:bg-gray-700/30">
                       I have reviewed my trip request and confirm that all information above is
                       accurate. I understand this will be sent to the dispatcher for approval and
                       vehicle assignment.
                     </span>
                   </label>
-                  <div className="flex items-start gap-3 p-4 bg-yellow-50 rounded-xl border border-yellow-100 dark:bg-gray-700/30 dark:border-gray-600">
-                    <div className="h-2 w-2 bg-yellow-500 rounded-full mt-1.5 shrink-0" />
-                    <p className="text-xs text-yellow-800 font-medium dark:text-gray-300 dark:bg-gray-700/30">
+                  <div className="flex items-start gap-2.5 p-3 bg-amber-50/40 rounded-xl border border-amber-200/50 dark:bg-gray-700/30 dark:border-gray-600">
+                    <div className="h-1.5 w-1.5 bg-amber-500/70 rounded-full mt-1.5 shrink-0" />
+                    <p className="text-[11px] text-amber-700/80 font-medium dark:text-gray-300 dark:bg-gray-700/30">
                       After you submit, you will receive a confirmation and your request will appear
                       in Request Status while it is being processed.
                     </p>
@@ -535,30 +539,31 @@ export default function RequestWizard() {
               )}
             </CardContent>
 
-            <div className="p-8 bg-gray-50 flex justify-between items-center border-t border-gray-100 dark:bg-gray-800 dark:border-gray-700">
+            {/* Compact Footer */}
+            <div className="px-6 py-4 bg-gray-50 flex justify-between items-center border-t border-gray-100 dark:bg-gray-800 dark:border-gray-700">
               <Button
                 type="button"
                 variant="ghost"
                 onClick={prevStep}
                 disabled={step === 1}
-                className="font-black text-brand-blue uppercase tracking-widest text-xs dark:text-gray-300"
+                className="font-black text-brand-blue uppercase tracking-widest text-[10px] h-10 dark:text-gray-300"
               >
-                <ChevronLeft className="mr-2 h-4 w-4" /> Back
+                <ChevronLeft className="mr-1.5 h-3.5 w-3.5" /> Back
               </Button>
 
               {step < TOTAL_STEPS ? (
                 <Button
                   type="button"
                   onClick={handleNext}
-                  className="bg-brand-blue hover:bg-blue-900 px-10 h-14 font-black shadow-xl rounded-2xl text-white transition-all active:scale-95 dark:bg-yellow-400 dark:hover:bg-yellow-500"
+                  className="bg-brand-blue hover:bg-blue-900 px-8 h-11 font-black shadow-lg rounded-xl text-white text-sm transition-all active:scale-95 dark:bg-yellow-400 dark:hover:bg-yellow-500"
                 >
                   {step === 4 ? (
                     <>
-                      Continue to Confirm <ChevronRight className="ml-3 h-5 w-5" />
+                      Continue to Confirm <ChevronRight className="ml-2 h-4 w-4" />
                     </>
                   ) : (
                     <>
-                      Continue <ChevronRight className="ml-3 h-5 w-5" />
+                      Continue <ChevronRight className="ml-2 h-4 w-4" />
                     </>
                   )}
                 </Button>
@@ -566,10 +571,10 @@ export default function RequestWizard() {
                 <Button
                   type="submit"
                   disabled={!confirmed || isSubmitting}
-                  className="bg-green-600 hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed px-10 h-14 font-black shadow-xl rounded-2xl text-white transition-all active:scale-95 dark:bg-green-600 dark:hover:bg-green-700"
+                  className="bg-emerald-500/80 hover:bg-emerald-600/80 disabled:opacity-50 disabled:cursor-not-allowed px-8 h-11 font-black shadow-lg rounded-xl text-white text-sm transition-all active:scale-95"
                 >
                   {isSubmitting ? "Submitting…" : "Confirm & Submit"}
-                  {!isSubmitting && <CheckCircle2 className="ml-3 h-5 w-5" />}
+                  {!isSubmitting && <CheckCircle2 className="ml-2 h-4 w-4" />}
                 </Button>
               )}
             </div>
