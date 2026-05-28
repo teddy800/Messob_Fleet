@@ -115,7 +115,7 @@ export default function RealTimeDashboard() {
 
   const getStatusColor = (state) => {
     const colors = {
-      approved: 'bg-green-100 text-green-700',
+      approved: 'bg-emerald-100/40 text-emerald-600/80',
       in_progress: 'bg-blue-100 text-blue-700',
       departed: 'bg-purple-100 text-purple-700',
       en_route: 'bg-orange-100 text-orange-700',

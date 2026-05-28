@@ -264,7 +264,7 @@ export default function MaintenanceNotifications({
                     </Badge>
                   )}
                   {stats.overdue > 0 && (
-                    <Badge className="bg-red-600 text-white text-xs">
+                    <Badge className="bg-rose-500/70 text-white text-xs">
                       {stats.overdue} Overdue
                     </Badge>
                   )}

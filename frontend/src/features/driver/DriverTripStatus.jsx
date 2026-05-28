@@ -136,7 +136,7 @@ export default function DriverTripStatus({ trip, onStatusUpdate }) {
                 <div key={step.key} className="flex items-center gap-3">
                   <div className={`h-8 w-8 rounded-full flex items-center justify-center ${
                     isCompleted 
-                      ? 'bg-green-100 text-green-600' 
+                      ? 'bg-green-50 text-green-600' 
                       : 'bg-gray-100 text-gray-400'
                   }`}>
                     <step.icon className="h-4 w-4" />

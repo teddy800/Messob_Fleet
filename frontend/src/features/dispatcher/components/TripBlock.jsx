@@ -14,11 +14,11 @@ export default function TripBlock({ trip, style, onRefresh }) {
       case 'approved':
         return 'bg-blue-500 hover:bg-blue-600';
       case 'in_progress':
-        return 'bg-green-600 hover:bg-green-700';
+        return 'bg-emerald-500/80 hover:bg-emerald-600/80';
       case 'completed':
         return 'bg-gray-500 hover:bg-gray-600';
       default:
-        return 'bg-red-500 hover:bg-red-600';
+        return 'bg-rose-400/70 hover:bg-rose-500/70';
     }
   };
 
@@ -52,7 +52,7 @@ export default function TripBlock({ trip, style, onRefresh }) {
               <span className="font-bold text-brand-blue">{trip.request_id}</span>
               <span className={`ml-auto text-xs px-2 py-1 rounded-full ${
                 trip.state === 'approved' ? 'bg-blue-100 text-blue-700' :
-                trip.state === 'in_progress' ? 'bg-green-100 text-green-700' :
+                trip.state === 'in_progress' ? 'bg-emerald-100/40 text-emerald-600/80' :
                 'bg-gray-100 text-gray-700'
               }`}>
                 {trip.state.replace('_', ' ').toUpperCase()}

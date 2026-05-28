@@ -8,9 +8,9 @@ import { searchRead, writeRecord } from "@/lib/odooApi";
 import MaintenanceNotifications from "@/components/shared/MaintenanceNotifications";
 
 const statusConfig = {
-  active:   { cls: "bg-green-100 text-green-700 border-green-200",  label: "Active" },
+  active:   { cls: "bg-green-50 text-green-600 border-green-100",  label: "Active" },
   inactive: { cls: "bg-gray-100 text-gray-500 border-gray-200",    label: "Inactive" },
-  disposed: { cls: "bg-red-100 text-red-600 border-red-200",       label: "Disposed" },
+  disposed: { cls: "bg-red-50 text-red-600 border-red-100",       label: "Disposed" },
 };
 
 export default function MechanicDashboard() {

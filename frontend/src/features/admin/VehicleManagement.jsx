@@ -9,9 +9,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { searchRead, createRecord, writeRecord } from "@/lib/odooApi";
 
 const statusBadge = {
-  normal:      "bg-green-100 text-green-700 border-green-200",
-  accident:    "bg-red-100 text-red-700 border-red-200",
-  good_condition: "bg-blue-100 text-blue-700 border-blue-200",
+  normal:      "bg-green-50 text-green-600 border-green-100",
+  accident:    "bg-red-50 text-red-600 border-red-100",
+  good_condition: "bg-blue-50 text-blue-600 border-blue-100",
   write_off:   "bg-gray-100 text-gray-500 border-gray-200",
 };
 

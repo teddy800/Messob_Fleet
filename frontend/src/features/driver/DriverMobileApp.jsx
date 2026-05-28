@@ -257,7 +257,7 @@ export default function DriverMobileApp() {
       <CardContent className="p-4 space-y-3">
         <div className="flex items-center justify-between">
           <span className="text-xs font-bold text-gray-500">{trip.name}</span>
-          <span className="text-xs px-2 py-1 bg-yellow-100 text-yellow-700 rounded-full font-bold">
+          <span className="text-xs px-2 py-1 bg-amber-50 text-amber-600 rounded-full font-bold">
             Upcoming
           </span>
         </div>

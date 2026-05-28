@@ -256,7 +256,7 @@ export default function LiveTracking({
               </div>
               
               <div className="flex items-center gap-3 p-3 bg-green-50 rounded-lg">
-                <Navigation className="h-6 w-6 text-green-500 flex-shrink-0" />
+                <Navigation className="h-6 w-6 text-green-600 flex-shrink-0" />
                 <div>
                   <p className="text-xs text-gray-600 font-medium">Heading</p>
                   <p className="text-lg font-bold text-gray-900">{formatHeading(position.heading)}</p>

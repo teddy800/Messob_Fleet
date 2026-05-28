@@ -79,11 +79,11 @@ export default function DashboardHome() {
               valueColor: 'text-amber-950 dark:text-amber-50'
             },
             'text-green-600': {
-              iconBg: 'bg-green-500 dark:bg-green-600',
-              cardBg: 'bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950 dark:to-green-900',
-              border: 'border-green-300 dark:border-green-700',
-              textColor: 'text-green-800 dark:text-green-200',
-              valueColor: 'text-green-950 dark:text-green-50'
+              iconBg: 'bg-emerald-400/70 dark:bg-emerald-500/70',
+              cardBg: 'bg-gradient-to-br from-emerald-50/40 to-emerald-100/40 dark:from-emerald-950 dark:to-emerald-900',
+              border: 'border-emerald-200/50 dark:border-emerald-700',
+              textColor: 'text-emerald-700/80 dark:text-emerald-200',
+              valueColor: 'text-emerald-900/80 dark:text-emerald-50'
             },
             'text-brand-blue': {
               iconBg: 'bg-blue-500 dark:bg-blue-600',
@@ -93,11 +93,11 @@ export default function DashboardHome() {
               valueColor: 'text-blue-950 dark:text-blue-50'
             },
             'text-red-600': {
-              iconBg: 'bg-red-500 dark:bg-red-600',
-              cardBg: 'bg-gradient-to-br from-red-50 to-red-100 dark:from-red-950 dark:to-red-900',
-              border: 'border-red-300 dark:border-red-700',
-              textColor: 'text-red-800 dark:text-red-200',
-              valueColor: 'text-red-950 dark:text-red-50'
+              iconBg: 'bg-rose-400/70 dark:bg-rose-500/70',
+              cardBg: 'bg-gradient-to-br from-rose-50/40 to-rose-100/40 dark:from-rose-950 dark:to-rose-900',
+              border: 'border-rose-200/50 dark:border-rose-700',
+              textColor: 'text-rose-700/80 dark:text-rose-200',
+              valueColor: 'text-rose-900/80 dark:text-rose-50'
             },
             'text-blue-600': {
               iconBg: 'bg-blue-500 dark:bg-blue-600',

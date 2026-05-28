@@ -92,7 +92,7 @@ export default function VehicleTimelineRow({ vehicle, date, onRefresh }) {
         {vehicle.maintenance && vehicle.maintenance.map(maint => (
           <div
             key={maint.id}
-            className="absolute top-2 bottom-2 bg-yellow-500 rounded-lg px-2 py-1 text-white text-xs font-bold cursor-pointer hover:shadow-lg hover:scale-105 transition-all overflow-hidden flex items-center gap-1"
+            className="absolute top-2 bottom-2 bg-amber-400/70 rounded-lg px-2 py-1 text-white text-xs font-bold cursor-pointer hover:shadow-lg hover:scale-105 transition-all overflow-hidden flex items-center gap-1"
             style={calculateBlockStyle(maint.start_dt, maint.end_dt || maint.start_dt)}
             title={maint.description}
           >

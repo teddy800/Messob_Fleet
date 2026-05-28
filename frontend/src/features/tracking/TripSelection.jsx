@@ -65,7 +65,7 @@ export default function TripSelection() {
       case 'approved':
         return 'bg-blue-500';
       case 'in_progress':
-        return 'bg-green-500';
+        return 'bg-amber-500';
       default:
         return 'bg-gray-500';
     }
