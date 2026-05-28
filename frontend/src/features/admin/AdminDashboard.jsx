@@ -7,9 +7,9 @@ import { useUserStore } from "@/store/useUserStore";
 import { searchRead } from "@/lib/odooApi";
 
 const quickActions = [
-  { label: "Add User",    icon: UserPlus,   path: "/dashboard/admin/users",   color: "bg-blue-600 hover:bg-blue-700" },
-  { label: "Add Vehicle", icon: PlusCircle, path: "/dashboard/admin/vehicles", color: "bg-green-600 hover:bg-green-700" },
-  { label: "Add Driver",  icon: UserCheck,  path: "/dashboard/admin/drivers",  color: "bg-purple-600 hover:bg-purple-700" },
+  { label: "Add User",    icon: UserPlus,   path: "/dashboard/admin/users",   color: "bg-gray-700 hover:bg-gray-800" },
+  { label: "Add Vehicle", icon: PlusCircle, path: "/dashboard/admin/vehicles", color: "bg-gray-700 hover:bg-gray-800" },
+  { label: "Add Driver",  icon: UserCheck,  path: "/dashboard/admin/drivers",  color: "bg-gray-700 hover:bg-gray-800" },
   { label: "View Reports",icon: LogIn,      path: "/dashboard/admin/reports",  color: "bg-gray-700 hover:bg-gray-800" },
 ];
 
@@ -35,29 +35,29 @@ export default function AdminDashboard() {
   }, []);
 
   const statCards = [
-    { label: "Total Users",      value: stats.users,   icon: Users,     color: "text-blue-600",   bg: "bg-blue-50",   border: "border-blue-200" },
-    { label: "Total Vehicles",   value: stats.vehicles, icon: Car,      color: "text-green-600",  bg: "bg-green-50",  border: "border-green-200" },
-    { label: "Total Drivers",    value: stats.drivers,  icon: UserCheck, color: "text-purple-600", bg: "bg-purple-50", border: "border-purple-200" },
-    { label: "Pending Requests", value: stats.pending,  icon: Clock,    color: "text-yellow-600", bg: "bg-yellow-50", border: "border-yellow-200" },
+    { label: "Total Users",      value: stats.users,   icon: Users,     color: "text-gray-900",   iconBg: "bg-gray-100",   border: "border-gray-200" },
+    { label: "Total Vehicles",   value: stats.vehicles, icon: Car,      color: "text-gray-900",  iconBg: "bg-gray-100",  border: "border-gray-200" },
+    { label: "Total Drivers",    value: stats.drivers,  icon: UserCheck, color: "text-gray-900", iconBg: "bg-gray-100", border: "border-gray-200" },
+    { label: "Pending Requests", value: stats.pending,  icon: Clock,    color: "text-gray-900", iconBg: "bg-gray-100", border: "border-gray-200" },
   ];
 
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-2xl font-black text-brand-blue">Admin Dashboard</h1>
-        <p className="text-sm text-gray-500 mt-1">Welcome back, {user?.name}</p>
+        <h1 className="text-3xl font-black text-brand-blue dark:text-blue-400">Admin Dashboard</h1>
+        <p className="text-base font-semibold text-gray-700 dark:text-gray-200 mt-2">Welcome back, {user?.name}</p>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {statCards.map((s) => (
-          <Card key={s.label} className={`${s.bg} border-2 ${s.border} shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105`}>
-            <CardContent className="p-5 flex items-center gap-4">
-              <div className={`p-3 rounded-xl shadow-md ${s.color.replace('text-', 'bg-')}`}>
-                <s.icon className="h-6 w-6 text-white" />
+          <Card key={s.label} className={`bg-white dark:bg-gray-800 border ${s.border} hover:shadow-md transition-shadow`}>
+            <CardContent className="p-6 flex items-center gap-4">
+              <div className={`p-3 rounded-lg ${s.iconBg}`}>
+                <s.icon className={`h-6 w-6 text-gray-700 dark:text-gray-300`} />
               </div>
               <div>
-                <p className={`text-xs font-extrabold uppercase tracking-widest ${s.color.replace('600', '800')} dark:${s.color.replace('600', '200')}`}>{s.label}</p>
-                <p className={`text-3xl font-black ${s.color.replace('600', '950')} dark:${s.color.replace('600', '50')} drop-shadow-sm`}>{s.value}</p>
+                <p className={`text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400`}>{s.label}</p>
+                <p className={`text-4xl font-black ${s.color} dark:text-gray-100`}>{s.value}</p>
               </div>
             </CardContent>
           </Card>
@@ -65,11 +65,11 @@ export default function AdminDashboard() {
       </div>
 
       <div>
-        <h2 className="text-sm font-bold uppercase tracking-widest text-gray-400 mb-3">Quick Actions</h2>
+        <h2 className="text-base font-black uppercase tracking-wider text-gray-700 dark:text-gray-200 mb-4">Quick Actions</h2>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           {quickActions.map((a) => (
             <Button key={a.label} onClick={() => navigate(a.path)}
-              className={`h-14 font-black text-white rounded-xl gap-2 ${a.color}`}>
+              className={`h-14 font-bold text-white rounded-lg gap-2 shadow-md hover:shadow-lg transition-all ${a.color}`}>
               <a.icon className="h-5 w-5" /> {a.label}
             </Button>
           ))}

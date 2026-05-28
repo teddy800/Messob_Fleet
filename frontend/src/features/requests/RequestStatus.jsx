@@ -8,18 +8,18 @@ import { useTripRequests } from "@/lib/useTripRequests";
 const statusConfig = {
   pending: {
     label: "Pending", icon: Clock,
-    color: "text-amber-500/70 dark:text-amber-400/60", bg: "bg-amber-50/40 dark:bg-amber-900/10",
-    border: "border-amber-200/50 dark:border-amber-700/30", activeBg: "bg-amber-100/30 dark:bg-amber-800/10",
+    color: "text-amber-600 dark:text-amber-400", bg: "bg-amber-50 dark:bg-amber-900/30",
+    border: "border-amber-300 dark:border-amber-600", activeBg: "bg-amber-100 dark:bg-amber-800/30",
   },
   approved: {
     label: "Approved", icon: CheckCircle,
-    color: "text-emerald-500/70 dark:text-emerald-400/60", bg: "bg-emerald-50/40 dark:bg-emerald-900/10",
-    border: "border-emerald-200/50 dark:border-emerald-700/30", activeBg: "bg-emerald-100/30 dark:bg-emerald-800/10",
+    color: "text-emerald-600 dark:text-emerald-400", bg: "bg-emerald-50 dark:bg-emerald-900/30",
+    border: "border-emerald-300 dark:border-emerald-600", activeBg: "bg-emerald-100 dark:bg-emerald-800/30",
   },
   rejected: {
     label: "Rejected", icon: XCircle,
-    color: "text-rose-500/70 dark:text-rose-400/60", bg: "bg-rose-50/40 dark:bg-rose-900/10",
-    border: "border-rose-200/50 dark:border-rose-700/30", activeBg: "bg-rose-100/30 dark:bg-rose-800/10",
+    color: "text-rose-600 dark:text-rose-400", bg: "bg-rose-50 dark:bg-rose-900/30",
+    border: "border-rose-300 dark:border-rose-600", activeBg: "bg-rose-100 dark:bg-rose-800/30",
   },
 };
 
@@ -53,14 +53,14 @@ export default function RequestStatus() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-2xl font-black text-brand-blue">Request Status</h1>
-        <p className="text-sm text-gray-500 mt-1">
+        <h1 className="text-3xl font-black text-brand-blue dark:text-blue-400">Request Status</h1>
+        <p className="text-base font-medium text-gray-700 dark:text-gray-200 mt-2">
           Welcome back, {user?.name}. Here's an overview of your vehicle requests.
         </p>
       </div>
 
       {loading ? (
-        <p className="text-sm text-gray-400">Loading...</p>
+        <p className="text-base font-semibold text-gray-600 dark:text-gray-300">Loading...</p>
       ) : (
         <>
           <div className="grid gap-5 sm:grid-cols-3">
@@ -70,19 +70,19 @@ export default function RequestStatus() {
                 <Card
                   key={status}
                   onClick={() => navigate(`/dashboard/requests/status/${status}`)}
-                  className={`cursor-pointer border-2 ${config.border} ${config.bg} hover:shadow-lg hover:scale-[1.02] transition-all duration-200 group dark:bg-opacity-10 dark:hover:bg-opacity-20`}
+                  className={`cursor-pointer border-2 ${config.border} ${config.bg} hover:shadow-xl hover:scale-[1.03] transition-all duration-200 group`}
                 >
                   <CardContent className="p-6 flex items-center justify-between">
-                    <div className="flex items-center gap-4 dark:bg-opacity-10">
-                      <div className={`p-3 rounded-xl ${config.activeBg} bg-opacity-10 group-hover:bg-opacity-20`}>
-                        <Icon className={`h-7 w-7 ${config.color} dark:text-gray-300`} />
+                    <div className="flex items-center gap-4">
+                      <div className={`p-3 rounded-xl ${config.activeBg} group-hover:shadow-md`}>
+                        <Icon className={`h-8 w-8 ${config.color}`} />
                       </div>
                       <div>
-                        <p className="text-xs font-bold uppercase tracking-widest text-gray-400 dark:text-gray-400">{config.label}</p>
-                        <p className={`text-4xl font-black ${config.color} dark:text-gray-400`}>{counts[status]}</p>
+                        <p className="text-sm font-black uppercase tracking-widest text-gray-600 dark:text-gray-300">{config.label}</p>
+                        <p className={`text-5xl font-black ${config.color}`}>{counts[status]}</p>
                       </div>
                     </div>
-                    <ChevronRight className="h-5 w-5 text-gray-300 group-hover:text-gray-500 transition-colors dark:text-gray-400" />
+                    <ChevronRight className="h-6 w-6 text-gray-400 group-hover:text-gray-700 dark:group-hover:text-gray-200 transition-colors" />
                   </CardContent>
                 </Card>
               );
@@ -90,7 +90,7 @@ export default function RequestStatus() {
           </div>
 
           <div>
-            <h2 className="text-sm font-bold uppercase tracking-widest text-gray-400 mb-3">Recent Requests</h2>
+            <h2 className="text-base font-black uppercase tracking-widest text-gray-700 dark:text-gray-200 mb-4">Recent Requests</h2>
             <div className="space-y-3">
               {recent.map((req) => {
                 const displayState = ["approved", "in_progress"].includes(req.state) ? "approved" : req.state;
@@ -100,20 +100,20 @@ export default function RequestStatus() {
                   <div
                     key={req.id}
                     onClick={() => navigate(`/dashboard/requests/status/${displayState}`)}
-                    className="flex items-center justify-between bg-white border border-gray-100 rounded-xl px-5 py-4 cursor-pointer hover:shadow-md hover:border-brand-blue/20 transition-all dark:bg-gray-800 dark:border-gray-700"
+                    className="flex items-center justify-between bg-white border-2 border-gray-200 rounded-xl px-6 py-5 cursor-pointer hover:shadow-lg hover:border-brand-blue/50 transition-all dark:bg-gray-800 dark:border-gray-600"
                   >
                     <div className="flex items-center gap-4">
-                      <Icon className={`h-5 w-5 ${config.color}`} />
+                      <Icon className={`h-6 w-6 ${config.color}`} />
                       <div>
-                        <p className="font-bold text-sm text-gray-800 dark:text-gray-300">{req.name}</p>
-                        <p className="text-xs text-gray-400 dark:text-gray-400">{req.pickup} → {req.destination}</p>
+                        <p className="font-black text-base text-gray-900 dark:text-gray-100">{req.name}</p>
+                        <p className="text-sm font-semibold text-gray-600 dark:text-gray-300">{req.pickup} → {req.destination}</p>
                       </div>
                     </div>
                     <div className="text-right">
-                      <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded-full ${config.bg} ${config.color}`}>
+                      <span className={`text-xs font-black uppercase tracking-widest px-3 py-1.5 rounded-full ${config.bg} ${config.color}`}>
                         {config.label}
                       </span>
-                      <p className="text-xs text-gray-400 mt-1 dark:text-gray-400">
+                      <p className="text-sm font-semibold text-gray-600 dark:text-gray-300 mt-1">
                         {req.start_dt ? new Date(req.start_dt).toLocaleDateString() : ""}
                       </p>
                     </div>
@@ -121,7 +121,7 @@ export default function RequestStatus() {
                 );
               })}
               {recent.length === 0 && (
-                <p className="text-sm text-gray-400 text-center py-6 dark:text-gray-400">No requests yet.</p>
+                <p className="text-base font-semibold text-gray-600 dark:text-gray-300 text-center py-8">No requests yet.</p>
               )}
             </div>
           </div>

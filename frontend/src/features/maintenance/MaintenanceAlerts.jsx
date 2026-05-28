@@ -26,45 +26,49 @@ import { format } from 'date-fns';
 
 const priorityConfig = {
   critical: { 
-    color: 'bg-rose-400/70', 
-    textColor: 'text-rose-600/80', 
-    bgColor: 'bg-rose-50/40', 
-    borderColor: 'border-rose-200/50',
+    color: 'bg-rose-600', 
+    textColor: 'text-rose-700 dark:text-rose-600', 
+    bgColor: 'bg-rose-50 dark:bg-rose-900/20', 
+    borderColor: 'border-gray-200 dark:border-gray-600',
+    iconBg: 'bg-rose-100',
     icon: AlertTriangle,
     label: 'Critical'
   },
   high: { 
-    color: 'bg-orange-400/70', 
-    textColor: 'text-orange-600/80', 
-    bgColor: 'bg-orange-50/40', 
-    borderColor: 'border-orange-200/50',
+    color: 'bg-orange-600', 
+    textColor: 'text-orange-700 dark:text-orange-600', 
+    bgColor: 'bg-orange-50 dark:bg-orange-900/20', 
+    borderColor: 'border-gray-200 dark:border-gray-600',
+    iconBg: 'bg-orange-100',
     icon: AlertTriangle,
     label: 'High'
   },
   medium: { 
-    color: 'bg-amber-400/70', 
-    textColor: 'text-amber-600/80', 
-    bgColor: 'bg-amber-50/40', 
-    borderColor: 'border-amber-200/50',
+    color: 'bg-amber-600', 
+    textColor: 'text-amber-700 dark:text-amber-600', 
+    bgColor: 'bg-amber-50 dark:bg-amber-900/20', 
+    borderColor: 'border-gray-200 dark:border-gray-600',
+    iconBg: 'bg-amber-100',
     icon: Clock,
     label: 'Medium'
   },
   low: { 
-    color: 'bg-blue-500', 
-    textColor: 'text-blue-700', 
-    bgColor: 'bg-blue-50', 
-    borderColor: 'border-blue-200',
+    color: 'bg-blue-600', 
+    textColor: 'text-blue-700 dark:text-blue-600', 
+    bgColor: 'bg-blue-50 dark:bg-blue-900/20', 
+    borderColor: 'border-gray-200 dark:border-gray-600',
+    iconBg: 'bg-blue-100',
     icon: Clock,
     label: 'Low'
   }
 };
 
 const statusConfig = {
-  pending: { color: 'bg-gray-500', label: 'Pending' },
-  sent: { color: 'bg-blue-500', label: 'Sent' },
-  acknowledged: { color: 'bg-amber-400/70', label: 'Acknowledged' },
-  completed: { color: 'bg-emerald-400/70', label: 'Completed' },
-  dismissed: { color: 'bg-gray-400', label: 'Dismissed' }
+  pending: { color: 'bg-gray-600', label: 'Pending' },
+  sent: { color: 'bg-blue-600', label: 'Sent' },
+  acknowledged: { color: 'bg-amber-600', label: 'Acknowledged' },
+  completed: { color: 'bg-emerald-600', label: 'Completed' },
+  dismissed: { color: 'bg-gray-500', label: 'Dismissed' }
 };
 
 export default function MaintenanceAlerts() {
@@ -176,18 +180,18 @@ export default function MaintenanceAlerts() {
     const PriorityIcon = priority.icon;
     
     return (
-      <Card className={`${priority.borderColor} border-l-4 hover:shadow-md transition-shadow`}>
+      <Card className={`border-l-4 ${priority.borderColor} bg-white dark:bg-gray-800 hover:shadow-lg transition-shadow`}>
         <CardHeader className="pb-3">
           <div className="flex items-start justify-between">
             <div className="flex items-start gap-3">
-              <div className={`p-2 rounded-full ${priority.bgColor}`}>
-                <PriorityIcon className={`h-4 w-4 ${priority.textColor}`} />
+              <div className={`p-3 rounded-lg ${priority.iconBg}`}>
+                <PriorityIcon className={`h-5 w-5 ${priority.textColor}`} />
               </div>
               <div className="flex-1">
-                <CardTitle className="text-lg font-bold text-gray-900">
+                <CardTitle className="text-xl font-black text-gray-900 dark:text-gray-100">
                   {alert.alert_title}
                 </CardTitle>
-                <p className="text-sm text-gray-600 mt-1">
+                <p className="text-base font-semibold text-gray-700 dark:text-gray-200 mt-1">
                   {Array.isArray(alert.vehicle_id) ? alert.vehicle_id[1] : 'Unknown Vehicle'}
                 </p>
               </div>
@@ -206,31 +210,31 @@ export default function MaintenanceAlerts() {
         
         <CardContent className="space-y-4">
           {/* Alert Message */}
-          <Alert className={alert.is_overdue ? 'border-red-200 bg-red-50' : priority.bgColor}>
-            <AlertDescription className={alert.is_overdue ? 'text-red-700' : priority.textColor}>
+          <Alert className={alert.is_overdue ? 'border-red-200 bg-red-50 dark:bg-red-900/20' : 'bg-gray-50 dark:bg-gray-800'}>
+            <AlertDescription className={alert.is_overdue ? 'text-red-800 dark:text-red-400 font-semibold text-base' : 'text-gray-800 dark:text-gray-200 font-semibold text-base'}>
               {alert.alert_message}
             </AlertDescription>
           </Alert>
 
           {/* Details Grid */}
-          <div className="grid grid-cols-2 gap-4 text-sm">
+          <div className="grid grid-cols-2 gap-4 text-base">
             <div className="flex items-center gap-2">
-              <Calendar className="h-4 w-4 text-gray-500" />
+              <Calendar className="h-5 w-5 text-gray-600" />
               <div>
-                <span className="text-gray-500">Due Date:</span>
-                <span className="ml-1 font-medium">
+                <span className="text-gray-700 dark:text-gray-200 font-semibold">Due Date:</span>
+                <span className="ml-1 font-black text-gray-900 dark:text-gray-100">
                   {alert.scheduled_date ? format(new Date(alert.scheduled_date), 'MMM d, yyyy') : 'N/A'}
                 </span>
               </div>
             </div>
             
             <div className="flex items-center gap-2">
-              <Clock className="h-4 w-4 text-gray-500" />
+              <Clock className="h-5 w-5 text-gray-600" />
               <div>
-                <span className="text-gray-500">Days:</span>
-                <span className={`ml-1 font-medium ${
-                  alert.days_until_due < 0 ? 'text-red-600' : 
-                  alert.days_until_due <= 3 ? 'text-orange-600' : 'text-gray-700'
+                <span className="text-gray-700 dark:text-gray-200 font-semibold">Days:</span>
+                <span className={`ml-1 font-black ${
+                  alert.days_until_due < 0 ? 'text-red-700' : 
+                  alert.days_until_due <= 3 ? 'text-orange-700' : 'text-gray-900 dark:text-gray-100'
                 }`}>
                   {alert.days_until_due < 0 ? `${Math.abs(alert.days_until_due)} overdue` : 
                    alert.days_until_due === 0 ? 'Due today' : 
@@ -240,19 +244,19 @@ export default function MaintenanceAlerts() {
             </div>
 
             <div className="flex items-center gap-2">
-              <Car className="h-4 w-4 text-gray-500" />
+              <Car className="h-5 w-5 text-gray-600" />
               <div>
-                <span className="text-gray-500">Service:</span>
-                <span className="ml-1 font-medium">{alert.service_type}</span>
+                <span className="text-gray-700 dark:text-gray-200 font-semibold">Service:</span>
+                <span className="ml-1 font-black text-gray-900 dark:text-gray-100">{alert.service_type}</span>
               </div>
             </div>
 
             {alert.scheduled_odometer && (
               <div className="flex items-center gap-2">
-                <Gauge className="h-4 w-4 text-gray-500" />
+                <Gauge className="h-5 w-5 text-gray-600" />
                 <div>
-                  <span className="text-gray-500">Odometer:</span>
-                  <span className="ml-1 font-medium">
+                  <span className="text-gray-700 dark:text-gray-200 font-semibold">Odometer:</span>
+                  <span className="ml-1 font-black text-gray-900 dark:text-gray-100">
                     {alert.scheduled_odometer.toLocaleString()} km
                   </span>
                 </div>
@@ -261,13 +265,13 @@ export default function MaintenanceAlerts() {
           </div>
 
           {/* Notification Status */}
-          <div className="flex items-center gap-4 text-xs">
-            <div className={`flex items-center gap-1 ${alert.email_sent ? 'text-green-600' : 'text-gray-400'}`}>
-              <Mail className="h-3 w-3" />
+          <div className="flex items-center gap-4 text-sm">
+            <div className={`flex items-center gap-1 font-semibold ${alert.email_sent ? 'text-green-700' : 'text-gray-600'}`}>
+              <Mail className="h-4 w-4" />
               <span>{alert.email_sent ? 'Email sent' : 'Email pending'}</span>
             </div>
-            <div className={`flex items-center gap-1 ${alert.sms_sent ? 'text-green-600' : 'text-gray-400'}`}>
-              <MessageSquare className="h-3 w-3" />
+            <div className={`flex items-center gap-1 font-semibold ${alert.sms_sent ? 'text-green-700' : 'text-gray-600'}`}>
+              <MessageSquare className="h-4 w-4" />
               <span>{alert.sms_sent ? 'SMS sent' : 'SMS pending'}</span>
             </div>
           </div>
@@ -342,11 +346,11 @@ export default function MaintenanceAlerts() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-            <AlertTriangle className="h-6 w-6 text-brand-blue" />
+          <h1 className="text-3xl font-black text-red-700 dark:text-red-400 flex items-center gap-2">
+            <AlertTriangle className="h-7 w-7 text-red-700 dark:text-red-400" />
             Maintenance Alerts
           </h1>
-          <p className="text-gray-600">Preventive maintenance scheduling and notifications</p>
+          <p className="text-base font-semibold text-gray-700 dark:text-gray-200 mt-1">Preventive maintenance scheduling and notifications</p>
         </div>
         
         <Button onClick={fetchAlerts} variant="outline">
@@ -357,45 +361,45 @@ export default function MaintenanceAlerts() {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
-        <Card className="border-red-200">
+        <Card className="border border-gray-200 bg-white dark:bg-gray-800">
           <CardContent className="p-4 text-center">
-            <div className="text-2xl font-bold text-red-600">{stats.critical}</div>
-            <div className="text-xs text-red-600 font-medium">Critical</div>
+            <div className="text-3xl font-black text-red-700 dark:text-red-400">{stats.critical}</div>
+            <div className="text-sm text-red-700 dark:text-red-400 font-black uppercase">Critical</div>
           </CardContent>
         </Card>
         
-        <Card className="border-orange-200">
+        <Card className="border border-gray-200 bg-white dark:bg-gray-800">
           <CardContent className="p-4 text-center">
-            <div className="text-2xl font-bold text-orange-600">{stats.high}</div>
-            <div className="text-xs text-orange-600 font-medium">High</div>
+            <div className="text-3xl font-black text-orange-700 dark:text-orange-400">{stats.high}</div>
+            <div className="text-sm text-orange-700 dark:text-orange-400 font-black uppercase">High</div>
           </CardContent>
         </Card>
         
-        <Card className="border-yellow-200">
+        <Card className="border border-gray-200 bg-white dark:bg-gray-800">
           <CardContent className="p-4 text-center">
-            <div className="text-2xl font-bold text-yellow-600">{stats.medium}</div>
-            <div className="text-xs text-yellow-600 font-medium">Medium</div>
+            <div className="text-3xl font-black text-amber-700 dark:text-amber-400">{stats.medium}</div>
+            <div className="text-sm text-amber-700 dark:text-amber-400 font-black uppercase">Medium</div>
           </CardContent>
         </Card>
         
-        <Card className="border-blue-200">
+        <Card className="border border-gray-200 bg-white dark:bg-gray-800">
           <CardContent className="p-4 text-center">
-            <div className="text-2xl font-bold text-blue-600">{stats.low}</div>
-            <div className="text-xs text-blue-600 font-medium">Low</div>
+            <div className="text-3xl font-black text-blue-700 dark:text-blue-400">{stats.low}</div>
+            <div className="text-sm text-blue-700 dark:text-blue-400 font-black uppercase">Low</div>
           </CardContent>
         </Card>
         
-        <Card className="border-red-300">
+        <Card className="border border-gray-200 bg-white dark:bg-gray-800">
           <CardContent className="p-4 text-center">
-            <div className="text-2xl font-bold text-red-700">{stats.overdue}</div>
-            <div className="text-xs text-red-700 font-medium">Overdue</div>
+            <div className="text-3xl font-black text-red-800 dark:text-red-400">{stats.overdue}</div>
+            <div className="text-sm text-red-800 dark:text-red-400 font-black uppercase">Overdue</div>
           </CardContent>
         </Card>
         
-        <Card className="border-gray-200">
+        <Card className="border border-gray-200 bg-white dark:bg-gray-800">
           <CardContent className="p-4 text-center">
-            <div className="text-2xl font-bold text-gray-700">{stats.total}</div>
-            <div className="text-xs text-gray-600 font-medium">Total</div>
+            <div className="text-3xl font-black text-gray-800 dark:text-gray-100">{stats.total}</div>
+            <div className="text-sm text-gray-700 dark:text-gray-200 font-black uppercase">Total</div>
           </CardContent>
         </Card>
       </div>
@@ -430,11 +434,11 @@ export default function MaintenanceAlerts() {
             {getFilteredAlerts(tab).length === 0 ? (
               <Card>
                 <CardContent className="p-8 text-center">
-                  <AlertTriangle className="h-12 w-12 text-gray-300 mx-auto mb-3" />
-                  <h3 className="text-lg font-medium text-gray-700 mb-2">
+                  <AlertTriangle className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-xl font-black text-gray-800 dark:text-gray-100 mb-3">
                     No {tab === 'all' ? '' : tab} alerts
                   </h3>
-                  <p className="text-gray-500 text-sm">
+                  <p className="text-gray-600 dark:text-gray-300 text-base font-semibold">
                     {tab === 'pending' && "No pending maintenance alerts at this time."}
                     {tab === 'urgent' && "No urgent maintenance alerts requiring immediate attention."}
                     {tab === 'overdue' && "No overdue maintenance items. Great job keeping up!"}
