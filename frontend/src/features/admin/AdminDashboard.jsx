@@ -50,14 +50,14 @@ export default function AdminDashboard() {
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {statCards.map((s) => (
-          <Card key={s.label} className={`border ${s.border} ${s.bg} shadow-sm`}>
+          <Card key={s.label} className={`${s.bg} border-2 ${s.border} shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105`}>
             <CardContent className="p-5 flex items-center gap-4">
-              <div className="p-3 rounded-xl bg-white shadow-sm">
-                <s.icon className={`h-6 w-6 ${s.color}`} />
+              <div className={`p-3 rounded-xl shadow-md ${s.color.replace('text-', 'bg-')}`}>
+                <s.icon className="h-6 w-6 text-white" />
               </div>
               <div>
-                <p className="text-xs font-bold uppercase tracking-widest text-gray-400">{s.label}</p>
-                <p className={`text-3xl font-black ${s.color}`}>{s.value}</p>
+                <p className={`text-xs font-extrabold uppercase tracking-widest ${s.color.replace('600', '800')} dark:${s.color.replace('600', '200')}`}>{s.label}</p>
+                <p className={`text-3xl font-black ${s.color.replace('600', '950')} dark:${s.color.replace('600', '50')} drop-shadow-sm`}>{s.value}</p>
               </div>
             </CardContent>
           </Card>

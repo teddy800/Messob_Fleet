@@ -68,17 +68,76 @@ export default function DashboardHome() {
       
       {/* Stat Cards Row */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {roleData.stats.map((stat) => (
-          <Card key={stat.title} className="border-b-4 border-b-brand-blue shadow-sm">
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-gray-500">{stat.title}</CardTitle>
-              <stat.icon className={`h-5 w-5 ${stat.color}`} />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stat.value}</div>
-            </CardContent>
-          </Card>
-        ))}
+        {roleData.stats.map((stat) => {
+          // Enhanced color schemes for better visibility in dark/light modes
+          const colorSchemes = {
+            'text-brand-gold': {
+              iconBg: 'bg-amber-500 dark:bg-amber-600',
+              cardBg: 'bg-gradient-to-br from-amber-50 to-amber-100 dark:from-amber-950 dark:to-amber-900',
+              border: 'border-amber-300 dark:border-amber-700',
+              textColor: 'text-amber-800 dark:text-amber-200',
+              valueColor: 'text-amber-950 dark:text-amber-50'
+            },
+            'text-green-600': {
+              iconBg: 'bg-green-500 dark:bg-green-600',
+              cardBg: 'bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950 dark:to-green-900',
+              border: 'border-green-300 dark:border-green-700',
+              textColor: 'text-green-800 dark:text-green-200',
+              valueColor: 'text-green-950 dark:text-green-50'
+            },
+            'text-brand-blue': {
+              iconBg: 'bg-blue-500 dark:bg-blue-600',
+              cardBg: 'bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950 dark:to-blue-900',
+              border: 'border-blue-300 dark:border-blue-700',
+              textColor: 'text-blue-800 dark:text-blue-200',
+              valueColor: 'text-blue-950 dark:text-blue-50'
+            },
+            'text-red-600': {
+              iconBg: 'bg-red-500 dark:bg-red-600',
+              cardBg: 'bg-gradient-to-br from-red-50 to-red-100 dark:from-red-950 dark:to-red-900',
+              border: 'border-red-300 dark:border-red-700',
+              textColor: 'text-red-800 dark:text-red-200',
+              valueColor: 'text-red-950 dark:text-red-50'
+            },
+            'text-blue-600': {
+              iconBg: 'bg-blue-500 dark:bg-blue-600',
+              cardBg: 'bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950 dark:to-blue-900',
+              border: 'border-blue-300 dark:border-blue-700',
+              textColor: 'text-blue-800 dark:text-blue-200',
+              valueColor: 'text-blue-950 dark:text-blue-50'
+            },
+            'text-orange-600': {
+              iconBg: 'bg-orange-500 dark:bg-orange-600',
+              cardBg: 'bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-950 dark:to-orange-900',
+              border: 'border-orange-300 dark:border-orange-700',
+              textColor: 'text-orange-800 dark:text-orange-200',
+              valueColor: 'text-orange-950 dark:text-orange-50'
+            },
+            'text-purple-600': {
+              iconBg: 'bg-purple-500 dark:bg-purple-600',
+              cardBg: 'bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-950 dark:to-purple-900',
+              border: 'border-purple-300 dark:border-purple-700',
+              textColor: 'text-purple-800 dark:text-purple-200',
+              valueColor: 'text-purple-950 dark:text-purple-50'
+            }
+          };
+          
+          const scheme = colorSchemes[stat.color] || colorSchemes['text-blue-600'];
+          
+          return (
+            <Card key={stat.title} className={`${scheme.cardBg} border-2 ${scheme.border} shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105`}>
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className={`text-sm font-extrabold uppercase tracking-wide ${scheme.textColor}`}>{stat.title}</CardTitle>
+                <div className={`${scheme.iconBg} p-2.5 rounded-xl shadow-md`}>
+                  <stat.icon className="h-5 w-5 text-white" />
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className={`text-3xl font-black ${scheme.valueColor} drop-shadow-sm`}>{stat.value}</div>
+              </CardContent>
+            </Card>
+          );
+        })}
       </div>
 
       {/* Workflow Visualization Area */}

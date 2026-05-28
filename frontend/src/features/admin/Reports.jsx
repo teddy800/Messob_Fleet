@@ -154,13 +154,13 @@ export default function Reports() {
   };
 
   const stateBadge = {
-    draft:       "bg-gray-100 text-gray-500",
-    pending:     "bg-yellow-100 text-yellow-700",
-    approved:    "bg-green-100 text-green-700",
-    rejected:    "bg-red-100 text-red-600",
-    in_progress: "bg-blue-100 text-blue-700",
-    completed:   "bg-purple-100 text-purple-700",
-    closed:      "bg-gray-200 text-gray-600",
+    draft:       "bg-gradient-to-r from-gray-400 to-gray-500 dark:from-gray-600 dark:to-gray-700 text-white shadow-md",
+    pending:     "bg-gradient-to-r from-amber-400 to-yellow-500 dark:from-amber-600 dark:to-yellow-700 text-white shadow-md",
+    approved:    "bg-gradient-to-r from-green-500 to-emerald-600 dark:from-green-600 dark:to-emerald-700 text-white shadow-md",
+    rejected:    "bg-gradient-to-r from-red-500 to-rose-600 dark:from-red-600 dark:to-rose-700 text-white shadow-md",
+    in_progress: "bg-gradient-to-r from-blue-500 to-cyan-600 dark:from-blue-600 dark:to-cyan-700 text-white shadow-md",
+    completed:   "bg-gradient-to-r from-purple-500 to-indigo-600 dark:from-purple-600 dark:to-indigo-700 text-white shadow-md",
+    closed:      "bg-gradient-to-r from-gray-500 to-slate-600 dark:from-gray-700 dark:to-slate-800 text-white shadow-md",
   };
 
   return (
@@ -206,19 +206,21 @@ export default function Reports() {
             {/* Summary cards */}
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
               {[
-                { label: "Total Trips",  value: analytics?.stats.total || 0,     icon: Car,         color: "text-brand-blue" },
-                { label: "Pending",      value: analytics?.stats.pending || 0,   icon: Clock,       color: "text-yellow-600" },
-                { label: "Approved",     value: analytics?.stats.approved || 0,  icon: CheckCircle, color: "text-green-600" },
-                { label: "In Progress",  value: analytics?.stats.inProgress || 0, icon: Activity,   color: "text-blue-600" },
-                { label: "Completed",    value: analytics?.stats.completed || 0, icon: BadgeCheck,  color: "text-purple-600" },
-                { label: "Rejected",     value: analytics?.stats.rejected || 0,  icon: XCircle,     color: "text-red-500" },
+                { label: "Total Trips",  value: analytics?.stats.total || 0,     icon: Car,         color: "text-blue-950 dark:text-blue-50", bg: "bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950 dark:to-blue-900", iconBg: "bg-blue-500 dark:bg-blue-600", border: "border-blue-300 dark:border-blue-700", labelColor: "text-blue-800 dark:text-blue-200" },
+                { label: "Pending",      value: analytics?.stats.pending || 0,   icon: Clock,       color: "text-amber-950 dark:text-amber-50", bg: "bg-gradient-to-br from-amber-50 to-amber-100 dark:from-amber-950 dark:to-amber-900", iconBg: "bg-amber-500 dark:bg-amber-600", border: "border-amber-300 dark:border-amber-700", labelColor: "text-amber-800 dark:text-amber-200" },
+                { label: "Approved",     value: analytics?.stats.approved || 0,  icon: CheckCircle, color: "text-green-950 dark:text-green-50", bg: "bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950 dark:to-green-900", iconBg: "bg-green-500 dark:bg-green-600", border: "border-green-300 dark:border-green-700", labelColor: "text-green-800 dark:text-green-200" },
+                { label: "In Progress",  value: analytics?.stats.inProgress || 0, icon: Activity,   color: "text-blue-950 dark:text-blue-50", bg: "bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950 dark:to-blue-900", iconBg: "bg-blue-500 dark:bg-blue-600", border: "border-blue-300 dark:border-blue-700", labelColor: "text-blue-800 dark:text-blue-200" },
+                { label: "Completed",    value: analytics?.stats.completed || 0, icon: BadgeCheck,  color: "text-purple-950 dark:text-purple-50", bg: "bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-950 dark:to-purple-900", iconBg: "bg-purple-500 dark:bg-purple-600", border: "border-purple-300 dark:border-purple-700", labelColor: "text-purple-800 dark:text-purple-200" },
+                { label: "Rejected",     value: analytics?.stats.rejected || 0,  icon: XCircle,     color: "text-red-950 dark:text-red-50", bg: "bg-gradient-to-br from-red-50 to-red-100 dark:from-red-950 dark:to-red-900", iconBg: "bg-red-500 dark:bg-red-600", border: "border-red-300 dark:border-red-700", labelColor: "text-red-800 dark:text-red-200" },
               ].map((s) => (
-                <Card key={s.label} className="border border-gray-100 shadow-sm">
+                <Card key={s.label} className={`${s.bg} border-2 ${s.border} shadow-lg hover:shadow-xl transition-all duration-300`}>
                   <CardContent className="p-4 flex items-center gap-3">
-                    <s.icon className={`h-6 w-6 ${s.color}`} />
+                    <div className={`${s.iconBg} p-2.5 rounded-xl shadow-md`}>
+                      <s.icon className="h-6 w-6 text-white" />
+                    </div>
                     <div>
-                      <p className="text-xs font-bold uppercase tracking-widest text-gray-400">{s.label}</p>
-                      <p className={`text-2xl font-black ${s.color}`}>{s.value}</p>
+                      <p className={`text-xs font-extrabold uppercase tracking-widest ${s.labelColor}`}>{s.label}</p>
+                      <p className={`text-2xl font-black ${s.color} drop-shadow-sm`}>{s.value}</p>
                     </div>
                   </CardContent>
                 </Card>
@@ -411,7 +413,7 @@ export default function Reports() {
                           <td className="py-3 px-3 text-gray-600 dark:text-gray-300 text-xs">{t.pickup} → {t.destination}</td>
                           <td className="py-3 px-3 text-gray-500 text-xs dark:text-gray-400">{t.start_dt ? new Date(t.start_dt).toLocaleDateString() : "—"}</td>
                           <td className="py-3 px-3">
-                            <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded-full ${stateBadge[t.state] || "bg-gray-100 text-gray-500"}`}>
+                            <span className={`text-xs font-black uppercase tracking-widest px-3 py-1.5 rounded-full border-2 ${stateBadge[t.state] || "bg-gray-100 text-gray-500"}`}>
                               {t.state}
                             </span>
                           </td>
