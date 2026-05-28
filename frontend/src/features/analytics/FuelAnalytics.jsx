@@ -105,12 +105,12 @@ export default function FuelAnalytics() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-black text-brand-blue">Fuel Analytics</h1>
+        <h1 className="text-3xl font-black text-brand-blue dark:text-blue-400">Fuel Analytics</h1>
         <div className="flex gap-2">
           <select
             value={timeRange}
             onChange={(e) => setTimeRange(e.target.value)}
-            className="px-3 py-2 border rounded-md text-sm"
+            className="px-4 py-2 border-2 rounded-md text-base font-semibold"
           >
             <option value="7">Last 7 Days</option>
             <option value="30">Last 30 Days</option>
@@ -123,23 +123,23 @@ export default function FuelAnalytics() {
 
       {/* Alerts Section */}
       {alerts.length > 0 && (
-        <Card className="border-orange-200 bg-orange-50 dark:bg-orange-950">
+        <Card className="border-2 border-orange-300 bg-orange-50 dark:bg-orange-950">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-orange-700 dark:text-orange-300">
-              <AlertTriangle className="h-5 w-5" />
+            <CardTitle className="flex items-center gap-2 text-orange-800 dark:text-orange-300 text-xl font-black">
+              <AlertTriangle className="h-6 w-6" />
               Fuel Alerts ({alerts.length})
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
               {alerts.slice(0, 5).map((alert, idx) => (
-                <div key={idx} className="flex items-center justify-between p-3 bg-white dark:bg-gray-800 rounded-md">
+                <div key={idx} className="flex items-center justify-between p-4 bg-white dark:bg-gray-800 rounded-md border-2 border-orange-200">
                   <div>
-                    <p className="font-semibold text-sm">{alert.vehicle_plate}</p>
-                    <p className="text-xs text-gray-600 dark:text-gray-400">{alert.message}</p>
+                    <p className="font-black text-base text-gray-900 dark:text-gray-100">{alert.vehicle_plate}</p>
+                    <p className="text-sm font-semibold text-gray-700 dark:text-gray-200">{alert.message}</p>
                   </div>
-                  <span className={`text-xs px-2 py-1 rounded-full ${
-                    alert.severity === 'warning' ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700'
+                  <span className={`text-sm font-black px-3 py-1.5 rounded-full ${
+                    alert.severity === 'warning' ? 'bg-yellow-200 text-yellow-800' : 'bg-red-200 text-red-800'
                   }`}>
                     {alert.type}
                   </span>
@@ -154,11 +154,11 @@ export default function FuelAnalytics() {
       <Card>
         <CardContent className="pt-6">
           <div className="flex items-center gap-4">
-            <label className="text-sm font-semibold">Select Vehicle:</label>
+            <label className="text-base font-black text-gray-900 dark:text-gray-100">Select Vehicle:</label>
             <select
               value={selectedVehicle || ''}
               onChange={(e) => setSelectedVehicle(parseInt(e.target.value))}
-              className="flex-1 px-3 py-2 border rounded-md"
+              className="flex-1 px-4 py-3 border-2 rounded-md text-base font-semibold"
             >
               {vehicles.map(v => (
                 <option key={v.id} value={v.id}>
@@ -181,7 +181,7 @@ export default function FuelAnalytics() {
         <TabsContent value="overview" className="space-y-4">
           {loading ? (
             <Card>
-              <CardContent className="py-12 text-center text-gray-500">
+              <CardContent className="py-12 text-center text-gray-700 dark:text-gray-200 text-lg font-semibold">
                 Loading analytics...
               </CardContent>
             </Card>
@@ -189,13 +189,13 @@ export default function FuelAnalytics() {
             <>
               {/* Key Metrics */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <Card>
+                <Card className="border-2 border-blue-300">
                   <CardContent className="pt-6">
                     <div className="flex items-center gap-3">
-                      <Activity className="h-8 w-8 text-blue-600" />
+                      <Activity className="h-10 w-10 text-blue-700" />
                       <div>
-                        <p className="text-xs text-gray-500 uppercase font-bold">Efficiency</p>
-                        <p className="text-2xl font-black text-blue-600">
+                        <p className="text-sm text-gray-700 dark:text-gray-200 uppercase font-black">Efficiency</p>
+                        <p className="text-3xl font-black text-blue-700">
                           {efficiencyData.statistics.efficiency_km_per_liter} km/L
                         </p>
                       </div>
@@ -203,13 +203,13 @@ export default function FuelAnalytics() {
                   </CardContent>
                 </Card>
 
-                <Card>
+                <Card className="border-2 border-green-300">
                   <CardContent className="pt-6">
                     <div className="flex items-center gap-3">
-                      <Fuel className="h-8 w-8 text-green-600" />
+                      <Fuel className="h-10 w-10 text-green-700" />
                       <div>
-                        <p className="text-xs text-gray-500 uppercase font-bold">Total Fuel</p>
-                        <p className="text-2xl font-black text-green-600">
+                        <p className="text-sm text-gray-700 dark:text-gray-200 uppercase font-black">Total Fuel</p>
+                        <p className="text-3xl font-black text-green-700">
                           {efficiencyData.statistics.total_fuel_liters} L
                         </p>
                       </div>
@@ -217,13 +217,13 @@ export default function FuelAnalytics() {
                   </CardContent>
                 </Card>
 
-                <Card>
+                <Card className="border-2 border-purple-300">
                   <CardContent className="pt-6">
                     <div className="flex items-center gap-3">
-                      <DollarSign className="h-8 w-8 text-purple-600" />
+                      <DollarSign className="h-10 w-10 text-purple-700" />
                       <div>
-                        <p className="text-xs text-gray-500 uppercase font-bold">Total Cost</p>
-                        <p className="text-2xl font-black text-purple-600">
+                        <p className="text-sm text-gray-700 dark:text-gray-200 uppercase font-black">Total Cost</p>
+                        <p className="text-3xl font-black text-purple-700">
                           ${efficiencyData.statistics.total_cost}
                         </p>
                       </div>
@@ -231,13 +231,13 @@ export default function FuelAnalytics() {
                   </CardContent>
                 </Card>
 
-                <Card>
+                <Card className="border-2 border-orange-300">
                   <CardContent className="pt-6">
                     <div className="flex items-center gap-3">
-                      <TrendingUp className="h-8 w-8 text-orange-600" />
+                      <TrendingUp className="h-10 w-10 text-orange-700" />
                       <div>
-                        <p className="text-xs text-gray-500 uppercase font-bold">Cost/km</p>
-                        <p className="text-2xl font-black text-orange-600">
+                        <p className="text-sm text-gray-700 dark:text-gray-200 uppercase font-black">Cost/km</p>
+                        <p className="text-3xl font-black text-orange-700">
                           ${efficiencyData.statistics.cost_per_km}
                         </p>
                       </div>
@@ -249,40 +249,40 @@ export default function FuelAnalytics() {
               {/* Detailed Statistics */}
               <Card>
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <BarChart3 className="h-5 w-5 text-brand-gold" />
+                  <CardTitle className="flex items-center gap-2 text-xl font-black">
+                    <BarChart3 className="h-6 w-6 text-brand-gold" />
                     Detailed Statistics
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
                     <div>
-                      <p className="text-xs text-gray-500 uppercase font-bold mb-1">Distance Traveled</p>
-                      <p className="text-xl font-bold text-brand-blue">
+                      <p className="text-sm text-gray-700 dark:text-gray-200 uppercase font-black mb-1">Distance Traveled</p>
+                      <p className="text-2xl font-black text-brand-blue dark:text-blue-400">
                         {efficiencyData.statistics.total_distance_km} km
                       </p>
                     </div>
                     <div>
-                      <p className="text-xs text-gray-500 uppercase font-bold mb-1">Refuel Count</p>
-                      <p className="text-xl font-bold text-brand-blue">
+                      <p className="text-sm text-gray-700 dark:text-gray-200 uppercase font-black mb-1">Refuel Count</p>
+                      <p className="text-2xl font-black text-brand-blue dark:text-blue-400">
                         {efficiencyData.statistics.refuel_count}
                       </p>
                     </div>
                     <div>
-                      <p className="text-xs text-gray-500 uppercase font-bold mb-1">Avg Refuel</p>
-                      <p className="text-xl font-bold text-brand-blue">
+                      <p className="text-sm text-gray-700 dark:text-gray-200 uppercase font-black mb-1">Avg Refuel</p>
+                      <p className="text-2xl font-black text-brand-blue dark:text-blue-400">
                         {efficiencyData.statistics.average_refuel_liters} L
                       </p>
                     </div>
                     <div>
-                      <p className="text-xs text-gray-500 uppercase font-bold mb-1">Avg Cost/Refuel</p>
-                      <p className="text-xl font-bold text-brand-blue">
+                      <p className="text-sm text-gray-700 dark:text-gray-200 uppercase font-black mb-1">Avg Cost/Refuel</p>
+                      <p className="text-2xl font-black text-brand-blue dark:text-blue-400">
                         ${efficiencyData.statistics.average_refuel_cost}
                       </p>
                     </div>
                     <div>
-                      <p className="text-xs text-gray-500 uppercase font-bold mb-1">Period</p>
-                      <p className="text-xl font-bold text-brand-blue">
+                      <p className="text-sm text-gray-700 dark:text-gray-200 uppercase font-black mb-1">Period</p>
+                      <p className="text-2xl font-black text-brand-blue dark:text-blue-400">
                         {efficiencyData.period.days} days
                       </p>
                     </div>
@@ -292,7 +292,7 @@ export default function FuelAnalytics() {
             </>
           ) : (
             <Card>
-              <CardContent className="py-12 text-center text-gray-500">
+              <CardContent className="py-12 text-center text-gray-700 dark:text-gray-200 text-lg font-semibold">
                 {efficiencyData?.error || 'No fuel data available for this period'}
               </CardContent>
             </Card>
@@ -312,31 +312,33 @@ export default function FuelAnalytics() {
               <CardContent>
                 <div className="space-y-4">
                   {trendData.trend.map((month, idx) => (
-                    <div key={idx} className="border-b pb-4 last:border-0">
-                      <div className="flex items-center justify-between mb-2">
-                        <h3 className="font-bold text-brand-blue">{month.month_name}</h3>
-                        <span className="text-sm text-gray-500">{month.refuel_count} refuels</span>
+                    <div key={idx} className="border-2 border-gray-200 rounded-lg p-4 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                      <div className="flex items-center justify-between mb-3">
+                        <div>
+                          <h3 className="font-black text-lg text-brand-blue dark:text-blue-400">{month.month_name}</h3>
+                          <p className="text-sm font-semibold text-gray-700 dark:text-gray-200">{month.refuel_count} refuels</p>
+                        </div>
                       </div>
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-base">
                         <div>
-                          <p className="text-xs text-gray-500">Efficiency</p>
-                          <p className="font-bold text-blue-600">{month.efficiency_km_per_liter} km/L</p>
+                          <p className="text-sm font-black text-gray-700 dark:text-gray-200">Efficiency</p>
+                          <p className="font-black text-xl text-blue-700">{month.efficiency_km_per_liter} km/L</p>
                         </div>
                         <div>
-                          <p className="text-xs text-gray-500">Distance</p>
-                          <p className="font-bold">{month.distance_km} km</p>
+                          <p className="text-sm font-black text-gray-700 dark:text-gray-200">Distance</p>
+                          <p className="font-black text-xl text-gray-900 dark:text-gray-100">{month.distance_km} km</p>
                         </div>
                         <div>
-                          <p className="text-xs text-gray-500">Fuel Used</p>
-                          <p className="font-bold">{month.total_fuel_liters} L</p>
+                          <p className="text-sm font-black text-gray-700 dark:text-gray-200">Fuel Used</p>
+                          <p className="font-black text-xl text-gray-900 dark:text-gray-100">{month.total_fuel_liters} L</p>
                         </div>
                         <div>
-                          <p className="text-xs text-gray-500">Total Cost</p>
-                          <p className="font-bold text-purple-600">${month.total_cost}</p>
+                          <p className="text-sm font-black text-gray-700 dark:text-gray-200">Total Cost</p>
+                          <p className="font-black text-xl text-purple-700">${month.total_cost}</p>
                         </div>
                       </div>
                       {/* Visual bar */}
-                      <div className="mt-2 h-2 bg-gray-200 rounded-full overflow-hidden">
+                      <div className="mt-3 h-3 bg-gray-200 rounded-full overflow-hidden">
                         <div 
                           className="h-full bg-blue-600 rounded-full"
                           style={{ width: `${Math.min((month.efficiency_km_per_liter / 20) * 100, 100)}%` }}
@@ -369,36 +371,36 @@ export default function FuelAnalytics() {
               <CardContent>
                 <div className="space-y-3">
                   {comparisonData.vehicles.map((vehicle, idx) => (
-                    <div key={idx} className="border rounded-lg p-4 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                    <div key={idx} className="border-2 border-gray-300 rounded-lg p-5 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors hover:shadow-lg">
                       <div className="flex items-center justify-between mb-3">
                         <div>
-                          <h3 className="font-bold text-brand-blue">{vehicle.plate_no}</h3>
-                          <p className="text-xs text-gray-500">{vehicle.model} - {vehicle.category}</p>
+                          <h3 className="font-black text-xl text-brand-blue dark:text-blue-400">{vehicle.plate_no}</h3>
+                          <p className="text-sm font-semibold text-gray-700 dark:text-gray-200">{vehicle.model} - {vehicle.category}</p>
                         </div>
                         <div className="text-right">
-                          <p className="text-2xl font-black text-blue-600">{vehicle.efficiency_km_per_liter} km/L</p>
-                          <p className="text-xs text-gray-500">Rank #{idx + 1}</p>
+                          <p className="text-3xl font-black text-blue-700">{vehicle.efficiency_km_per_liter} km/L</p>
+                          <p className="text-sm font-black text-gray-700 dark:text-gray-200">Rank #{idx + 1}</p>
                         </div>
                       </div>
-                      <div className="grid grid-cols-3 gap-4 text-sm">
+                      <div className="grid grid-cols-3 gap-4 text-base">
                         <div>
-                          <p className="text-xs text-gray-500">Distance</p>
-                          <p className="font-bold">{vehicle.total_distance_km} km</p>
+                          <p className="text-sm font-black text-gray-700 dark:text-gray-200">Distance</p>
+                          <p className="font-black text-lg text-gray-900 dark:text-gray-100">{vehicle.total_distance_km} km</p>
                         </div>
                         <div>
-                          <p className="text-xs text-gray-500">Fuel Used</p>
-                          <p className="font-bold">{vehicle.total_fuel_liters} L</p>
+                          <p className="text-sm font-black text-gray-700 dark:text-gray-200">Fuel Used</p>
+                          <p className="font-black text-lg text-gray-900 dark:text-gray-100">{vehicle.total_fuel_liters} L</p>
                         </div>
                         <div>
-                          <p className="text-xs text-gray-500">Cost/km</p>
-                          <p className="font-bold text-purple-600">${vehicle.cost_per_km}</p>
+                          <p className="text-sm font-black text-gray-700 dark:text-gray-200">Cost/km</p>
+                          <p className="font-black text-lg text-purple-700">${vehicle.cost_per_km}</p>
                         </div>
                       </div>
                       {/* Efficiency bar */}
-                      <div className="mt-3 h-2 bg-gray-200 rounded-full overflow-hidden">
+                      <div className="mt-3 h-3 bg-gray-200 rounded-full overflow-hidden">
                         <div 
                           className={`h-full rounded-full ${
-                            idx === 0 ? 'bg-green-600' : idx === 1 ? 'bg-blue-600' : 'bg-gray-400'
+                            idx === 0 ? 'bg-green-600' : idx === 1 ? 'bg-blue-600' : 'bg-gray-500'
                           }`}
                           style={{ width: `${Math.min((vehicle.efficiency_km_per_liter / 20) * 100, 100)}%` }}
                         />
