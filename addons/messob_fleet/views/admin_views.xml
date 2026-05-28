@@ -178,7 +178,7 @@
 
     <!-- ================================================================
          5. AUDIT LOGS — messob.fms.audit.log (FR-5.3)
-         Comprehensive audit trail viewer with advanced filtering
+         Comprehensive audit trail viewer with filtering
     ================================================================ -->
     
     <!-- Search View with Filters -->

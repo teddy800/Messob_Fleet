@@ -166,7 +166,7 @@ export default function Reports() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-black text-brand-blue">Advanced Reports & Analytics</h1>
+        <h1 className="text-2xl font-black text-brand-blue">Reports & Analytics</h1>
         <div className="flex gap-2">
           <select
             value={dateRange}

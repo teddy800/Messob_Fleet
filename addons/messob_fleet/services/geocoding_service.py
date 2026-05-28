@@ -2,7 +2,7 @@
 # ---------------------------------------------------------------------------
 # MESSOB Fleet Management System
 # Service: Geocoding Service
-# Description: Advanced geocoding with multiple provider support
+# Description: Geocoding with multiple provider support
 #
 # Supported Providers:
 #   - Google Maps Geocoding API
@@ -23,7 +23,7 @@ _logger = logging.getLogger(__name__)
 
 class GeocodingService(models.AbstractModel):
     """
-    Advanced Geocoding Service with multiple provider support.
+    Geocoding Service with multiple provider support.
     Automatically falls back to alternative providers if primary fails.
     """
 

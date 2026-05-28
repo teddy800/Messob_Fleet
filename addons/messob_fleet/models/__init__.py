@@ -22,7 +22,7 @@ from . import geofence
 from . import geocode_cache
 from . import sms_log
 
-# Import advanced services
+# Import services
 from ..services import geocoding_service
 from ..services import routing_service
 from ..services import sms_service

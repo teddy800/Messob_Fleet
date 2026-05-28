@@ -8,7 +8,7 @@
 #   - Comprehensive logging (logins, approvals, data changes)
 #   - Audit log viewer for admins
 #   - Log retention policies
-#   - Advanced filtering and search
+#   - Filtering and search
 # ---------------------------------------------------------------------------
 
 from odoo import models, fields, api, _
