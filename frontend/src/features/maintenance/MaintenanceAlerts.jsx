@@ -28,32 +28,36 @@ const priorityConfig = {
   critical: { 
     color: 'bg-rose-600', 
     textColor: 'text-rose-700 dark:text-rose-600', 
-    bgColor: 'bg-rose-50 dark:bg-rose-900/30', 
-    borderColor: 'border-rose-300 dark:border-rose-600',
+    bgColor: 'bg-rose-50 dark:bg-rose-900/20', 
+    borderColor: 'border-gray-200 dark:border-gray-600',
+    iconBg: 'bg-rose-100',
     icon: AlertTriangle,
     label: 'Critical'
   },
   high: { 
     color: 'bg-orange-600', 
     textColor: 'text-orange-700 dark:text-orange-600', 
-    bgColor: 'bg-orange-50 dark:bg-orange-900/30', 
-    borderColor: 'border-orange-300 dark:border-orange-600',
+    bgColor: 'bg-orange-50 dark:bg-orange-900/20', 
+    borderColor: 'border-gray-200 dark:border-gray-600',
+    iconBg: 'bg-orange-100',
     icon: AlertTriangle,
     label: 'High'
   },
   medium: { 
     color: 'bg-amber-600', 
     textColor: 'text-amber-700 dark:text-amber-600', 
-    bgColor: 'bg-amber-50 dark:bg-amber-900/30', 
-    borderColor: 'border-amber-300 dark:border-amber-600',
+    bgColor: 'bg-amber-50 dark:bg-amber-900/20', 
+    borderColor: 'border-gray-200 dark:border-gray-600',
+    iconBg: 'bg-amber-100',
     icon: Clock,
     label: 'Medium'
   },
   low: { 
     color: 'bg-blue-600', 
     textColor: 'text-blue-700 dark:text-blue-600', 
-    bgColor: 'bg-blue-50 dark:bg-blue-900/30', 
-    borderColor: 'border-blue-300 dark:border-blue-600',
+    bgColor: 'bg-blue-50 dark:bg-blue-900/20', 
+    borderColor: 'border-gray-200 dark:border-gray-600',
+    iconBg: 'bg-blue-100',
     icon: Clock,
     label: 'Low'
   }
@@ -176,11 +180,11 @@ export default function MaintenanceAlerts() {
     const PriorityIcon = priority.icon;
     
     return (
-      <Card className={`${priority.borderColor} border-l-4 hover:shadow-xl transition-shadow`}>
+      <Card className={`border-l-4 ${priority.borderColor} bg-white dark:bg-gray-800 hover:shadow-lg transition-shadow`}>
         <CardHeader className="pb-3">
           <div className="flex items-start justify-between">
             <div className="flex items-start gap-3">
-              <div className={`p-3 rounded-full ${priority.bgColor}`}>
+              <div className={`p-3 rounded-lg ${priority.iconBg}`}>
                 <PriorityIcon className={`h-5 w-5 ${priority.textColor}`} />
               </div>
               <div className="flex-1">
@@ -206,8 +210,8 @@ export default function MaintenanceAlerts() {
         
         <CardContent className="space-y-4">
           {/* Alert Message */}
-          <Alert className={alert.is_overdue ? 'border-red-300 bg-red-100' : priority.bgColor}>
-            <AlertDescription className={alert.is_overdue ? 'text-red-800 font-semibold text-base' : `${priority.textColor} font-semibold text-base`}>
+          <Alert className={alert.is_overdue ? 'border-red-200 bg-red-50 dark:bg-red-900/20' : 'bg-gray-50 dark:bg-gray-800'}>
+            <AlertDescription className={alert.is_overdue ? 'text-red-800 dark:text-red-400 font-semibold text-base' : 'text-gray-800 dark:text-gray-200 font-semibold text-base'}>
               {alert.alert_message}
             </AlertDescription>
           </Alert>
@@ -357,45 +361,45 @@ export default function MaintenanceAlerts() {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-2 md:grid-cols-6 gap-4">
-        <Card className="border-2 border-red-300">
+        <Card className="border border-gray-200 bg-white dark:bg-gray-800">
           <CardContent className="p-4 text-center">
-            <div className="text-3xl font-black text-red-700">{stats.critical}</div>
-            <div className="text-sm text-red-700 font-black uppercase">Critical</div>
+            <div className="text-3xl font-black text-red-700 dark:text-red-400">{stats.critical}</div>
+            <div className="text-sm text-gray-700 dark:text-gray-200 font-black uppercase">Critical</div>
           </CardContent>
         </Card>
         
-        <Card className="border-2 border-orange-300">
+        <Card className="border border-gray-200 bg-white dark:bg-gray-800">
           <CardContent className="p-4 text-center">
-            <div className="text-3xl font-black text-orange-700">{stats.high}</div>
-            <div className="text-sm text-orange-700 font-black uppercase">High</div>
+            <div className="text-3xl font-black text-orange-700 dark:text-orange-400">{stats.high}</div>
+            <div className="text-sm text-gray-700 dark:text-gray-200 font-black uppercase">High</div>
           </CardContent>
         </Card>
         
-        <Card className="border-2 border-yellow-300">
+        <Card className="border border-gray-200 bg-white dark:bg-gray-800">
           <CardContent className="p-4 text-center">
-            <div className="text-3xl font-black text-yellow-700">{stats.medium}</div>
-            <div className="text-sm text-yellow-700 font-black uppercase">Medium</div>
+            <div className="text-3xl font-black text-amber-700 dark:text-amber-400">{stats.medium}</div>
+            <div className="text-sm text-gray-700 dark:text-gray-200 font-black uppercase">Medium</div>
           </CardContent>
         </Card>
         
-        <Card className="border-2 border-blue-300">
+        <Card className="border border-gray-200 bg-white dark:bg-gray-800">
           <CardContent className="p-4 text-center">
-            <div className="text-3xl font-black text-blue-700">{stats.low}</div>
-            <div className="text-sm text-blue-700 font-black uppercase">Low</div>
+            <div className="text-3xl font-black text-blue-700 dark:text-blue-400">{stats.low}</div>
+            <div className="text-sm text-gray-700 dark:text-gray-200 font-black uppercase">Low</div>
           </CardContent>
         </Card>
         
-        <Card className="border-2 border-red-400">
+        <Card className="border border-gray-200 bg-white dark:bg-gray-800">
           <CardContent className="p-4 text-center">
-            <div className="text-3xl font-black text-red-800">{stats.overdue}</div>
-            <div className="text-sm text-red-800 font-black uppercase">Overdue</div>
+            <div className="text-3xl font-black text-red-800 dark:text-red-400">{stats.overdue}</div>
+            <div className="text-sm text-gray-700 dark:text-gray-200 font-black uppercase">Overdue</div>
           </CardContent>
         </Card>
         
-        <Card className="border-2 border-gray-300">
+        <Card className="border border-gray-200 bg-white dark:bg-gray-800">
           <CardContent className="p-4 text-center">
-            <div className="text-3xl font-black text-gray-800">{stats.total}</div>
-            <div className="text-sm text-gray-800 font-black uppercase">Total</div>
+            <div className="text-3xl font-black text-gray-800 dark:text-gray-100">{stats.total}</div>
+            <div className="text-sm text-gray-700 dark:text-gray-200 font-black uppercase">Total</div>
           </CardContent>
         </Card>
       </div>
