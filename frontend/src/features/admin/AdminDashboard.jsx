@@ -7,9 +7,9 @@ import { useUserStore } from "@/store/useUserStore";
 import { searchRead } from "@/lib/odooApi";
 
 const quickActions = [
-  { label: "Add User",    icon: UserPlus,   path: "/dashboard/admin/users",   color: "bg-blue-600 hover:bg-blue-700" },
-  { label: "Add Vehicle", icon: PlusCircle, path: "/dashboard/admin/vehicles", color: "bg-green-600 hover:bg-green-700" },
-  { label: "Add Driver",  icon: UserCheck,  path: "/dashboard/admin/drivers",  color: "bg-purple-600 hover:bg-purple-700" },
+  { label: "Add User",    icon: UserPlus,   path: "/dashboard/admin/users",   color: "bg-gray-700 hover:bg-gray-800" },
+  { label: "Add Vehicle", icon: PlusCircle, path: "/dashboard/admin/vehicles", color: "bg-gray-700 hover:bg-gray-800" },
+  { label: "Add Driver",  icon: UserCheck,  path: "/dashboard/admin/drivers",  color: "bg-gray-700 hover:bg-gray-800" },
   { label: "View Reports",icon: LogIn,      path: "/dashboard/admin/reports",  color: "bg-gray-700 hover:bg-gray-800" },
 ];
 
@@ -35,10 +35,10 @@ export default function AdminDashboard() {
   }, []);
 
   const statCards = [
-    { label: "Total Users",      value: stats.users,   icon: Users,     color: "text-blue-700",   iconBg: "bg-blue-100",   border: "border-gray-200" },
-    { label: "Total Vehicles",   value: stats.vehicles, icon: Car,      color: "text-emerald-700",  iconBg: "bg-emerald-100",  border: "border-gray-200" },
-    { label: "Total Drivers",    value: stats.drivers,  icon: UserCheck, color: "text-purple-700", iconBg: "bg-purple-100", border: "border-gray-200" },
-    { label: "Pending Requests", value: stats.pending,  icon: Clock,    color: "text-orange-700", iconBg: "bg-orange-100", border: "border-gray-200" },
+    { label: "Total Users",      value: stats.users,   icon: Users,     color: "text-gray-900",   iconBg: "bg-gray-100",   border: "border-gray-200" },
+    { label: "Total Vehicles",   value: stats.vehicles, icon: Car,      color: "text-gray-900",  iconBg: "bg-gray-100",  border: "border-gray-200" },
+    { label: "Total Drivers",    value: stats.drivers,  icon: UserCheck, color: "text-gray-900", iconBg: "bg-gray-100", border: "border-gray-200" },
+    { label: "Pending Requests", value: stats.pending,  icon: Clock,    color: "text-gray-900", iconBg: "bg-gray-100", border: "border-gray-200" },
   ];
 
   return (
@@ -50,13 +50,13 @@ export default function AdminDashboard() {
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {statCards.map((s) => (
-          <Card key={s.label} className={`bg-white dark:bg-gray-800 border ${s.border} hover:shadow-lg transition-all duration-200 hover:border-gray-300`}>
+          <Card key={s.label} className={`bg-white dark:bg-gray-800 border ${s.border} hover:shadow-md transition-shadow`}>
             <CardContent className="p-6 flex items-center gap-4">
               <div className={`p-3 rounded-lg ${s.iconBg}`}>
-                <s.icon className={`h-6 w-6 ${s.color}`} />
+                <s.icon className={`h-6 w-6 text-gray-700 dark:text-gray-300`} />
               </div>
               <div>
-                <p className={`text-xs font-bold uppercase tracking-wider text-gray-600 dark:text-gray-400`}>{s.label}</p>
+                <p className={`text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-gray-400`}>{s.label}</p>
                 <p className={`text-4xl font-black ${s.color} dark:text-gray-100`}>{s.value}</p>
               </div>
             </CardContent>

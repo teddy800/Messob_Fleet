@@ -346,8 +346,8 @@ export default function MaintenanceAlerts() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-black text-gray-900 dark:text-gray-100 flex items-center gap-2">
-            <AlertTriangle className="h-7 w-7 text-brand-blue" />
+          <h1 className="text-3xl font-black text-red-700 dark:text-red-400 flex items-center gap-2">
+            <AlertTriangle className="h-7 w-7 text-red-700 dark:text-red-400" />
             Maintenance Alerts
           </h1>
           <p className="text-base font-semibold text-gray-700 dark:text-gray-200 mt-1">Preventive maintenance scheduling and notifications</p>
@@ -364,35 +364,35 @@ export default function MaintenanceAlerts() {
         <Card className="border border-gray-200 bg-white dark:bg-gray-800">
           <CardContent className="p-4 text-center">
             <div className="text-3xl font-black text-red-700 dark:text-red-400">{stats.critical}</div>
-            <div className="text-sm text-gray-700 dark:text-gray-200 font-black uppercase">Critical</div>
+            <div className="text-sm text-red-700 dark:text-red-400 font-black uppercase">Critical</div>
           </CardContent>
         </Card>
         
         <Card className="border border-gray-200 bg-white dark:bg-gray-800">
           <CardContent className="p-4 text-center">
             <div className="text-3xl font-black text-orange-700 dark:text-orange-400">{stats.high}</div>
-            <div className="text-sm text-gray-700 dark:text-gray-200 font-black uppercase">High</div>
+            <div className="text-sm text-orange-700 dark:text-orange-400 font-black uppercase">High</div>
           </CardContent>
         </Card>
         
         <Card className="border border-gray-200 bg-white dark:bg-gray-800">
           <CardContent className="p-4 text-center">
             <div className="text-3xl font-black text-amber-700 dark:text-amber-400">{stats.medium}</div>
-            <div className="text-sm text-gray-700 dark:text-gray-200 font-black uppercase">Medium</div>
+            <div className="text-sm text-amber-700 dark:text-amber-400 font-black uppercase">Medium</div>
           </CardContent>
         </Card>
         
         <Card className="border border-gray-200 bg-white dark:bg-gray-800">
           <CardContent className="p-4 text-center">
             <div className="text-3xl font-black text-blue-700 dark:text-blue-400">{stats.low}</div>
-            <div className="text-sm text-gray-700 dark:text-gray-200 font-black uppercase">Low</div>
+            <div className="text-sm text-blue-700 dark:text-blue-400 font-black uppercase">Low</div>
           </CardContent>
         </Card>
         
         <Card className="border border-gray-200 bg-white dark:bg-gray-800">
           <CardContent className="p-4 text-center">
             <div className="text-3xl font-black text-red-800 dark:text-red-400">{stats.overdue}</div>
-            <div className="text-sm text-gray-700 dark:text-gray-200 font-black uppercase">Overdue</div>
+            <div className="text-sm text-red-800 dark:text-red-400 font-black uppercase">Overdue</div>
           </CardContent>
         </Card>
         

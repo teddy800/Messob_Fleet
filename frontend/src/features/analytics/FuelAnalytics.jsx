@@ -123,9 +123,9 @@ export default function FuelAnalytics() {
 
       {/* Alerts Section */}
       {alerts.length > 0 && (
-        <Card className="border border-orange-200 bg-orange-50 dark:bg-orange-950/30">
+        <Card className="border border-gray-200 bg-gray-50 dark:bg-gray-800">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-orange-800 dark:text-orange-300 text-xl font-black">
+            <CardTitle className="flex items-center gap-2 text-gray-900 dark:text-gray-100 text-xl font-black">
               <AlertTriangle className="h-6 w-6" />
               Fuel Alerts ({alerts.length})
             </CardTitle>
@@ -133,14 +133,12 @@ export default function FuelAnalytics() {
           <CardContent>
             <div className="space-y-2">
               {alerts.slice(0, 5).map((alert, idx) => (
-                <div key={idx} className="flex items-center justify-between p-4 bg-white dark:bg-gray-800 rounded-md border border-gray-200">
+                <div key={idx} className="flex items-center justify-between p-4 bg-white dark:bg-gray-700 rounded-md border border-gray-200">
                   <div>
                     <p className="font-black text-base text-gray-900 dark:text-gray-100">{alert.vehicle_plate}</p>
                     <p className="text-sm font-semibold text-gray-700 dark:text-gray-200">{alert.message}</p>
                   </div>
-                  <span className={`text-sm font-black px-3 py-1.5 rounded-full ${
-                    alert.severity === 'warning' ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800'
-                  }`}>
+                  <span className="text-sm font-black px-3 py-1.5 rounded-full bg-gray-200 dark:bg-gray-600 text-gray-900 dark:text-gray-100">
                     {alert.type}
                   </span>
                 </div>
@@ -192,12 +190,12 @@ export default function FuelAnalytics() {
                 <Card className="border border-gray-200 bg-white dark:bg-gray-800">
                   <CardContent className="pt-6">
                     <div className="flex items-center gap-3">
-                      <div className="p-3 rounded-lg bg-blue-100">
-                        <Activity className="h-8 w-8 text-blue-700" />
+                      <div className="p-3 rounded-lg bg-gray-100 dark:bg-gray-700">
+                        <Activity className="h-8 w-8 text-gray-700 dark:text-gray-300" />
                       </div>
                       <div>
-                        <p className="text-sm text-gray-700 dark:text-gray-200 uppercase font-black">Efficiency</p>
-                        <p className="text-3xl font-black text-blue-700 dark:text-blue-400">
+                        <p className="text-sm text-gray-600 dark:text-gray-400 uppercase font-black">Efficiency</p>
+                        <p className="text-3xl font-black text-gray-900 dark:text-gray-100">
                           {efficiencyData.statistics.efficiency_km_per_liter} km/L
                         </p>
                       </div>
@@ -208,12 +206,12 @@ export default function FuelAnalytics() {
                 <Card className="border border-gray-200 bg-white dark:bg-gray-800">
                   <CardContent className="pt-6">
                     <div className="flex items-center gap-3">
-                      <div className="p-3 rounded-lg bg-emerald-100">
-                        <Fuel className="h-8 w-8 text-emerald-700" />
+                      <div className="p-3 rounded-lg bg-gray-100 dark:bg-gray-700">
+                        <Fuel className="h-8 w-8 text-gray-700 dark:text-gray-300" />
                       </div>
                       <div>
-                        <p className="text-sm text-gray-700 dark:text-gray-200 uppercase font-black">Total Fuel</p>
-                        <p className="text-3xl font-black text-emerald-700 dark:text-emerald-400">
+                        <p className="text-sm text-gray-600 dark:text-gray-400 uppercase font-black">Total Fuel</p>
+                        <p className="text-3xl font-black text-gray-900 dark:text-gray-100">
                           {efficiencyData.statistics.total_fuel_liters} L
                         </p>
                       </div>
@@ -224,12 +222,12 @@ export default function FuelAnalytics() {
                 <Card className="border border-gray-200 bg-white dark:bg-gray-800">
                   <CardContent className="pt-6">
                     <div className="flex items-center gap-3">
-                      <div className="p-3 rounded-lg bg-purple-100">
-                        <DollarSign className="h-8 w-8 text-purple-700" />
+                      <div className="p-3 rounded-lg bg-gray-100 dark:bg-gray-700">
+                        <DollarSign className="h-8 w-8 text-gray-700 dark:text-gray-300" />
                       </div>
                       <div>
-                        <p className="text-sm text-gray-700 dark:text-gray-200 uppercase font-black">Total Cost</p>
-                        <p className="text-3xl font-black text-purple-700 dark:text-purple-400">
+                        <p className="text-sm text-gray-600 dark:text-gray-400 uppercase font-black">Total Cost</p>
+                        <p className="text-3xl font-black text-gray-900 dark:text-gray-100">
                           ${efficiencyData.statistics.total_cost}
                         </p>
                       </div>
@@ -240,12 +238,12 @@ export default function FuelAnalytics() {
                 <Card className="border border-gray-200 bg-white dark:bg-gray-800">
                   <CardContent className="pt-6">
                     <div className="flex items-center gap-3">
-                      <div className="p-3 rounded-lg bg-orange-100">
-                        <TrendingUp className="h-8 w-8 text-orange-700" />
+                      <div className="p-3 rounded-lg bg-gray-100 dark:bg-gray-700">
+                        <TrendingUp className="h-8 w-8 text-gray-700 dark:text-gray-300" />
                       </div>
                       <div>
-                        <p className="text-sm text-gray-700 dark:text-gray-200 uppercase font-black">Cost/km</p>
-                        <p className="text-3xl font-black text-orange-700 dark:text-orange-400">
+                        <p className="text-sm text-gray-600 dark:text-gray-400 uppercase font-black">Cost/km</p>
+                        <p className="text-3xl font-black text-gray-900 dark:text-gray-100">
                           ${efficiencyData.statistics.cost_per_km}
                         </p>
                       </div>
@@ -330,7 +328,7 @@ export default function FuelAnalytics() {
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-base">
                         <div>
                           <p className="text-sm font-black text-gray-700 dark:text-gray-200">Efficiency</p>
-                          <p className="font-black text-xl text-blue-700 dark:text-blue-400">{month.efficiency_km_per_liter} km/L</p>
+                          <p className="font-black text-xl text-gray-900 dark:text-gray-100">{month.efficiency_km_per_liter} km/L</p>
                         </div>
                         <div>
                           <p className="text-sm font-black text-gray-700 dark:text-gray-200">Distance</p>
@@ -342,13 +340,13 @@ export default function FuelAnalytics() {
                         </div>
                         <div>
                           <p className="text-sm font-black text-gray-700 dark:text-gray-200">Total Cost</p>
-                          <p className="font-black text-xl text-purple-700 dark:text-purple-400">${month.total_cost}</p>
+                          <p className="font-black text-xl text-gray-900 dark:text-gray-100">${month.total_cost}</p>
                         </div>
                       </div>
                       {/* Visual bar */}
                       <div className="mt-3 h-3 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
                         <div 
-                          className="h-full bg-blue-600 rounded-full"
+                          className="h-full bg-gray-700 dark:bg-gray-400 rounded-full"
                           style={{ width: `${Math.min((month.efficiency_km_per_liter / 20) * 100, 100)}%` }}
                         />
                       </div>
@@ -386,7 +384,7 @@ export default function FuelAnalytics() {
                           <p className="text-sm font-semibold text-gray-700 dark:text-gray-200">{vehicle.model} - {vehicle.category}</p>
                         </div>
                         <div className="text-right">
-                          <p className="text-3xl font-black text-blue-700 dark:text-blue-400">{vehicle.efficiency_km_per_liter} km/L</p>
+                          <p className="text-3xl font-black text-gray-900 dark:text-gray-100">{vehicle.efficiency_km_per_liter} km/L</p>
                           <p className="text-sm font-black text-gray-700 dark:text-gray-200">Rank #{idx + 1}</p>
                         </div>
                       </div>
@@ -401,15 +399,13 @@ export default function FuelAnalytics() {
                         </div>
                         <div>
                           <p className="text-sm font-black text-gray-700 dark:text-gray-200">Cost/km</p>
-                          <p className="font-black text-lg text-purple-700 dark:text-purple-400">${vehicle.cost_per_km}</p>
+                          <p className="font-black text-lg text-gray-900 dark:text-gray-100">${vehicle.cost_per_km}</p>
                         </div>
                       </div>
                       {/* Efficiency bar */}
                       <div className="mt-3 h-3 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
                         <div 
-                          className={`h-full rounded-full ${
-                            idx === 0 ? 'bg-emerald-600' : idx === 1 ? 'bg-blue-600' : 'bg-gray-500'
-                          }`}
+                          className="h-full rounded-full bg-gray-700 dark:bg-gray-400"
                           style={{ width: `${Math.min((vehicle.efficiency_km_per_liter / 20) * 100, 100)}%` }}
                         />
                       </div>
