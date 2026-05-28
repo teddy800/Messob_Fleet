@@ -16,7 +16,6 @@ import {
   AlertTriangle,
   Moon,
   Sun,
-  Activity,
 } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
@@ -26,6 +25,13 @@ import { useUserStore } from "@/store/useUserStore";
 
 // The Master Menu List with Role-Based Access Control (RBAC)
 const menuItems = [
+  // Dispatcher & Admin: Unified Dashboard
+  {
+    name: "Dashboard",
+    path: "/dashboard/dispatch/home",
+    icon: LayoutDashboard,
+    roles: ["Dispatcher", "Admin"],
+  },
   // Staff: request-focused menu
   {
     name: "Request Status",
@@ -58,12 +64,6 @@ const menuItems = [
     icon: Fuel,
     roles: ["Driver"],
   },
-  {
-    name: "Dashboard",
-    path: "/dashboard/admin",
-    icon: LayoutDashboard,
-    roles: ["Admin"],
-  },
   // Dispatcher: current requests only
   {
     name: "Current Requests",
@@ -72,9 +72,9 @@ const menuItems = [
     roles: ["Dispatcher", "Admin"],
   },
   {
-    name: "Real-Time Dashboard",
-    path: "/dashboard/dispatch/real-time",
-    icon: Activity,
+    name: "Fleet Calendar",
+    path: "/dashboard/dispatch/fleet-calendar",
+    icon: Calendar,
     roles: ["Dispatcher", "Admin"],
   },
   // Admin: full operations menu

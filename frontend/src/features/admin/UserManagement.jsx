@@ -14,11 +14,11 @@ import {
 } from "@/lib/fmsUserRoles";
 
 const roleBadge = {
-  Administrator: "bg-blue-100 text-blue-700",
-  Dispatcher: "bg-purple-100 text-purple-700",
-  "Staff (User)": "bg-yellow-100 text-yellow-700",
-  Driver: "bg-green-100 text-green-700",
-  Mechanic: "bg-orange-100 text-orange-700",
+  Administrator: "bg-blue-50 text-blue-600",
+  Dispatcher: "bg-purple-50 text-purple-600",
+  "Staff (User)": "bg-amber-50 text-amber-600",
+  Driver: "bg-green-50 text-green-600",
+  Mechanic: "bg-orange-50 text-orange-600",
 };
 
 const emptyForm = () => ({

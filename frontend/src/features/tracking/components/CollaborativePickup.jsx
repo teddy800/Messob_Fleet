@@ -217,14 +217,14 @@ export default function CollaborativePickup({ tripId, className = "" }) {
 
           <CollapsibleContent className="space-y-3 mt-3">
             {/* Current User */}
-            <div className="flex items-start gap-3 p-3 bg-green-50 rounded-lg border-l-4 border-green-500">
-              <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white text-xs font-bold">
+            <div className="flex items-start gap-3 p-3 bg-emerald-50/40 rounded-lg border-l-4 border-emerald-200/50">
+              <div className="w-8 h-8 bg-emerald-500/70 rounded-full flex items-center justify-center text-white text-xs font-bold">
                 ME
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-1">
-                  <span className="font-medium text-green-700">{current_trip.requester}</span>
-                  <Badge variant="secondary" className="text-xs bg-green-100 text-green-700">
+                  <span className="font-medium text-emerald-600/80">{current_trip.requester}</span>
+                  <Badge variant="secondary" className="text-xs bg-emerald-100/40 text-emerald-600/80">
                     You
                   </Badge>
                 </div>

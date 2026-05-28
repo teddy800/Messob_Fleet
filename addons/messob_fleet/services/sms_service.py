@@ -2,7 +2,7 @@
 # ---------------------------------------------------------------------------
 # MESSOB Fleet Management System
 # Service: SMS Service
-# Description: Advanced SMS gateway with multiple provider support
+# Description: SMS gateway with multiple provider support
 #
 # Supported Providers:
 #   - Twilio
@@ -24,7 +24,7 @@ _logger = logging.getLogger(__name__)
 
 class SmsService(models.AbstractModel):
     """
-    Advanced SMS Service with multiple provider support.
+    SMS Service with multiple provider support.
     Sends SMS notifications for trip updates, maintenance alerts, etc.
     """
 

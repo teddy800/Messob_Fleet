@@ -9,6 +9,7 @@ import RequestWizard from "./features/requests/components/RequestWizard";
 import RequestStatus from "./features/requests/RequestStatus";
 import RequestList from "./features/requests/RequestList";
 import ApprovalQueue from "./features/dispatch/ApprovalQueue";
+import Dashboard from "./features/dispatch/Dashboard";
 import Profile from "./features/profile/profile";
 import ManageFleet from "./features/fleet/ManageFleet";
 import DriverRequests from "./features/driver/DriverRequests";
@@ -59,6 +60,7 @@ export default function App() {
             </Route>
 
             <Route element={<RoleGuard allowedRoles={["Dispatcher", "Admin"]} />}>
+              <Route path="dispatch/home" element={<Dashboard />} />
               <Route path="dispatch/approvals" element={<ApprovalQueue />} />
               <Route path="dispatch/fleet-calendar" element={<FleetCalendarEnhanced />} />
               <Route path="dispatch/real-time" element={<RealTimeDashboard />} />

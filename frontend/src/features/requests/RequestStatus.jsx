@@ -8,18 +8,18 @@ import { useTripRequests } from "@/lib/useTripRequests";
 const statusConfig = {
   pending: {
     label: "Pending", icon: Clock,
-    color: "text-yellow-500 dark:text-yellow-400", bg: "bg-yellow-50 dark:bg-yellow-900/20",
-    border: "border-yellow-200 dark:border-yellow-600", activeBg: "bg-yellow-500 dark:bg-yellow-600/20",
+    color: "text-amber-500/70 dark:text-amber-400/60", bg: "bg-amber-50/40 dark:bg-amber-900/10",
+    border: "border-amber-200/50 dark:border-amber-700/30", activeBg: "bg-amber-100/30 dark:bg-amber-800/10",
   },
   approved: {
     label: "Approved", icon: CheckCircle,
-    color: "text-green-600 dark:text-green-400", bg: "bg-green-50 dark:bg-green-900/20",
-    border: "border-green-200 dark:border-green-600", activeBg: "bg-green-600 dark:bg-green-600/20",
+    color: "text-emerald-500/70 dark:text-emerald-400/60", bg: "bg-emerald-50/40 dark:bg-emerald-900/10",
+    border: "border-emerald-200/50 dark:border-emerald-700/30", activeBg: "bg-emerald-100/30 dark:bg-emerald-800/10",
   },
   rejected: {
     label: "Rejected", icon: XCircle,
-    color: "text-red-500 dark:text-red-400", bg: "bg-red-50 dark:bg-red-900/20",
-    border: "border-red-200 dark:border-red-600", activeBg: "bg-red-600 dark:bg-red-600/20",
+    color: "text-rose-500/70 dark:text-rose-400/60", bg: "bg-rose-50/40 dark:bg-rose-900/10",
+    border: "border-rose-200/50 dark:border-rose-700/30", activeBg: "bg-rose-100/30 dark:bg-rose-800/10",
   },
 };
 

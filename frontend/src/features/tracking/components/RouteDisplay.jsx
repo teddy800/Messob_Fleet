@@ -163,7 +163,7 @@ export default function RouteDisplay({ tripId, className = "" }) {
           <div className="flex items-center gap-2">
             <Badge 
               variant={trip.state === 'approved' ? 'default' : 'secondary'}
-              className={trip.state === 'approved' ? 'bg-blue-500' : 'bg-green-500'}
+              className={trip.state === 'approved' ? 'bg-blue-500' : 'bg-amber-500'}
             >
               {trip.state.replace('_', ' ').toUpperCase()}
             </Badge>
@@ -264,8 +264,8 @@ export default function RouteDisplay({ tripId, className = "" }) {
         <div className="p-3 bg-green-50 border-b">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <div className={`w-2 h-2 rounded-full ${isTracking ? 'bg-green-500 animate-pulse' : 'bg-gray-400'}`}></div>
-              <span className="text-sm font-medium text-green-700">
+              <div className={`w-2 h-2 rounded-full ${isTracking ? 'bg-emerald-500/70 animate-pulse' : 'bg-gray-400'}`}></div>
+              <span className="text-sm font-medium text-emerald-600/80">
                 GPS: {gpsPosition.gps.status.replace('_', ' ').toUpperCase()}
               </span>
               <span className="text-xs text-green-600">

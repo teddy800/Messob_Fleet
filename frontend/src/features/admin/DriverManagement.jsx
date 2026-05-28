@@ -10,7 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { searchRead, createRecord, writeRecord } from "@/lib/odooApi";
 
 const statusBadge = {
-  active:   "bg-green-100 text-green-700 border-green-200",
+  active:   "bg-green-50 text-green-600 border-green-100",
   inactive: "bg-gray-100 text-gray-500 border-gray-200",
 };
 

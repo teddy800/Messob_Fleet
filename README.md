@@ -22,7 +22,7 @@ A comprehensive fleet management system built with Odoo 18 backend and React fro
 - 🔄 Driver Mobile Interface
 - 🔄 Fuel Management System
 - 🔄 Maintenance Scheduling
-- 🔄 Advanced Reporting & Analytics
+- 🔄 Reporting & Analytics
 
 ## 🏗️ Architecture
 
@@ -375,12 +375,12 @@ For support, email support@mesob.et or open an issue on GitHub.
 - [ ] Push notifications
 
 ### Version 1.3 (Q3 2026)
-- [ ] Advanced fuel management
+- [ ] Fuel management
 - [ ] Maintenance scheduling
 - [ ] Predictive maintenance
 
 ### Version 2.0 (Q4 2026)
-- [ ] Advanced analytics dashboard
+- [ ] Analytics dashboard
 - [ ] Route optimization
 - [ ] Cost analysis tools
 

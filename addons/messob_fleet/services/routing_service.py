@@ -2,7 +2,7 @@
 # ---------------------------------------------------------------------------
 # MESSOB Fleet Management System
 # Service: Routing Service
-# Description: Advanced routing with multiple provider support
+# Description: Routing with multiple provider support
 #
 # Supported Providers:
 #   - Google Maps Directions API
@@ -24,7 +24,7 @@ _logger = logging.getLogger(__name__)
 
 class RoutingService(models.AbstractModel):
     """
-    Advanced Routing Service with multiple provider support.
+    Routing Service with multiple provider support.
     Calculates optimal routes, distances, and travel times.
     """
 

@@ -251,7 +251,7 @@ export default function FleetCalendar() {
       <div className="bg-white rounded-xl shadow-lg p-4">
         <div className="flex items-center justify-center gap-6 text-sm">
           <div className="flex items-center gap-2">
-            <div className="w-4 h-4 bg-green-500 rounded"></div>
+            <div className="w-4 h-4 bg-emerald-400/70 rounded"></div>
             <span className="text-gray-700">Available</span>
           </div>
           <div className="flex items-center gap-2">
@@ -259,11 +259,11 @@ export default function FleetCalendar() {
             <span className="text-gray-700">Approved</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-4 h-4 bg-green-600 rounded"></div>
+            <div className="w-4 h-4 bg-emerald-500/80 rounded"></div>
             <span className="text-gray-700">In Progress</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-4 h-4 bg-yellow-500 rounded"></div>
+            <div className="w-4 h-4 bg-amber-400/70 rounded"></div>
             <span className="text-gray-700">Maintenance</span>
           </div>
         </div>

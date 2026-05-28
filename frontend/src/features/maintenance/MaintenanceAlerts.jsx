@@ -26,26 +26,26 @@ import { format } from 'date-fns';
 
 const priorityConfig = {
   critical: { 
-    color: 'bg-red-500', 
-    textColor: 'text-red-700', 
-    bgColor: 'bg-red-50', 
-    borderColor: 'border-red-200',
+    color: 'bg-rose-400/70', 
+    textColor: 'text-rose-600/80', 
+    bgColor: 'bg-rose-50/40', 
+    borderColor: 'border-rose-200/50',
     icon: AlertTriangle,
     label: 'Critical'
   },
   high: { 
-    color: 'bg-orange-500', 
-    textColor: 'text-orange-700', 
-    bgColor: 'bg-orange-50', 
-    borderColor: 'border-orange-200',
+    color: 'bg-orange-400/70', 
+    textColor: 'text-orange-600/80', 
+    bgColor: 'bg-orange-50/40', 
+    borderColor: 'border-orange-200/50',
     icon: AlertTriangle,
     label: 'High'
   },
   medium: { 
-    color: 'bg-yellow-500', 
-    textColor: 'text-yellow-700', 
-    bgColor: 'bg-yellow-50', 
-    borderColor: 'border-yellow-200',
+    color: 'bg-amber-400/70', 
+    textColor: 'text-amber-600/80', 
+    bgColor: 'bg-amber-50/40', 
+    borderColor: 'border-amber-200/50',
     icon: Clock,
     label: 'Medium'
   },
@@ -62,8 +62,8 @@ const priorityConfig = {
 const statusConfig = {
   pending: { color: 'bg-gray-500', label: 'Pending' },
   sent: { color: 'bg-blue-500', label: 'Sent' },
-  acknowledged: { color: 'bg-yellow-500', label: 'Acknowledged' },
-  completed: { color: 'bg-green-500', label: 'Completed' },
+  acknowledged: { color: 'bg-amber-400/70', label: 'Acknowledged' },
+  completed: { color: 'bg-emerald-400/70', label: 'Completed' },
   dismissed: { color: 'bg-gray-400', label: 'Dismissed' }
 };
 
@@ -474,7 +474,7 @@ export default function MaintenanceAlerts() {
                   {statusConfig[selectedAlert.status]?.label}
                 </Badge>
                 {selectedAlert.is_overdue && (
-                  <Badge className="bg-red-600 text-white">OVERDUE</Badge>
+                  <Badge className="bg-rose-500/70 text-white">OVERDUE</Badge>
                 )}
               </div>
 

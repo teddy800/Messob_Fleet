@@ -16,11 +16,11 @@ import { useTripRequests, fetchVehicles, fetchDrivers, approveTrip, rejectTrip }
 import { searchRead } from "@/lib/odooApi";
 
 const statusBadge = {
-  Pending:  "bg-gradient-to-r from-amber-400 to-yellow-500 dark:from-amber-600 dark:to-yellow-700 text-white border-2 border-amber-300 dark:border-amber-800 shadow-md",
-  Approved: "bg-gradient-to-r from-green-500 to-emerald-600 dark:from-green-600 dark:to-emerald-700 text-white border-2 border-green-300 dark:border-green-800 shadow-md",
-  Rejected: "bg-gradient-to-r from-red-500 to-rose-600 dark:from-red-600 dark:to-rose-700 text-white border-2 border-red-300 dark:border-red-800 shadow-md",
-  "In Progress": "bg-gradient-to-r from-blue-500 to-cyan-600 dark:from-blue-600 dark:to-cyan-700 text-white border-2 border-blue-300 dark:border-blue-800 shadow-md",
-  Completed: "bg-gradient-to-r from-purple-500 to-indigo-600 dark:from-purple-600 dark:to-indigo-700 text-white border-2 border-purple-300 dark:border-purple-800 shadow-md",
+  Pending:  "bg-amber-50/40 dark:bg-amber-900/10 text-amber-600/80 dark:text-amber-400/60 border-2 border-amber-200/50 dark:border-amber-700/30",
+  Approved: "bg-emerald-50/40 dark:bg-emerald-900/10 text-emerald-600/80 dark:text-emerald-400/60 border-2 border-emerald-200/50 dark:border-emerald-700/30",
+  Rejected: "bg-rose-50/40 dark:bg-rose-900/10 text-rose-600/80 dark:text-rose-400/60 border-2 border-rose-200/50 dark:border-rose-700/30",
+  "In Progress": "bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 border-2 border-blue-200 dark:border-blue-700",
+  Completed: "bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-400 border-2 border-purple-200 dark:border-purple-700",
 };
 
 const statusIcon = {
@@ -138,7 +138,7 @@ export default function ApprovalQueue() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-black text-brand-blue">Current Requests</h1>
-        <Badge className="bg-gradient-to-r from-amber-400 to-yellow-500 dark:from-amber-600 dark:to-yellow-700 text-white border-2 border-amber-300 dark:border-amber-800 shadow-lg px-4 py-2 font-black text-sm">
+        <Badge className="bg-amber-50/40 dark:bg-amber-900/10 text-amber-600/80 dark:text-amber-400/60 border-2 border-amber-200/50 dark:border-amber-700/30 px-4 py-2 font-black text-sm">
           <Clock className="h-4 w-4 mr-2" />
           {pendingCount} Pending
         </Badge>

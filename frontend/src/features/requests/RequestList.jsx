@@ -8,18 +8,18 @@ import { useTripRequests } from "@/lib/useTripRequests";
 const statusConfig = {
   pending: {
     label: "Pending", icon: Clock,
-    color: "text-yellow-500", bg: "bg-yellow-50",
-    border: "border-yellow-300", badgeClass: "bg-yellow-100 text-yellow-700 border-yellow-200",
+    color: "text-amber-400/70", bg: "bg-amber-50/40",
+    border: "border-amber-200/50", badgeClass: "bg-amber-100/40 text-amber-600/80 border-amber-200/40",
   },
   approved: {
     label: "Approved", icon: CheckCircle,
-    color: "text-green-600", bg: "bg-green-50",
-    border: "border-green-300", badgeClass: "bg-green-100 text-green-700 border-green-200",
+    color: "text-emerald-500/70", bg: "bg-emerald-50/40",
+    border: "border-emerald-200/50", badgeClass: "bg-emerald-100/40 text-emerald-600/80 border-emerald-200/40",
   },
   rejected: {
     label: "Rejected", icon: XCircle,
-    color: "text-red-500", bg: "bg-red-50",
-    border: "border-red-300", badgeClass: "bg-red-100 text-red-700 border-red-200",
+    color: "text-rose-400/70", bg: "bg-rose-50/40",
+    border: "border-rose-200/50", badgeClass: "bg-rose-100/40 text-rose-600/80 border-rose-200/40",
   },
 };
 
