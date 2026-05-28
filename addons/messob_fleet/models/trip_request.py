@@ -696,6 +696,7 @@ class MessobFmsTrip(models.Model):
     # ROUTE TRACKING & COLLABORATION METHODS (FR-3.x)
     # =========================================================================
 
+    @api.model
     def get_route_display(self, trip_id):
         """
         FR-3.1: Get assigned route display data for approved/active trips.
@@ -767,6 +768,7 @@ class MessobFmsTrip(models.Model):
             }
         }
 
+    @api.model
     def get_gps_position(self, trip_id):
         """
         FR-3.2: Get real-time GPS position of assigned vehicle.
@@ -811,6 +813,7 @@ class MessobFmsTrip(models.Model):
             'last_updated': fields.Datetime.now().isoformat()
         }
 
+    @api.model
     def get_collaborative_pickup(self, trip_id):
         """
         FR-3.3: Get collaborative pickup information for shared trips.
@@ -879,6 +882,7 @@ class MessobFmsTrip(models.Model):
             }
         }
 
+    @api.model
     def update_pickup_point(self, trip_id, new_pickup_address, new_coordinates):
         """
         FR-3.4: Update pickup point dynamically.
