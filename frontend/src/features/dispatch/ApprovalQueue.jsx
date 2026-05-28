@@ -16,11 +16,11 @@ import { useTripRequests, fetchVehicles, fetchDrivers, approveTrip, rejectTrip }
 import { searchRead } from "@/lib/odooApi";
 
 const statusBadge = {
-  Pending:  "bg-yellow-100 text-yellow-700 border-yellow-200",
-  Approved: "bg-green-100 text-green-700 border-green-200",
-  Rejected: "bg-red-100 text-red-700 border-red-200",
-  "In Progress": "bg-blue-100 text-blue-700 border-blue-200",
-  Completed: "bg-green-100 text-green-700 border-green-200",
+  Pending:  "bg-gradient-to-r from-amber-400 to-yellow-500 dark:from-amber-600 dark:to-yellow-700 text-white border-2 border-amber-300 dark:border-amber-800 shadow-md",
+  Approved: "bg-gradient-to-r from-green-500 to-emerald-600 dark:from-green-600 dark:to-emerald-700 text-white border-2 border-green-300 dark:border-green-800 shadow-md",
+  Rejected: "bg-gradient-to-r from-red-500 to-rose-600 dark:from-red-600 dark:to-rose-700 text-white border-2 border-red-300 dark:border-red-800 shadow-md",
+  "In Progress": "bg-gradient-to-r from-blue-500 to-cyan-600 dark:from-blue-600 dark:to-cyan-700 text-white border-2 border-blue-300 dark:border-blue-800 shadow-md",
+  Completed: "bg-gradient-to-r from-purple-500 to-indigo-600 dark:from-purple-600 dark:to-indigo-700 text-white border-2 border-purple-300 dark:border-purple-800 shadow-md",
 };
 
 const statusIcon = {
@@ -138,8 +138,8 @@ export default function ApprovalQueue() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-black text-brand-blue">Current Requests</h1>
-        <Badge className="bg-yellow-100 text-yellow-700 border border-yellow-200 px-3 py-1 font-bold">
-          <Clock className="h-3.5 w-3.5 mr-1.5" />
+        <Badge className="bg-gradient-to-r from-amber-400 to-yellow-500 dark:from-amber-600 dark:to-yellow-700 text-white border-2 border-amber-300 dark:border-amber-800 shadow-lg px-4 py-2 font-black text-sm">
+          <Clock className="h-4 w-4 mr-2" />
           {pendingCount} Pending
         </Badge>
       </div>
@@ -165,7 +165,7 @@ export default function ApprovalQueue() {
                 <div className="min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="font-black text-sm text-brand-blue">{req.name}</span>
-                    <Badge className={`text-[10px] font-black uppercase tracking-widest border flex items-center gap-1 ${statusBadge[stateLabel(req.state)] || statusBadge.Pending}`}>
+                    <Badge className={`text-xs font-black uppercase tracking-widest border-2 shadow-md flex items-center gap-1.5 px-3 py-1.5 ${statusBadge[stateLabel(req.state)] || statusBadge.Pending}`}>
                       {statusIcon[stateLabel(req.state)] || statusIcon.Pending} {stateLabel(req.state)}
                     </Badge>
                   </div>
@@ -216,7 +216,7 @@ export default function ApprovalQueue() {
                         {Array.isArray(selected.requester_id) ? selected.requester_id[1] : "—"}
                       </p>
                     </div>
-                    <Badge className={`ml-auto text-[10px] font-black uppercase tracking-widest border ${statusBadge[stateLabel(selected.state)] || statusBadge.Pending}`}>
+                    <Badge className={`ml-auto text-xs font-black uppercase tracking-widest border-2 shadow-md px-3 py-1.5 ${statusBadge[stateLabel(selected.state)] || statusBadge.Pending}`}>
                       {stateLabel(selected.state)}
                     </Badge>
                   </div>
