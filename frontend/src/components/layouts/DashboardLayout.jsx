@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
-import { Outlet } from "react-router-dom";
+import { Outlet, useNavigate } from "react-router-dom";
 import {useUserStore} from "@/store/useUserStore"
-import { Menu, Moon, Sun } from "lucide-react";
+import { Menu, Moon, Sun, User } from "lucide-react";
 import Sidebar from "../shared/Sidebar";
 import UserAvatar from "../shared/UserAvatar";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
@@ -11,6 +11,7 @@ import { Toaster } from "@/components/ui/sonner"; // For the "Check" notificatio
 export default function DashboardLayout() {
   const [open, setOpen] = useState(false);
   const user = useUserStore((s) => s.user);
+  const navigate = useNavigate();
   const [isDarkMode, setIsDarkMode] = useState(() => {
     const storedTheme = localStorage.getItem("theme");
     if (storedTheme) return storedTheme === "dark";
@@ -63,8 +64,20 @@ export default function DashboardLayout() {
               onClick={() => setIsDarkMode((prev) => !prev)}
               className="text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800"
               aria-label="Toggle dark mode"
+              title={isDarkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
             >
               {isDarkMode ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+            </Button>
+
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => navigate("/dashboard/profile")}
+              className="text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800"
+              aria-label="Account Profile"
+              title="Account Profile"
+            >
+              <User className="h-5 w-5" />
             </Button>
 
             <UserAvatar size={10} textSize="text-sm" />
