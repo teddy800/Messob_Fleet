@@ -316,9 +316,9 @@ class MessobFmsTrip(models.Model):
                 )
             
             if 'assigned_driver_id' in vals and vals['assigned_driver_id'] != rec.assigned_driver_id.id:
-                old_driver = rec.assigned_driver_id.name if rec.assigned_driver_id else 'None'
-                new_driver_obj = self.env['res.partner'].browse(vals['assigned_driver_id']) if vals['assigned_driver_id'] else None
-                new_driver = new_driver_obj.name if new_driver_obj else 'None'
+                old_driver = rec.assigned_driver_id.name if rec.assigned_driver_id and rec.assigned_driver_id.exists() else 'None'
+                new_driver_obj = self.env['messob.fms.driver'].browse(vals['assigned_driver_id']) if vals['assigned_driver_id'] else None
+                new_driver = new_driver_obj.name if new_driver_obj and new_driver_obj.exists() else 'None'
                 
                 self.env['messob.fms.audit.log'].log_business_action(
                     action='ASSIGN',
@@ -381,6 +381,20 @@ class MessobFmsTrip(models.Model):
             'End date/time must be after start date/time!'
         ),
     ]
+
+    @api.model
+    def cleanup_orphaned_drivers(self):
+        """
+        Clean up trips with driver references that no longer exist.
+        This can happen if drivers are deleted from the system.
+        """
+        trips = self.search([('assigned_driver_id', '!=', False)])
+        cleaned = 0
+        for trip in trips:
+            if trip.assigned_driver_id and not trip.assigned_driver_id.exists():
+                trip.write({'assigned_driver_id': False})
+                cleaned += 1
+        return cleaned
 
     def _check_resource_availability(self):
         """
@@ -714,6 +728,10 @@ class MessobFmsTrip(models.Model):
         if not trip.exists():
             return {'success': False, 'error': 'Trip not found'}
         
+        # Clean up orphaned driver reference
+        if trip.assigned_driver_id and not trip.assigned_driver_id.exists():
+            trip.write({'assigned_driver_id': False})
+        
         # Check if user can view this trip (requester or dispatcher/admin)
         user = self.env.user
         if (trip.requester_id.id != user.partner_id.id and 
@@ -747,8 +765,8 @@ class MessobFmsTrip(models.Model):
                     'category': trip.assigned_vehicle_id.category_id.name if trip.assigned_vehicle_id and trip.assigned_vehicle_id.category_id else None,
                 },
                 'driver': {
-                    'id': trip.assigned_driver_id.id if trip.assigned_driver_id else None,
-                    'name': trip.assigned_driver_id.name if trip.assigned_driver_id else None,
+                    'id': trip.assigned_driver_id.id if trip.assigned_driver_id and trip.assigned_driver_id.exists() else None,
+                    'name': trip.assigned_driver_id.name if trip.assigned_driver_id and trip.assigned_driver_id.exists() else 'Driver Not Found',
                 }
             },
             'route': {
