@@ -616,9 +616,9 @@ class MessobFmsTrip(models.Model):
                 } for trip in trips],
                 'maintenance': [{
                     'id': maint.id,
-                    'type': maint.maintenance_type if hasattr(maint, 'maintenance_type') else 'Maintenance',
-                    'start_dt': maint.start_date.isoformat(),
-                    'end_dt': maint.end_date.isoformat() if maint.end_date else None,
+                    'type': maint.service_type if hasattr(maint, 'service_type') else 'Maintenance',
+                    'start_dt': maint.date.isoformat() if maint.date else None,
+                    'end_dt': maint.next_service_date.isoformat() if maint.next_service_date else None,
                     'description': maint.description if hasattr(maint, 'description') else 'Scheduled maintenance',
                 } for maint in maintenance],
             })
