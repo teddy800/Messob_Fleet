@@ -70,6 +70,13 @@ class MessobFmsTrip(models.Model):
         tracking=True,
         help='Minimum 10 characters. Describe the official reason for the trip.',
     )
+    
+    @api.constrains('purpose')
+    def _check_purpose_length(self):
+        """FR-1.1: Enforce minimum 10 characters for purpose field."""
+        for rec in self:
+            if rec.purpose and len(rec.purpose.strip()) < 10:
+                raise UserError(_('Trip purpose must be at least 10 characters long.'))
 
     vehicle_category = fields.Selection(
         selection=[
@@ -98,6 +105,33 @@ class MessobFmsTrip(models.Model):
 
     end_dt = fields.Datetime(
         string='End Date / Time',
+        required=True,
+        tracking=True,
+        index=True,  # NFR-1: Performance - Index for date range queries
+    )
+    
+    @api.constrains('start_dt', 'end_dt')
+    def _check_date_sequence(self):
+        """FR-1.1: Prevent selection of end times before start times."""
+        for rec in self:
+            if rec.start_dt and rec.end_dt and rec.end_dt < rec.start_dt:
+                raise UserError(_('End date/time must be on or after start date/time.'))
+    
+    @api.constrains('start_dt')
+    def _check_past_date(self):
+        """Prevent scheduling trips in the past."""
+        for rec in self:
+            if rec.start_dt and rec.start_dt < fields.Datetime.now():
+                if rec.state == 'draft':  # Allow editing existing records
+                    continue
+                raise UserError(_('Cannot schedule trips in the past.'))
+    
+    # =========================================================================
+    # LOCATIONS (Wizard Step 3 — FR-1.1)
+    # =========================================================================
+    
+    pickup = fields.Char(
+        string='Pickup Location',
         required=True,
         tracking=True,
         index=True,  # NFR-1: Performance - Index for date range queries
