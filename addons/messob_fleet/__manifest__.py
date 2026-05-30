@@ -33,7 +33,7 @@ Covers:
     'category': 'Fleet',
     'depends': ['base', 'fleet', 'mail'],
     'external_dependencies': {
-        'python': ['requests', 'paho-mqtt', 'geopy'],
+        'python': ['requests', 'paho-mqtt', 'geopy', 'PyJWT'],
     },
 
     # -----------------------------------------------------------------------
@@ -46,6 +46,7 @@ Covers:
         'security/groups.xml',
         'security/ir.model.access.csv',
         'security/record_rules.xml',
+        'security/api_performance_rules.xml',
 
         # 2. Master data (sequences + locations)
         'data/sequences.xml',
@@ -55,6 +56,8 @@ Covers:
         'data/audit_log_cron.xml',
         'data/gps_cron.xml',
         'data/geocode_cache_cron.xml',
+        'data/performance_cron.xml',
+        'data/priority_cron.xml',
 
         # 3. Views: model views, then wizard, then menus last
         'views/trip_views.xml',

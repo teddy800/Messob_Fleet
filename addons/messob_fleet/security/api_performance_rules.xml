@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="0">
+        <!-- API Performance Log Access Rules -->
+        <record id="access_messob_fms_api_performance_admin" model="ir.model.access">
+            <field name="name">messob.fms.api.performance.admin</field>
+            <field name="model_id" ref="model_messob_fms_api_performance"/>
+            <field name="group_id" ref="group_fms_admin"/>
+            <field name="perm_read">1</field>
+            <field name="perm_write">1</field>
+            <field name="perm_create">1</field>
+            <field name="perm_unlink">1</field>
+        </record>
+
+        <record id="access_messob_fms_api_performance_dispatcher" model="ir.model.access">
+            <field name="name">messob.fms.api.performance.dispatcher</field>
+            <field name="model_id" ref="model_messob_fms_api_performance"/>
+            <field name="group_id" ref="group_fms_dispatcher"/>
+            <field name="perm_read">1</field>
+            <field name="perm_write">0</field>
+            <field name="perm_create">0</field>
+            <field name="perm_unlink">0</field>
+        </record>
+    </data>
+</odoo>
