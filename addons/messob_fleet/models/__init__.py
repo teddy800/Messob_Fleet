@@ -11,6 +11,7 @@ from . import audit_log
 # Now import models that use the audit mixin
 from . import trip_request
 from . import trip_request_dispatch
+from . import trip_priority_scoring
 from . import trip_driver
 from . import fuel_log
 from . import maintenance_log
@@ -23,6 +24,7 @@ from . import gps_gateway
 from . import geofence
 from . import geocode_cache
 from . import sms_log
+from . import api_performance
 
 # Import services
 from ..services import geocoding_service
