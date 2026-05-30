@@ -70,6 +70,13 @@ class MessobFmsTrip(models.Model):
         tracking=True,
         help='Minimum 10 characters. Describe the official reason for the trip.',
     )
+    
+    @api.constrains('purpose')
+    def _check_purpose_length(self):
+        """FR-1.1: Enforce minimum 10 characters for purpose field."""
+        for rec in self:
+            if rec.purpose and len(rec.purpose.strip()) < 10:
+                raise UserError(_('Trip purpose must be at least 10 characters long.'))
 
     vehicle_category = fields.Selection(
         selection=[
@@ -98,6 +105,33 @@ class MessobFmsTrip(models.Model):
 
     end_dt = fields.Datetime(
         string='End Date / Time',
+        required=True,
+        tracking=True,
+        index=True,  # NFR-1: Performance - Index for date range queries
+    )
+    
+    @api.constrains('start_dt', 'end_dt')
+    def _check_date_sequence(self):
+        """FR-1.1: Prevent selection of end times before start times."""
+        for rec in self:
+            if rec.start_dt and rec.end_dt and rec.end_dt < rec.start_dt:
+                raise UserError(_('End date/time must be on or after start date/time.'))
+    
+    @api.constrains('start_dt')
+    def _check_past_date(self):
+        """Prevent scheduling trips in the past."""
+        for rec in self:
+            if rec.start_dt and rec.start_dt < fields.Datetime.now():
+                if rec.state == 'draft':  # Allow editing existing records
+                    continue
+                raise UserError(_('Cannot schedule trips in the past.'))
+    
+    # =========================================================================
+    # LOCATIONS (Wizard Step 3 — FR-1.1)
+    # =========================================================================
+    
+    pickup = fields.Char(
+        string='Pickup Location',
         required=True,
         tracking=True,
         index=True,  # NFR-1: Performance - Index for date range queries
@@ -316,9 +350,9 @@ class MessobFmsTrip(models.Model):
                 )
             
             if 'assigned_driver_id' in vals and vals['assigned_driver_id'] != rec.assigned_driver_id.id:
-                old_driver = rec.assigned_driver_id.name if rec.assigned_driver_id else 'None'
-                new_driver_obj = self.env['res.partner'].browse(vals['assigned_driver_id']) if vals['assigned_driver_id'] else None
-                new_driver = new_driver_obj.name if new_driver_obj else 'None'
+                old_driver = rec.assigned_driver_id.name if rec.assigned_driver_id and rec.assigned_driver_id.exists() else 'None'
+                new_driver_obj = self.env['messob.fms.driver'].browse(vals['assigned_driver_id']) if vals['assigned_driver_id'] else None
+                new_driver = new_driver_obj.name if new_driver_obj and new_driver_obj.exists() else 'None'
                 
                 self.env['messob.fms.audit.log'].log_business_action(
                     action='ASSIGN',
@@ -381,6 +415,20 @@ class MessobFmsTrip(models.Model):
             'End date/time must be after start date/time!'
         ),
     ]
+
+    @api.model
+    def cleanup_orphaned_drivers(self):
+        """
+        Clean up trips with driver references that no longer exist.
+        This can happen if drivers are deleted from the system.
+        """
+        trips = self.search([('assigned_driver_id', '!=', False)])
+        cleaned = 0
+        for trip in trips:
+            if trip.assigned_driver_id and not trip.assigned_driver_id.exists():
+                trip.write({'assigned_driver_id': False})
+                cleaned += 1
+        return cleaned
 
     def _check_resource_availability(self):
         """
@@ -616,9 +664,9 @@ class MessobFmsTrip(models.Model):
                 } for trip in trips],
                 'maintenance': [{
                     'id': maint.id,
-                    'type': maint.maintenance_type if hasattr(maint, 'maintenance_type') else 'Maintenance',
-                    'start_dt': maint.start_date.isoformat(),
-                    'end_dt': maint.end_date.isoformat() if maint.end_date else None,
+                    'type': maint.service_type if hasattr(maint, 'service_type') else 'Maintenance',
+                    'start_dt': maint.date.isoformat() if maint.date else None,
+                    'end_dt': maint.next_service_date.isoformat() if maint.next_service_date else None,
                     'description': maint.description if hasattr(maint, 'description') else 'Scheduled maintenance',
                 } for maint in maintenance],
             })
@@ -714,6 +762,10 @@ class MessobFmsTrip(models.Model):
         if not trip.exists():
             return {'success': False, 'error': 'Trip not found'}
         
+        # Clean up orphaned driver reference
+        if trip.assigned_driver_id and not trip.assigned_driver_id.exists():
+            trip.write({'assigned_driver_id': False})
+        
         # Check if user can view this trip (requester or dispatcher/admin)
         user = self.env.user
         if (trip.requester_id.id != user.partner_id.id and 
@@ -747,8 +799,8 @@ class MessobFmsTrip(models.Model):
                     'category': trip.assigned_vehicle_id.category_id.name if trip.assigned_vehicle_id and trip.assigned_vehicle_id.category_id else None,
                 },
                 'driver': {
-                    'id': trip.assigned_driver_id.id if trip.assigned_driver_id else None,
-                    'name': trip.assigned_driver_id.name if trip.assigned_driver_id else None,
+                    'id': trip.assigned_driver_id.id if trip.assigned_driver_id and trip.assigned_driver_id.exists() else None,
+                    'name': trip.assigned_driver_id.name if trip.assigned_driver_id and trip.assigned_driver_id.exists() else 'Driver Not Found',
                 }
             },
             'route': {

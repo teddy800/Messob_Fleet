@@ -2,8 +2,10 @@
 # ---------------------------------------------------------------------------
 # MESSOB Fleet Management System - Models Package
 # ---------------------------------------------------------------------------
-# Import audit_log FIRST because it contains the base.model.audit.mixin
-# that other models inherit from
+# Import base_model_audit_mixin FIRST because other models inherit from it
+from . import base_model_audit_mixin
+
+# Import audit_log SECOND because it uses the mixin
 from . import audit_log
 
 # Now import models that use the audit mixin
