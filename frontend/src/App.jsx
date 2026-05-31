@@ -1,6 +1,5 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 import { Toaster } from "@/components/ui/sonner";
-import { ThemeProvider } from "./components/shared/ThemeProvider";
 import DashboardLayout from "./components/layouts/DashboardLayout";
 import Login from "./features/auth/Login";
 import ProtectedRoute from "./features/auth/ProtectedRoute";
@@ -33,7 +32,7 @@ import MaintenanceAlerts from "./features/maintenance/MaintenanceAlerts";
 
 export default function App() {
   return (
-    <ThemeProvider defaultTheme="system" storageKey="messob-fms-theme">
+    <>
       <Routes>
         {/* 1. Public */}
         <Route path="/" element={<Login />} />
@@ -94,6 +93,6 @@ export default function App() {
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
       <Toaster />
-    </ThemeProvider>
+    </>
   );
 }

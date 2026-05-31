@@ -27,6 +27,9 @@ export default function DriverMobileApp() {
   }, []);
 
   const registerServiceWorker = async () => {
+    // Service Worker registration disabled in development
+    // Uncomment for production PWA functionality
+    /*
     if ('serviceWorker' in navigator) {
       try {
         const registration = await navigator.serviceWorker.register('/sw.js');
@@ -40,6 +43,8 @@ export default function DriverMobileApp() {
         console.error('Service Worker registration failed:', error);
       }
     }
+    */
+    console.log('Service Worker disabled in development mode');
   };
 
   const requestLocationPermission = () => {

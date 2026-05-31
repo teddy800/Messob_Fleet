@@ -4,13 +4,11 @@
 // Enables offline functionality and push notifications for Driver Mobile App
 // ============================================================================
 
-const CACHE_NAME = 'messob-fms-v1.0.0';
+const CACHE_NAME = 'messob-fms-v1.0.1';
 const OFFLINE_URL = '/offline.html';
 
-// Assets to cache for offline functionality
+// Assets to cache for offline functionality (excluding HTML files)
 const ASSETS_TO_CACHE = [
-  '/',
-  '/dashboard/driver/mobile',
   '/offline.html',
   '/manifest.json',
 ];
@@ -62,6 +60,14 @@ self.addEventListener('fetch', (event) => {
   
   // Skip API calls - always fetch fresh
   if (event.request.url.includes('/api/') || event.request.url.includes('/odoo/')) {
+    return;
+  }
+  
+  // Skip HTML files - always fetch fresh to avoid stale content
+  if (event.request.url.endsWith('.html') || event.request.mode === 'navigate') {
+    event.respondWith(
+      fetch(event.request).catch(() => caches.match(OFFLINE_URL))
+    );
     return;
   }
   
