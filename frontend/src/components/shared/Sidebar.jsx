@@ -19,6 +19,7 @@ import logo from "@/assets/logo.png";
 import { cn } from "@/lib/utils";
 import { useUserStore } from "@/store/useUserStore";
 import LanguageSwitcher from "./LanguageSwitcher";
+import ThemeToggle from "./ThemeToggle";
 
 // The Master Menu List with Role-Based Access Control (RBAC)
 const menuItems = [
@@ -209,10 +210,10 @@ export default function Sidebar({ setOpen }) {
       </nav>
 
       {/* --- Footer / User Account Section --- */}
-      <div className="pt-6 border-t border-white/10 mt-auto space-y-1">
-        <div className="px-4 py-3 mb-2 bg-white/5 rounded-xl border border-white/5">
-           <p className="text-[10px] text-gray-400 uppercase font-bold tracking-tighter">Current User</p>
-           <p className="text-sm font-bold truncate text-brand-gold">{user?.name || "Unauthorized"}</p>
+      <div className="pt-6 border-t border-white/10 dark:border-gray-700 mt-auto space-y-1">
+        <div className="px-4 py-3 mb-2 bg-white/5 dark:bg-gray-800/50 rounded-xl border border-white/5 dark:border-gray-700">
+           <p className="text-[10px] text-gray-400 dark:text-gray-500 uppercase font-bold tracking-tighter">Current User</p>
+           <p className="text-sm font-bold truncate text-brand-gold dark:text-brand-gold">{user?.name || "Unauthorized"}</p>
         </div>
         
         {/* Language Switcher */}
@@ -220,9 +221,14 @@ export default function Sidebar({ setOpen }) {
           <LanguageSwitcher variant="ghost" showLabel={true} />
         </div>
         
+        {/* Theme Toggle */}
+        <div className="px-2 py-2">
+          <ThemeToggle variant="ghost" showLabel={true} />
+        </div>
+        
         <button 
           onClick={handleLogout}
-          className="w-full flex items-center px-4 py-3 hover:bg-red-500/20 text-red-400 rounded-xl transition-all group mt-2"
+          className="w-full flex items-center px-4 py-3 hover:bg-red-500/20 text-red-400 dark:text-red-300 rounded-xl transition-all group mt-2"
         >
           <LogOut className="mr-3 h-5 w-5 group-hover:-translate-x-1 transition-transform" />
           <span className="text-sm font-bold">Sign Out</span>

@@ -1,0 +1,69 @@
+# ============================================================================
+# MESSOB Fleet Management System
+# Database Backup & PITR Configuration
+# SRS Requirements: DB-2 (PITR), DB-3 (Automated Backups)
+# ============================================================================
+
+version: '3.8'
+
+services:
+  # PostgreSQL with WAL Archiving for PITR
+  db18:
+    image: postgres:16
+    container_name: messob_fms_db_pitr
+    environment:
+      POSTGRES_DB: fleet_management
+      POSTGRES_USER: odoo
+      POSTGRES_PASSWORD: odoo
+      # Enable WAL archiving for Point-in-Time Recovery
+      POSTGRES_INITDB_ARGS: "-c wal_level=replica -c archive_mode=on -c archive_command='test ! -f /var/lib/postgresql/wal_archive/%f && cp %p /var/lib/postgresql/wal_archive/%f'"
+    volumes:
+      - odoo-db-data:/var/lib/postgresql/data
+      - ./backups/wal_archive:/var/lib/postgresql/wal_archive
+      - ./backups/pg_backups:/backups
+    ports:
+      - "5432:5432"
+    command: >
+      postgres
+      -c wal_level=replica
+      -c archive_mode=on
+      -c archive_command='test ! -f /var/lib/postgresql/wal_archive/%f && cp %p /var/lib/postgresql/wal_archive/%f'
+      -c max_wal_senders=3
+      -c wal_keep_size=128MB
+    networks:
+      - odoo-network
+    restart: unless-stopped
+
+  # Automated Backup Service
+  db-backup:
+    image: postgres:16
+    container_name: messob_fms_backup_service
+    environment:
+      PGHOST: db18
+      PGPORT: 5432
+      PGDATABASE: fleet_management
+      PGUSER: odoo
+      PGPASSWORD: odoo
+      BACKUP_RETENTION_DAYS: 30
+    volumes:
+      - ./backups/pg_backups:/backups
+      - ./scripts/backup.sh:/backup.sh:ro
+    depends_on:
+      - db18
+    networks:
+      - odoo-network
+    # Run backup daily at 2:00 AM
+    entrypoint: >
+      sh -c "
+      echo '0 2 * * * /backup.sh' > /etc/crontabs/root &&
+      crond -f -l 2
+      "
+    restart: unless-stopped
+
+volumes:
+  odoo-db-data:
+    driver: local
+
+networks:
+  odoo-network:
+    driver: bridge
