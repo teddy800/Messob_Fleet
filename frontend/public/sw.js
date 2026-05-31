@@ -1,212 +1,176 @@
-// Service Worker for MESSOB Fleet Management PWA
-const CACHE_NAME = 'messob-fleet-v3'; // Increment version to force update
-const isDevelopment = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+// ============================================================================
+// MESSOB Fleet Management System
+// Service Worker for Progressive Web App (PWA)
+// Enables offline functionality and push notifications for Driver Mobile App
+// ============================================================================
 
-const urlsToCache = [
-  '/',
-  '/index.html',
+const CACHE_NAME = 'messob-fms-v1.0.1';
+const OFFLINE_URL = '/offline.html';
+
+// Assets to cache for offline functionality (excluding HTML files)
+const ASSETS_TO_CACHE = [
+  '/offline.html',
+  '/manifest.json',
 ];
 
-// Install event - cache resources (skip in development)
+// Install event - cache essential assets
 self.addEventListener('install', (event) => {
-  if (!isDevelopment) {
-    event.waitUntil(
-      caches.open(CACHE_NAME)
-        .then((cache) => {
-          console.log('Opened cache');
-          return cache.addAll(urlsToCache);
-        })
-    );
-  }
-  self.skipWaiting();
-});
-
-// Fetch event - serve from network first in development, cache in production
-self.addEventListener('fetch', (event) => {
-  const url = new URL(event.request.url);
+  console.log('[Service Worker] Installing...');
   
-  // Skip caching in development mode
-  if (isDevelopment) {
-    // For navigation requests (HTML pages), always return index.html for React Router
-    if (event.request.mode === 'navigate') {
-      event.respondWith(
-        fetch('/index.html')
-          .then(response => response || caches.match('/index.html'))
-          .catch(() => caches.match('/index.html'))
-      );
-      return;
-    }
-    
-    // For all other requests, fetch from network
-    event.respondWith(
-      fetch(event.request)
-        .catch(() => caches.match(event.request))
-        .then(response => response || new Response('Not found', { status: 404 }))
-    );
-    return;
-  }
-
-  // Skip caching for non-GET requests
-  if (event.request.method !== 'GET') {
-    event.respondWith(fetch(event.request));
-    return;
-  }
-
-  // Skip caching for API requests
-  if (url.pathname.includes('/odoo/') || url.pathname.includes('/api/')) {
-    event.respondWith(fetch(event.request));
-    return;
-  }
-
-  // For navigation requests (HTML pages), return index.html for React Router
-  if (event.request.mode === 'navigate') {
-    event.respondWith(
-      fetch('/index.html')
-        .then(response => {
-          const responseToCache = response.clone();
-          caches.open(CACHE_NAME).then(cache => {
-            cache.put('/index.html', responseToCache);
-          });
-          return response;
-        })
-        .catch(() => caches.match('/index.html'))
-    );
-    return;
-  }
-
-  // Production: Cache-first strategy for assets
-  event.respondWith(
-    caches.match(event.request)
-      .then((response) => {
-        if (response) {
-          return response;
-        }
-
-        return fetch(event.request).then(
-          (response) => {
-            if (!response || response.status !== 200 || response.type !== 'basic') {
-              return response;
-            }
-
-            const responseToCache = response.clone();
-
-            caches.open(CACHE_NAME)
-              .then((cache) => {
-                cache.put(event.request, responseToCache);
-              });
-
-            return response;
-          }
-        );
-      })
-      .catch(() => {
-        // If fetch fails, return a fallback
-        return new Response('Offline', { status: 503, statusText: 'Service Unavailable' });
-      })
+  event.waitUntil(
+    caches.open(CACHE_NAME).then((cache) => {
+      console.log('[Service Worker] Caching essential assets');
+      return cache.addAll(ASSETS_TO_CACHE).catch((error) => {
+        console.error('[Service Worker] Cache addAll failed:', error);
+      });
+    })
   );
+  
+  // Force the waiting service worker to become the active service worker
+  self.skipWaiting();
 });
 
 // Activate event - clean up old caches
 self.addEventListener('activate', (event) => {
-  const cacheWhitelist = ['messob-fleet-v3'];
+  console.log('[Service Worker] Activating...');
+  
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames.map((cacheName) => {
-          if (cacheWhitelist.indexOf(cacheName) === -1) {
-            console.log('Deleting old cache:', cacheName);
+          if (cacheName !== CACHE_NAME) {
+            console.log('[Service Worker] Deleting old cache:', cacheName);
             return caches.delete(cacheName);
           }
         })
       );
     })
   );
-  self.clients.claim();
+  
+  // Take control of all pages immediately
+  return self.clients.claim();
+});
+
+// Fetch event - serve from cache, fallback to network
+self.addEventListener('fetch', (event) => {
+  // Skip non-GET requests
+  if (event.request.method !== 'GET') {
+    return;
+  }
+  
+  // Skip API calls - always fetch fresh
+  if (event.request.url.includes('/api/') || event.request.url.includes('/odoo/')) {
+    return;
+  }
+  
+  // Skip HTML files - always fetch fresh to avoid stale content
+  if (event.request.url.endsWith('.html') || event.request.mode === 'navigate') {
+    event.respondWith(
+      fetch(event.request).catch(() => caches.match(OFFLINE_URL))
+    );
+    return;
+  }
+  
+  event.respondWith(
+    caches.match(event.request).then((cachedResponse) => {
+      if (cachedResponse) {
+        // Return cached version
+        return cachedResponse;
+      }
+      
+      // Fetch from network
+      return fetch(event.request).then((response) => {
+        // Don't cache non-successful responses
+        if (!response || response.status !== 200 || response.type !== 'basic') {
+          return response;
+        }
+        
+        // Clone the response
+        const responseToCache = response.clone();
+        
+        // Cache the fetched response
+        caches.open(CACHE_NAME).then((cache) => {
+          cache.put(event.request, responseToCache);
+        });
+        
+        return response;
+      }).catch(() => {
+        // Network failed, return offline page
+        return caches.match(OFFLINE_URL);
+      });
+    })
+  );
 });
 
 // Push notification event
 self.addEventListener('push', (event) => {
-  const data = event.data ? event.data.json() : {};
-  const title = data.title || 'MESSOB Fleet';
+  console.log('[Service Worker] Push notification received');
+  
   const options = {
-    body: data.body || 'New notification',
+    body: event.data ? event.data.text() : 'New notification from MESSOB Fleet',
     icon: '/icon-192.png',
     badge: '/icon-192.png',
     vibrate: [200, 100, 200],
-    data: data.data || {},
-    actions: data.actions || []
+    tag: 'messob-notification',
+    requireInteraction: false,
   };
-
+  
   event.waitUntil(
-    self.registration.showNotification(title, options)
+    self.registration.showNotification('MESSOB Fleet', options)
   );
 });
 
 // Notification click event
 self.addEventListener('notificationclick', (event) => {
+  console.log('[Service Worker] Notification clicked');
+  
   event.notification.close();
-
+  
   event.waitUntil(
-    clients.openWindow(event.notification.data.url || '/')
+    clients.openWindow('/dashboard/driver/mobile')
   );
 });
 
-// Background sync event
+// Background sync event (for offline actions)
 self.addEventListener('sync', (event) => {
-  if (event.tag === 'sync-fuel-logs') {
-    event.waitUntil(syncFuelLogs());
-  }
+  console.log('[Service Worker] Background sync:', event.tag);
+  
   if (event.tag === 'sync-trip-status') {
     event.waitUntil(syncTripStatus());
   }
 });
 
-// Sync fuel logs when back online
-async function syncFuelLogs() {
+// Sync trip status updates when back online
+async function syncTripStatus() {
   try {
-    const cache = await caches.open('fuel-logs-pending');
-    const requests = await cache.keys();
+    // Get pending updates from IndexedDB or localStorage
+    const pendingUpdates = await getPendingUpdates();
     
-    for (const request of requests) {
-      const response = await cache.match(request);
-      const data = await response.json();
-      
-      // Send to server
-      await fetch('/odoo/api/fuel/log', {
+    for (const update of pendingUpdates) {
+      await fetch('/api/trip/update-status', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
+        body: JSON.stringify(update),
       });
-      
-      // Remove from cache after successful sync
-      await cache.delete(request);
     }
+    
+    // Clear pending updates
+    await clearPendingUpdates();
+    
+    console.log('[Service Worker] Trip status synced successfully');
   } catch (error) {
-    console.error('Sync failed:', error);
+    console.error('[Service Worker] Sync failed:', error);
   }
 }
 
-// Sync trip status when back online
-async function syncTripStatus() {
-  try {
-    const cache = await caches.open('trip-status-pending');
-    const requests = await cache.keys();
-    
-    for (const request of requests) {
-      const response = await cache.match(request);
-      const data = await response.json();
-      
-      // Send to server
-      await fetch('/odoo/api/trip/status', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
-      });
-      
-      // Remove from cache after successful sync
-      await cache.delete(request);
-    }
-  } catch (error) {
-    console.error('Sync failed:', error);
-  }
+// Helper functions (implement based on your storage strategy)
+async function getPendingUpdates() {
+  // Implement retrieval from IndexedDB or localStorage
+  return [];
 }
+
+async function clearPendingUpdates() {
+  // Implement clearing from IndexedDB or localStorage
+}
+
+console.log('[Service Worker] Loaded successfully');

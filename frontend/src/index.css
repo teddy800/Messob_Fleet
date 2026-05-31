@@ -37,13 +37,66 @@
     --accent: var(--brand-gold);
     --accent-foreground: oklch(0.145 0 0);
 
-    /* ... rest of your :root variables ... */
+    --card: oklch(1 0 0);
+    --card-foreground: oklch(0.145 0 0);
+    
+    --popover: oklch(1 0 0);
+    --popover-foreground: oklch(0.145 0 0);
+    
+    --secondary: oklch(0.96 0 0);
+    --secondary-foreground: oklch(0.145 0 0);
+    
+    --muted: oklch(0.96 0 0);
+    --muted-foreground: oklch(0.455 0 0);
+    
+    --destructive: oklch(0.577 0.245 27.325);
+    --destructive-foreground: oklch(0.985 0 0);
+    
+    --border: oklch(0.898 0 0);
+    --input: oklch(0.898 0 0);
+    --ring: var(--brand-blue);
+    
+    --radius: 0.5rem;
 }
 
 .dark {
+    --background: oklch(0.145 0 0);
+    --foreground: oklch(0.985 0 0);
+    
     /* Set Primary to a slightly lighter blue for dark mode readability */
     --primary: oklch(0.55 0.12 253.35);
-    --primary-foreground: oklch(0.145 0 0);
+    --primary-foreground: oklch(0.985 0 0);
     
-    /* ... rest of your .dark variables ... */
+    /* Keep Gold accent bright in dark mode */
+    --accent: oklch(0.795 0.184 81.11);
+    --accent-foreground: oklch(0.145 0 0);
+    
+    --card: oklch(0.185 0 0);
+    --card-foreground: oklch(0.985 0 0);
+    
+    --popover: oklch(0.185 0 0);
+    --popover-foreground: oklch(0.985 0 0);
+    
+    --secondary: oklch(0.225 0 0);
+    --secondary-foreground: oklch(0.985 0 0);
+    
+    --muted: oklch(0.225 0 0);
+    --muted-foreground: oklch(0.655 0 0);
+    
+    --destructive: oklch(0.577 0.245 27.325);
+    --destructive-foreground: oklch(0.985 0 0);
+    
+    --border: oklch(0.225 0 0);
+    --input: oklch(0.225 0 0);
+    --ring: var(--brand-gold);
+}
+
+* {
+  border-color: hsl(var(--border));
+}
+
+body {
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+  font-feature-settings: "rlig" 1, "calt" 1;
 }

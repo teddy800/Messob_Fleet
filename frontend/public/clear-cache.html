@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clear Cache - MESSOB Fleet</title>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #1e40af;
+            margin-bottom: 20px;
+        }
+        button {
+            background: #1e40af;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+        }
+        button:hover {
+            background: #1e3a8a;
+        }
+        .success {
+            background: #10b981;
+            padding: 15px;
+            border-radius: 6px;
+            color: white;
+            margin-top: 20px;
+            display: none;
+        }
+        .info {
+            background: #eff6ff;
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 20px;
+            border-left: 4px solid #1e40af;
+        }
+        .status {
+            margin-top: 20px;
+            padding: 10px;
+            background: #f9fafb;
+            border-radius: 6px;
+            font-family: monospace;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧹 Clear Cache & Service Worker</h1>
+        
+        <div class="info">
+            <strong>Why do I need this?</strong>
+            <p>Service Workers cache files for offline use. Sometimes old cached files cause issues. This tool helps you clear everything and start fresh.</p>
+        </div>
+
+        <div style="margin-top: 30px;">
+            <button onclick="clearEverything()">🗑️ Clear All Cache & Service Workers</button>
+            <button onclick="hardReload()">🔄 Hard Reload Page</button>
+        </div>
+
+        <div id="success" class="success">
+            ✅ Cache cleared successfully! The page will reload in 2 seconds...
+        </div>
+
+        <div id="status" class="status"></div>
+    </div>
+
+    <script>
+        const statusDiv = document.getElementById('status');
+        const successDiv = document.getElementById('success');
+
+        function log(message) {
+            statusDiv.innerHTML += message + '<br>';
+            console.log(message);
+        }
+
+        async function clearEverything() {
+            statusDiv.innerHTML = '';
+            log('🚀 Starting cache clear process...');
+
+            try {
+                // 1. Unregister all service workers
+                if ('serviceWorker' in navigator) {
+                    const registrations = await navigator.serviceWorker.getRegistrations();
+                    log(`📋 Found ${registrations.length} service worker(s)`);
+                    
+                    for (let registration of registrations) {
+                        await registration.unregister();
+                        log('✅ Service worker unregistered');
+                    }
+                } else {
+                    log('ℹ️ Service workers not supported');
+                }
+
+                // 2. Clear all caches
+                if ('caches' in window) {
+                    const cacheNames = await caches.keys();
+                    log(`📦 Found ${cacheNames.length} cache(s)`);
+                    
+                    for (let cacheName of cacheNames) {
+                        await caches.delete(cacheName);
+                        log(`✅ Deleted cache: ${cacheName}`);
+                    }
+                } else {
+                    log('ℹ️ Cache API not supported');
+                }
+
+                // 3. Clear localStorage (except important data)
+                const importantKeys = ['messob_token', 'messob_user'];
+                const keysToRemove = [];
+                for (let i = 0; i < localStorage.length; i++) {
+                    const key = localStorage.key(i);
+                    if (!importantKeys.includes(key)) {
+                        keysToRemove.push(key);
+                    }
+                }
+                keysToRemove.forEach(key => localStorage.removeItem(key));
+                log(`✅ localStorage cleaned (kept ${importantKeys.length} important items)`);
+
+                // 4. Clear sessionStorage
+                sessionStorage.clear();
+                log('✅ sessionStorage cleared');
+
+                log('');
+                log('🎉 All done! Reloading page...');
+                
+                successDiv.style.display = 'block';
+                
+                // Reload after 2 seconds with hard refresh
+                setTimeout(() => {
+                    window.location.href = '/?nocache=' + Date.now();
+                }, 2000);
+
+            } catch (error) {
+                log('❌ Error: ' + error.message);
+            }
+        }
+
+        function hardReload() {
+            log('🔄 Performing hard reload...');
+            // Hard reload bypasses cache
+            window.location.reload(true);
+        }
+
+        // Show current status on load
+        window.addEventListener('load', async () => {
+            log('📊 Current Status:');
+            
+            if ('serviceWorker' in navigator) {
+                const registrations = await navigator.serviceWorker.getRegistrations();
+                log(`   Service Workers: ${registrations.length} active`);
+            }
+            
+            if ('caches' in window) {
+                const cacheNames = await caches.keys();
+                log(`   Caches: ${cacheNames.length} stored`);
+            }
+            
+            log(`   localStorage items: ${localStorage.length}`);
+            log('');
+        });
+    </script>
+</body>
+</html>

@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
 import App from './App.jsx'
 import './index.css'
+import './lib/i18n' // Initialize i18n
 import { useUserStore } from './store/useUserStore'
 
 // Theme Provider Component (UI-3: Dark Mode Support)

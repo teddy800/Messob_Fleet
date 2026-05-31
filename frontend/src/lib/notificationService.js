@@ -16,7 +16,9 @@ class NotificationService {
       return false;
     }
 
-    // Register service worker
+    // Service Worker registration disabled in development
+    // Uncomment for production PWA functionality
+    /*
     if ('serviceWorker' in navigator) {
       try {
         this.serviceWorkerRegistration = await navigator.serviceWorker.register('/sw.js');
@@ -25,6 +27,7 @@ class NotificationService {
         console.error('Service Worker registration failed:', error);
       }
     }
+    */
 
     // Request permission if not granted
     if (this.permission === 'default') {

@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { callOdooMethod, searchRead } from '@/lib/odooApi';
 import { useUserStore } from '@/store/useUserStore';
 import { toast } from 'sonner';
+import IncidentReport from './IncidentReport';
 
 export default function DriverMobileApp() {
   const user = useUserStore((s) => s.user);
@@ -17,6 +18,7 @@ export default function DriverMobileApp() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [currentView, setCurrentView] = useState('home');
   const [location, setLocation] = useState(null);
+  const [showIncidentReport, setShowIncidentReport] = useState(false);
 
   useEffect(() => {
     loadTrips();
@@ -25,6 +27,9 @@ export default function DriverMobileApp() {
   }, []);
 
   const registerServiceWorker = async () => {
+    // Service Worker registration disabled in development
+    // Uncomment for production PWA functionality
+    /*
     if ('serviceWorker' in navigator) {
       try {
         const registration = await navigator.serviceWorker.register('/sw.js');
@@ -38,6 +43,8 @@ export default function DriverMobileApp() {
         console.error('Service Worker registration failed:', error);
       }
     }
+    */
+    console.log('Service Worker disabled in development mode');
   };
 
   const requestLocationPermission = () => {
@@ -117,8 +124,8 @@ export default function DriverMobileApp() {
     }
   };
 
-  const reportIncident = async () => {
-    toast.info('Incident reporting feature coming soon');
+  const reportIncident = () => {
+    setShowIncidentReport(true);
   };
 
   const callDispatcher = () => {
@@ -351,6 +358,14 @@ export default function DriverMobileApp() {
   return (
     <div className="min-h-screen bg-gray-50">
       <MobileHeader />
+      
+      {/* Incident Report Modal */}
+      {showIncidentReport && activeTrip && (
+        <IncidentReport
+          tripId={activeTrip.id}
+          onClose={() => setShowIncidentReport(false)}
+        />
+      )}
       
       <div className="pb-20">
         {loading ? (

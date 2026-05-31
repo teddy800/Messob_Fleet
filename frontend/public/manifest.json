@@ -1,11 +1,11 @@
 {
-  "name": "MESSOB Fleet Management",
-  "short_name": "MESSOB Fleet",
-  "description": "Fleet Management System for MESSOB - Driver Mobile App",
-  "start_url": "/",
+  "name": "MESSOB Fleet Driver",
+  "short_name": "MESSOB Driver",
+  "description": "MESSOB Fleet Management System - Driver Mobile App",
+  "start_url": "/dashboard/driver/mobile",
   "display": "standalone",
-  "background_color": "#ffffff",
-  "theme_color": "#1e40af",
+  "background_color": "#1e3a8a",
+  "theme_color": "#1e3a8a",
   "orientation": "portrait",
   "icons": [
     {
@@ -21,22 +21,23 @@
       "purpose": "any maskable"
     }
   ],
-  "categories": ["business", "productivity"],
+  "categories": ["business", "productivity", "utilities"],
   "screenshots": [],
   "shortcuts": [
     {
-      "name": "My Trips",
-      "short_name": "Trips",
-      "description": "View assigned trips",
-      "url": "/driver/trips",
+      "name": "Active Trip",
+      "short_name": "Active",
+      "description": "View active trip",
+      "url": "/dashboard/driver/mobile?view=home",
       "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
     },
     {
       "name": "Log Fuel",
       "short_name": "Fuel",
-      "description": "Log fuel consumption",
-      "url": "/driver/fuel",
+      "description": "Log fuel transaction",
+      "url": "/dashboard/driver/fuel",
       "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
     }
-  ]
+  ],
+  "prefer_related_applications": false
 }

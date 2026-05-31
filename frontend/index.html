@@ -21,7 +21,9 @@
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
     <script>
-      // Register Service Worker for PWA
+      // Service Worker Registration (Disabled in Development)
+      // Uncomment for production PWA functionality
+      /*
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
           navigator.serviceWorker.register('/sw.js')
@@ -31,6 +33,17 @@
             .catch(error => {
               console.log('Service Worker registration failed:', error);
             });
+        });
+      }
+      */
+      
+      // Unregister any existing service workers (for development)
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then(registrations => {
+          for (let registration of registrations) {
+            registration.unregister();
+            console.log('Service Worker unregistered for development');
+          }
         });
       }
     </script>

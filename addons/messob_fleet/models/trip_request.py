@@ -348,19 +348,185 @@ class MessobFmsTrip(models.Model):
                     description=f"Vehicle assignment changed for {rec.name}: {old_vehicle} → {new_vehicle}",
                     severity='medium'
                 )
-            
-            if 'assigned_driver_id' in vals and vals['assigned_driver_id'] != rec.assigned_driver_id.id:
-                old_driver = rec.assigned_driver_id.name if rec.assigned_driver_id and rec.assigned_driver_id.exists() else 'None'
-                new_driver_obj = self.env['messob.fms.driver'].browse(vals['assigned_driver_id']) if vals['assigned_driver_id'] else None
-                new_driver = new_driver_obj.name if new_driver_obj and new_driver_obj.exists() else 'None'
-                
-                self.env['messob.fms.audit.log'].log_business_action(
-                    action='ASSIGN',
-                    model=rec._name,
-                    record_id=rec.id,
-                    description=f"Driver assignment changed for {rec.name}: {old_driver} → {new_driver}",
-                    severity='medium'
-                )
+    
+    # =========================================================================
+    # DRIVER MOBILE APP ACTIONS (NFR-2.1: Safety - Simple driver interface)
+    # =========================================================================
+    
+    def action_start_trip(self):
+        """
+        Driver action: Start the trip (change state to in_progress).
+        Called from Driver Mobile App when driver begins journey.
+        
+        Security: Only assigned driver can start their trip.
+        """
+        self.ensure_one()
+        
+        # Security check: Only assigned driver can start
+        if self.assigned_driver_id.user_id.id != self.env.user.id:
+            raise UserError(_('Only the assigned driver can start this trip.'))
+        
+        if self.state != 'approved':
+            raise UserError(_('Only approved trips can be started.'))
+        
+        # Record start time and change state
+        self.write({
+            'state': 'in_progress',
+            'actual_start_dt': fields.Datetime.now(),
+        })
+        
+        # Log audit trail
+        self.env['messob.fms.audit.log'].log_business_action(
+            action='START_TRIP',
+            model=self._name,
+            record_id=self.id,
+            description=f"Trip {self.name} started by driver {self.assigned_driver_id.name}",
+            severity='medium'
+        )
+        
+        # Send notification to requester
+        self.message_post(
+            body=f"Your trip has started. Driver: {self.assigned_driver_id.name}",
+            subject=f"Trip Started: {self.name}",
+            partner_ids=[self.requester_id.id],
+        )
+        
+        return {
+            'type': 'ir.actions.client',
+            'tag': 'display_notification',
+            'params': {
+                'title': _('Trip Started'),
+                'message': _('Trip has been started successfully.'),
+                'type': 'success',
+                'sticky': False,
+            }
+        }
+    
+    def action_complete_trip(self):
+        """
+        Driver action: Complete the trip (change state to completed).
+        Called from Driver Mobile App when driver finishes journey.
+        
+        Security: Only assigned driver can complete their trip.
+        """
+        self.ensure_one()
+        
+        # Security check: Only assigned driver can complete
+        if self.assigned_driver_id.user_id.id != self.env.user.id:
+            raise UserError(_('Only the assigned driver can complete this trip.'))
+        
+        if self.state != 'in_progress':
+            raise UserError(_('Only in-progress trips can be completed.'))
+        
+        # Record completion time and change state
+        self.write({
+            'state': 'completed',
+            'actual_end_dt': fields.Datetime.now(),
+        })
+        
+        # Log audit trail
+        self.env['messob.fms.audit.log'].log_business_action(
+            action='COMPLETE',
+            model=self._name,
+            record_id=self.id,
+            description=f"Trip {self.name} completed by driver {self.assigned_driver_id.name}",
+            severity='medium'
+        )
+        
+        # Send notification to requester and dispatcher
+        self.message_post(
+            body=f"Your trip has been completed. Thank you for using MESSOB Fleet Management.",
+            subject=f"Trip Completed: {self.name}",
+            partner_ids=[self.requester_id.id],
+        )
+        
+        return {
+            'type': 'ir.actions.client',
+            'tag': 'display_notification',
+            'params': {
+                'title': _('Trip Completed'),
+                'message': _('Trip has been completed successfully.'),
+                'type': 'success',
+                'sticky': False,
+            }
+        }
+    
+    def action_report_incident(self, incident_type, description, location=None):
+        """
+        Driver action: Report an incident during trip.
+        Creates an audit log and notifies dispatcher.
+        
+        Args:
+            incident_type: Type of incident (accident, breakdown, delay, etc.)
+            description: Detailed description of the incident
+            location: Optional GPS coordinates
+        """
+        self.ensure_one()
+        
+        # Security check: Only assigned driver can report
+        if self.assigned_driver_id.user_id.id != self.env.user.id:
+            raise UserError(_('Only the assigned driver can report incidents.'))
+        
+        # Log incident in audit trail
+        incident_details = {
+            'trip': self.name,
+            'type': incident_type,
+            'description': description,
+            'location': location or 'Not provided',
+            'timestamp': fields.Datetime.now().isoformat(),
+        }
+        
+        self.env['messob.fms.audit.log'].log_business_action(
+            action='INCIDENT',
+            model=self._name,
+            record_id=self.id,
+            description=f"Incident reported on trip {self.name}: {incident_type}",
+            severity='high',
+            additional_data=incident_details
+        )
+        
+        # Send urgent notification to dispatcher
+        dispatcher_group = self.env.ref('messob_fleet.group_fms_dispatcher')
+        dispatcher_users = dispatcher_group.users
+        
+        self.message_post(
+            body=f"<strong>INCIDENT REPORTED</strong><br/>"
+                 f"Type: {incident_type}<br/>"
+                 f"Description: {description}<br/>"
+                 f"Location: {location or 'Not provided'}<br/>"
+                 f"Driver: {self.assigned_driver_id.name}<br/>"
+                 f"Time: {fields.Datetime.now()}",
+            subject=f"URGENT: Incident on Trip {self.name}",
+            partner_ids=dispatcher_users.mapped('partner_id').ids,
+            message_type='notification',
+        )
+        
+        return {
+            'type': 'ir.actions.client',
+            'tag': 'display_notification',
+            'params': {
+                'title': _('Incident Reported'),
+                'message': _('Dispatcher has been notified.'),
+                'type': 'warning',
+                'sticky': True,
+            }
+        }
+    
+    # Continue with parent write method to handle driver assignment tracking
+        if 'assigned_driver_id' in vals:
+            for rec in self:
+                if vals['assigned_driver_id'] != rec.assigned_driver_id.id:
+                    old_driver = rec.assigned_driver_id.name if rec.assigned_driver_id and rec.assigned_driver_id.exists() else 'None'
+                    new_driver_obj = self.env['messob.fms.driver'].browse(vals['assigned_driver_id']) if vals['assigned_driver_id'] else None
+                    new_driver = new_driver_obj.name if new_driver_obj and new_driver_obj.exists() else 'None'
+                    
+                    self.env['messob.fms.audit.log'].log_business_action(
+                        action='ASSIGN',
+                        model=rec._name,
+                        record_id=rec.id,
+                        description=f"Driver assignment changed for {rec.name}: {old_driver} → {new_driver}",
+                        severity='medium'
+                    )
         
         return super().write(vals)
 
