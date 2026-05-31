@@ -73,6 +73,13 @@ class MessobFmsTripDriver(models.Model):
         help='Any observations or issues during the trip.',
     )
 
+    fuel_log_ids = fields.One2many(
+        comodel_name='messob.fms.fuel.log',
+        inverse_name='trip_id',
+        string='Fuel Logs',
+        help='Fuel refill records for this trip.',
+    )
+
     # =========================================================================
     # COMPUTED FIELDS
     # =========================================================================
@@ -221,6 +228,29 @@ class MessobFmsTripDriver(models.Model):
         })
         
         return self._notify('Completed', 'Trip has been completed successfully.', 'success')
+
+    def action_open_fuel_log(self):
+        """
+        Driver action: Open fuel log wizard to record fuel fill.
+        Opens the fuel log wizard form for the current trip.
+        """
+        self.ensure_one()
+        self._assert_assigned_driver()
+
+        if self.state != 'in_progress':
+            raise UserError(_('Fuel can only be logged for trips that are in progress.'))
+
+        return {
+            'type': 'ir.actions.act_window',
+            'name': _('Log Fuel Fill'),
+            'res_model': 'messob.fms.fuel.log.wizard',
+            'view_mode': 'form',
+            'view_id': self.env.ref('messob_fleet.view_fuel_log_wizard_form').id,
+            'target': 'new',
+            'context': {
+                'default_trip_id': self.id,
+            },
+        }
 
     def action_report_issue(self):
         """

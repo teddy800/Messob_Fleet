@@ -18,6 +18,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import logo from "@/assets/logo.png";
 import { cn } from "@/lib/utils";
 import { useUserStore } from "@/store/useUserStore";
+import LanguageSwitcher from "./LanguageSwitcher";
 
 // The Master Menu List with Role-Based Access Control (RBAC)
 const menuItems = [
@@ -212,6 +213,11 @@ export default function Sidebar({ setOpen }) {
         <div className="px-4 py-3 mb-2 bg-white/5 rounded-xl border border-white/5">
            <p className="text-[10px] text-gray-400 uppercase font-bold tracking-tighter">Current User</p>
            <p className="text-sm font-bold truncate text-brand-gold">{user?.name || "Unauthorized"}</p>
+        </div>
+        
+        {/* Language Switcher */}
+        <div className="px-2 py-2">
+          <LanguageSwitcher variant="ghost" showLabel={true} />
         </div>
         
         <button 

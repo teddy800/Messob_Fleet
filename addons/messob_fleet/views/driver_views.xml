@@ -38,7 +38,7 @@
                 <field name="state"         string="Status" widget="badge" column_invisible="1"/>
 
                 <!-- Start button — visible when approved -->
-                <button name="action_start_trip"
+                <button name="action_depart"
                         string="Start"
                         type="object"
                         icon="fa-play"
@@ -47,7 +47,7 @@
                         confirm="Start this trip?"/>
 
                 <!-- Complete button — visible when in progress -->
-                <button name="action_complete_trip"
+                <button name="action_complete"
                         string="Complete"
                         type="object"
                         icon="fa-check"
@@ -80,14 +80,14 @@
             <form string="Trip Details">
 
                 <header>
-                    <button name="action_start_trip"
+                    <button name="action_depart"
                             string="Start Trip"
                             type="object"
                             class="btn-success"
                             invisible="state != 'approved'"
                             confirm="Start this trip now?"/>
 
-                    <button name="action_complete_trip"
+                    <button name="action_complete"
                             string="Complete Trip"
                             type="object"
                             class="btn-primary"
