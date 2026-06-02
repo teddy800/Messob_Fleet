@@ -13,6 +13,9 @@
 
 from odoo import models, _ # type: ignore
 from odoo.exceptions import UserError # type: ignore
+import logging
+
+_logger = logging.getLogger(__name__)
 
 
 class MessobFmsTripDispatcher(models.Model):
@@ -107,10 +110,10 @@ class MessobFmsTripDispatcher(models.Model):
     # =========================================================================
 
     def _send_approval_notification(self):
-        """Send email notification when trip is approved."""
+        """Send email and SMS notification when trip is approved."""
         self.ensure_one()
         
-        # Notify requester
+        # Send Email Notification
         if self.requester_id.email:
             subject = f"Trip Request Approved: {self.name}"
             body = f"""
@@ -137,7 +140,33 @@ class MessobFmsTripDispatcher(models.Model):
                 subtype_xmlid='mail.mt_comment',
             )
         
-        # Notify driver
+        # Send SMS Notification (SW-4)
+        if self.requester_id.phone:
+            sms_service = self.env['messob.fms.sms.service']
+            sms_message = (
+                f"MESSOB FMS: Your trip request {self.name} has been APPROVED. "
+                f"Vehicle: {self.assigned_vehicle_id.license_plate}, "
+                f"Driver: {self.assigned_driver_id.name}. "
+                f"Pickup: {self.start_dt.strftime('%Y-%m-%d %H:%M')} at {self.pickup}. "
+                f"Be ready on time!"
+            )
+            
+            try:
+                result = sms_service.send_sms(
+                    phone_number=self.requester_id.phone,
+                    message=sms_message,
+                    provider='auto',
+                    priority='high'
+                )
+                
+                if result.get('success'):
+                    _logger.info(f"SMS sent to {self.requester_id.name} for trip approval: {self.name}")
+                else:
+                    _logger.warning(f"SMS failed for trip approval {self.name}: {result.get('error')}")
+            except Exception as e:
+                _logger.error(f"Failed to send approval SMS: {e}")
+        
+        # Notify Driver via Email
         if self.assigned_driver_id.email:
             subject = f"New Trip Assignment: {self.name}"
             body = f"""
@@ -164,11 +193,36 @@ class MessobFmsTripDispatcher(models.Model):
                 message_type='email',
                 subtype_xmlid='mail.mt_comment',
             )
+        
+        # Notify Driver via SMS
+        if self.assigned_driver_id.phone:
+            sms_service = self.env['messob.fms.sms.service']
+            sms_message = (
+                f"MESSOB FMS: New trip assignment {self.name}. "
+                f"Requester: {self.requester_id.name}. "
+                f"Pickup: {self.start_dt.strftime('%Y-%m-%d %H:%M')} at {self.pickup}. "
+                f"Vehicle: {self.assigned_vehicle_id.license_plate}. "
+                f"Please be ready!"
+            )
+            
+            try:
+                result = sms_service.send_sms(
+                    phone_number=self.assigned_driver_id.phone,
+                    message=sms_message,
+                    provider='auto',
+                    priority='high'
+                )
+                
+                if result.get('success'):
+                    _logger.info(f"SMS sent to driver {self.assigned_driver_id.name} for trip {self.name}")
+            except Exception as e:
+                _logger.error(f"Failed to send driver SMS: {e}")
 
     def _send_rejection_notification(self):
-        """Send email notification when trip is rejected."""
+        """Send email and SMS notification when trip is rejected."""
         self.ensure_one()
         
+        # Send Email Notification
         if self.requester_id.email:
             subject = f"Trip Request Rejected: {self.name}"
             body = f"""
@@ -192,6 +246,30 @@ class MessobFmsTripDispatcher(models.Model):
                 message_type='email',
                 subtype_xmlid='mail.mt_comment',
             )
+        
+        # Send SMS Notification (SW-4)
+        if self.requester_id.phone:
+            sms_service = self.env['messob.fms.sms.service']
+            sms_message = (
+                f"MESSOB FMS: Your trip request {self.name} has been REJECTED. "
+                f"Please contact the dispatcher for more information or submit a new request. "
+                f"Thank you."
+            )
+            
+            try:
+                result = sms_service.send_sms(
+                    phone_number=self.requester_id.phone,
+                    message=sms_message,
+                    provider='auto',
+                    priority='normal'
+                )
+                
+                if result.get('success'):
+                    _logger.info(f"SMS sent to {self.requester_id.name} for trip rejection: {self.name}")
+                else:
+                    _logger.warning(f"SMS failed for trip rejection {self.name}: {result.get('error')}")
+            except Exception as e:
+                _logger.error(f"Failed to send rejection SMS: {e}")
 
     # =========================================================================
     # AVAILABILITY CHECK (BR-2, BR-3)

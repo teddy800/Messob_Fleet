@@ -1,0 +1,90 @@
+{
+  "nav": {
+    "dashboard": "Dashboard",
+    "requests": "Requests",
+    "newRequest": "New Request",
+    "myRequests": "My Requests",
+    "tracking": "Tracking",
+    "dispatch": "Dispatch",
+    "fleet": "Fleet",
+    "admin": "Administration",
+    "profile": "Profile",
+    "logout": "Logout"
+  },
+  "request": {
+    "title": "Vehicle Request",
+    "purpose": "Purpose",
+    "purposePlaceholder": "Describe the purpose of your trip briefly",
+    "vehicleCategory": "Vehicle Category",
+    "selectCategory": "Select a category",
+    "sedan": "Sedan",
+    "suv": "SUV",
+    "bus": "Bus",
+    "minibus": "Mini-Bus",
+    "pickup": "Pick-up",
+    "departureDate": "Departure Date",
+    "arrivalDate": "Arrival Date",
+    "pickupLocation": "Pickup Location",
+    "destination": "Destination",
+    "submit": "Submit",
+    "cancel": "Cancel",
+    "save": "Save",
+    "back": "Back",
+    "continue": "Continue",
+    "reviewRequest": "Review Request",
+    "confirmSubmit": "Confirm & Submit"
+  },
+  "status": {
+    "draft": "Draft",
+    "pending": "Pending",
+    "approved": "Approved",
+    "rejected": "Rejected",
+    "in_progress": "In Progress",
+    "completed": "Completed",
+    "closed": "Closed"
+  },
+  "wizard": {
+    "step1": "Basics",
+    "step2": "Dates",
+    "step3": "Route",
+    "step4": "Review",
+    "step5": "Confirm"
+  },
+  "dispatch": {
+    "approvalQueue": "Pending Requests",
+    "assignVehicle": "Assign Vehicle",
+    "assignDriver": "Assign Driver",
+    "approve": "Approve",
+    "reject": "Reject",
+    "fleetCalendar": "Fleet Calendar"
+  },
+  "tracking": {
+    "realTimeTracking": "Real-Time Tracking",
+    "viewProgress": "View Progress",
+    "serviceUsers": "Service Users",
+    "updatePickup": "Update Pickup"
+  },
+  "messages": {
+    "requestSubmitted": "Request submitted successfully!",
+    "requestApproved": "Request approved",
+    "requestRejected": "Request rejected",
+    "fillRequired": "Please fill in all required fields",
+    "success": "Success!",
+    "error": "An error occurred",
+    "loading": "Loading..."
+  },
+  "common": {
+    "yes": "Yes",
+    "no": "No",
+    "confirm": "Confirm",
+    "close": "Close",
+    "search": "Search",
+    "filter": "Filter",
+    "export": "Export",
+    "print": "Print",
+    "refresh": "Refresh",
+    "view": "View",
+    "edit": "Edit",
+    "delete": "Delete"
+  }
+}

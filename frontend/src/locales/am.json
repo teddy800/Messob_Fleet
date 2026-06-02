@@ -1,0 +1,90 @@
+{
+  "nav": {
+    "dashboard": "ዳሽቦርድ",
+    "requests": "ጥያቄዎች",
+    "newRequest": "አዲስ ጥያቄ",
+    "myRequests": "የእኔ ጥያቄዎች",
+    "tracking": "ክትትል",
+    "dispatch": "ማሰራጨት",
+    "fleet": "ተሽከርካሪዎች",
+    "admin": "አስተዳዳሪ",
+    "profile": "መገለጫ",
+    "logout": "ውጣ"
+  },
+  "request": {
+    "title": "የተሽከርካሪ ጥያቄ",
+    "purpose": "ዓላማ",
+    "purposePlaceholder": "የጉዞውን ዓላማ በአጭሩ ይግለጹ",
+    "vehicleCategory": "የተሽከርካሪ ዓይነት",
+    "selectCategory": "ዓይነት ይምረጡ",
+    "sedan": "ሴዳን",
+    "suv": "ኤስዩቪ",
+    "bus": "አውቶቡስ",
+    "minibus": "ሚኒ-አውቶቡስ",
+    "pickup": "ፒክ-አፕ",
+    "departureDate": "የመነሻ ቀን",
+    "arrivalDate": "የመድረሻ ቀን",
+    "pickupLocation": "የመነሻ ቦታ",
+    "destination": "መድረሻ",
+    "submit": "ላክ",
+    "cancel": "ሰርዝ",
+    "save": "አስቀምጥ",
+    "back": "ተመለስ",
+    "continue": "ቀጥል",
+    "reviewRequest": "ጥያቄ ይገምግሙ",
+    "confirmSubmit": "አረጋግጥና ላክ"
+  },
+  "status": {
+    "draft": "ረቂቅ",
+    "pending": "በመጠባበቅ ላይ",
+    "approved": "ተፈቅዷል",
+    "rejected": "ተቀባይነት አላገኘም",
+    "in_progress": "በሂደት ላይ",
+    "completed": "ተጠናቅቋል",
+    "closed": "ተዘግቷል"
+  },
+  "wizard": {
+    "step1": "መሰረታዊ መረጃ",
+    "step2": "የጉዞ ቀናት",
+    "step3": "መንገድ",
+    "step4": "ግምገማ",
+    "step5": "ማረጋገጫ"
+  },
+  "dispatch": {
+    "approvalQueue": "በመጠባበቅ ላይ ያሉ ጥያቄዎች",
+    "assignVehicle": "ተሽከርካሪ መድብ",
+    "assignDriver": "ሾፌር መድብ",
+    "approve": "ፍቀድ",
+    "reject": "ውድቅ አድርግ",
+    "fleetCalendar": "የፍሊት የቀን መቁጠሪያ"
+  },
+  "tracking": {
+    "realTimeTracking": "በቀጥታ ክትትል",
+    "viewProgress": "ሂደት ይመልከቱ",
+    "serviceUsers": "አገልግሎት ተጠቃሚዎች",
+    "updatePickup": "የመነሻ ቦታ አዘምን"
+  },
+  "messages": {
+    "requestSubmitted": "ጥያቄ በተሳካ ሁኔታ ተልኳል!",
+    "requestApproved": "ጥያቄ ተፈቅዷል",
+    "requestRejected": "ጥያቄ ውድቅ ተደርጓል",
+    "fillRequired": "እባክዎ የሚያስፈልጉ መስኮችን ይሙሉ",
+    "success": "ተሳክቷል!",
+    "error": "ስህተት ተፈጥሯል",
+    "loading": "እየጫነ..."
+  },
+  "common": {
+    "yes": "አዎ",
+    "no": "አይደለም",
+    "confirm": "አረጋግጥ",
+    "close": "ዝጋ",
+    "search": "ፈልግ",
+    "filter": "ማጣሪያ",
+    "export": "ወደ ውጭ ላክ",
+    "print": "አትም",
+    "refresh": "አድስ",
+    "view": "ይመልከቱ",
+    "edit": "አስተካክል",
+    "delete": "ሰርዝ"
+  }
+}

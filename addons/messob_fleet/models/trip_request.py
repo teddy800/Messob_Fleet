@@ -599,6 +599,89 @@ class MessobFmsTrip(models.Model):
                 cleaned += 1
         return cleaned
 
+    def get_collaborative_users(self):
+        """
+        FR-3.3: Get all service users (passengers) sharing the same vehicle
+        for collaborative pickup coordination.
+        
+        Returns:
+            dict: Collaborative users data with pickup locations
+        """
+        self.ensure_one()
+        
+        if not self.assigned_vehicle_id:
+            return {
+                'success': False,
+                'error': 'No vehicle assigned to this trip'
+            }
+        
+        # Find other approved/in-progress trips with the same vehicle
+        # that overlap in time (same route/day)
+        other_trips = self.search([
+            ('id', '!=', self.id),
+            ('assigned_vehicle_id', '=', self.assigned_vehicle_id.id),
+            ('state', 'in', ['approved', 'in_progress']),
+            ('start_dt', '<=', self.end_dt),
+            ('end_dt', '>=', self.start_dt),
+        ], order='start_dt asc')
+        
+        # Get geocoding service for coordinate resolution
+        geocoding_service = self.env['messob.fms.geocoding.service']
+        
+        # Build current trip data
+        current_coords = geocoding_service.geocode_address(self.pickup) if self.pickup else None
+        current_trip_data = {
+            'trip_id': self.id,
+            'request_id': self.name,
+            'requester': self.requester_id.name if self.requester_id else 'Unknown',
+            'pickup_address': self.pickup or '',
+            'pickup_coordinates': {
+                'lat': current_coords.get('latitude', 9.0320) if current_coords else 9.0320,
+                'lng': current_coords.get('longitude', 38.7469) if current_coords else 38.7469,
+            },
+            'start_time': self.start_dt.strftime('%Y-%m-%d %H:%M') if self.start_dt else '',
+            'status': self.state,
+        }
+        
+        # Build service users list
+        service_users = []
+        for trip in other_trips:
+            coords = geocoding_service.geocode_address(trip.pickup) if trip.pickup else None
+            
+            user_data = {
+                'trip_id': trip.id,
+                'request_id': trip.name,
+                'requester': trip.requester_id.name if trip.requester_id else 'Unknown',
+                'department': trip.requester_id.function if trip.requester_id and hasattr(trip.requester_id, 'function') else None,
+                'pickup_address': trip.pickup or '',
+                'pickup_coordinates': {
+                    'lat': coords.get('latitude', 9.0320) if coords else 9.0320,
+                    'lng': coords.get('longitude', 38.7469) if coords else 38.7469,
+                },
+                'start_time': trip.start_dt.strftime('%Y-%m-%d %H:%M') if trip.start_dt else '',
+                'status': trip.state,
+                'phone': trip.requester_id.phone if trip.requester_id and trip.requester_id.phone else None,
+                'email': trip.requester_id.email if trip.requester_id and trip.requester_id.email else None,
+                'contact_allowed': True,  # Can be controlled by privacy settings
+            }
+            service_users.append(user_data)
+        
+        # Vehicle information
+        vehicle_data = {
+            'id': self.assigned_vehicle_id.id,
+            'plate_no': self.assigned_vehicle_id.license_plate,
+            'model': self.assigned_vehicle_id.model_id.name if self.assigned_vehicle_id.model_id else 'Unknown',
+            'category': dict(self._fields['vehicle_category'].selection).get(self.vehicle_category, self.vehicle_category),
+        }
+        
+        return {
+            'success': True,
+            'current_trip': current_trip_data,
+            'service_users': service_users,
+            'vehicle': vehicle_data,
+            'total_passengers': len(service_users) + 1,
+        }
+
     def _check_resource_availability(self):
         """
         Check if assigned vehicle and driver are available (BR-2, BR-3).
