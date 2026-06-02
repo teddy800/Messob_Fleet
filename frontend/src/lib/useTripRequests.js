@@ -120,11 +120,22 @@ export async function fetchDrivers() {
  * Approve a trip: assign vehicle + driver then call action_approve
  */
 export async function approveTrip(tripId, vehicleId, driverPartnerId) {
-  await writeRecord("messob.fms.trip", [tripId], {
+  console.log("🚀 approveTrip called:", { tripId, vehicleId, driverPartnerId });
+  
+  // Step 1: Assign vehicle and driver
+  console.log("📝 Step 1: Writing vehicle and driver assignments...");
+  const writeResult = await writeRecord("messob.fms.trip", [tripId], {
     assigned_vehicle_id: vehicleId,
     assigned_driver_id: driverPartnerId,
   });
-  return callMethod("messob.fms.trip", "action_approve", [tripId]);
+  console.log("✅ Step 1 complete:", writeResult);
+  
+  // Step 2: Call action_approve
+  console.log("🎯 Step 2: Calling action_approve...");
+  const approveResult = await callMethod("messob.fms.trip", "action_approve", [tripId]);
+  console.log("✅ Step 2 complete:", approveResult);
+  
+  return approveResult;
 }
 
 /**

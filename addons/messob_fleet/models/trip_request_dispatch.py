@@ -43,6 +43,9 @@ class MessobFmsTripDispatcher(models.Model):
         self._assert_dispatcher()
 
         for rec in self:
+            # Refresh record to get latest data from database (in case assignments were just made)
+            rec.invalidate_recordset(['assigned_vehicle_id', 'assigned_driver_id', 'state'])
+            
             if rec.state != 'pending':
                 raise UserError(_('Only "Pending" requests can be approved.'))
             if not rec.assigned_vehicle_id:

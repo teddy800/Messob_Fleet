@@ -348,6 +348,9 @@ class MessobFmsTrip(models.Model):
                     description=f"Vehicle assignment changed for {rec.name}: {old_vehicle} → {new_vehicle}",
                     severity='medium'
                 )
+        
+        # CRITICAL: Call parent write method to actually save the changes!
+        return super().write(vals)
     
     # =========================================================================
     # DRIVER MOBILE APP ACTIONS (NFR-2.1: Safety - Simple driver interface)
