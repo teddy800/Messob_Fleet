@@ -23,9 +23,9 @@ export default function AuditLog() {
   const [selectedLog, setSelectedLog] = useState(null);
   const [filters, setFilters] = useState({
     searchTerm: "",
-    actionType: "",
-    severity: "",
-    success: "",
+    actionType: "all",
+    severity: "all",
+    success: "all",
     dateFrom: "",
     dateTo: "",
     userId: "",
@@ -84,15 +84,15 @@ export default function AuditLog() {
       domain.push(["resource_name", "ilike", filters.searchTerm]);
     }
 
-    if (filters.actionType) {
+    if (filters.actionType && filters.actionType !== "all") {
       domain.push(["action", "=", filters.actionType]);
     }
 
-    if (filters.severity) {
+    if (filters.severity && filters.severity !== "all") {
       domain.push(["severity", "=", filters.severity]);
     }
 
-    if (filters.success !== "") {
+    if (filters.success && filters.success !== "all") {
       domain.push(["success", "=", filters.success === "true"]);
     }
 
@@ -119,9 +119,9 @@ export default function AuditLog() {
   const clearFilters = () => {
     setFilters({
       searchTerm: "",
-      actionType: "",
-      severity: "",
-      success: "",
+      actionType: "all",
+      severity: "all",
+      success: "all",
       dateFrom: "",
       dateTo: "",
       userId: "",
@@ -173,9 +173,9 @@ export default function AuditLog() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 w-full">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
           <h1 className="text-2xl font-black text-brand-blue">Audit Log</h1>
           <p className="text-sm text-gray-500 mt-1">
@@ -200,97 +200,97 @@ export default function AuditLog() {
 
       {/* Filters Panel */}
       {showFilters && (
-        <Card className="border-2 border-brand-blue/20">
-          <CardContent className="p-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              <div className="space-y-2">
-                <Label className="text-xs font-bold uppercase text-gray-500">Search</Label>
-                <div className="relative">
-                  <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+        <Card className="border-2 border-brand-blue/20 bg-white shadow-lg relative z-10">
+          <CardContent className="p-6 bg-white min-h-[200px]">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 w-full">
+              <div className="space-y-2 w-full">
+                <Label className="text-xs font-bold uppercase text-gray-700 block">Search</Label>
+                <div className="relative w-full">
+                  <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400 z-10" />
                   <Input
                     placeholder="Search description or resource..."
                     value={filters.searchTerm}
                     onChange={(e) => handleFilterChange("searchTerm", e.target.value)}
-                    className="pl-10 h-11"
+                    className="pl-10 h-11 bg-white text-gray-900 border-gray-300 w-full"
                   />
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <Label className="text-xs font-bold uppercase text-gray-500">Action Type</Label>
+              <div className="space-y-2 w-full">
+                <Label className="text-xs font-bold uppercase text-gray-700 block">Action Type</Label>
                 <Select value={filters.actionType} onValueChange={(v) => handleFilterChange("actionType", v)}>
-                  <SelectTrigger className="h-11">
+                  <SelectTrigger className="h-11 bg-white text-gray-900 border-gray-300 w-full">
                     <SelectValue placeholder="All actions" />
                   </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="">All Actions</SelectItem>
-                    <SelectItem value="LOGIN">Login</SelectItem>
-                    <SelectItem value="LOGOUT">Logout</SelectItem>
-                    <SelectItem value="CREATE">Create</SelectItem>
-                    <SelectItem value="UPDATE">Update</SelectItem>
-                    <SelectItem value="DELETE">Delete</SelectItem>
-                    <SelectItem value="APPROVE">Approve</SelectItem>
-                    <SelectItem value="REJECT">Reject</SelectItem>
-                    <SelectItem value="ASSIGN">Assign</SelectItem>
+                  <SelectContent className="bg-white z-50">
+                    <SelectItem value="all" className="text-gray-900">All Actions</SelectItem>
+                    <SelectItem value="LOGIN" className="text-gray-900">Login</SelectItem>
+                    <SelectItem value="LOGOUT" className="text-gray-900">Logout</SelectItem>
+                    <SelectItem value="CREATE" className="text-gray-900">Create</SelectItem>
+                    <SelectItem value="UPDATE" className="text-gray-900">Update</SelectItem>
+                    <SelectItem value="DELETE" className="text-gray-900">Delete</SelectItem>
+                    <SelectItem value="APPROVE" className="text-gray-900">Approve</SelectItem>
+                    <SelectItem value="REJECT" className="text-gray-900">Reject</SelectItem>
+                    <SelectItem value="ASSIGN" className="text-gray-900">Assign</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
-              <div className="space-y-2">
-                <Label className="text-xs font-bold uppercase text-gray-500">Severity</Label>
+              <div className="space-y-2 w-full">
+                <Label className="text-xs font-bold uppercase text-gray-700 block">Severity</Label>
                 <Select value={filters.severity} onValueChange={(v) => handleFilterChange("severity", v)}>
-                  <SelectTrigger className="h-11">
+                  <SelectTrigger className="h-11 bg-white text-gray-900 border-gray-300 w-full">
                     <SelectValue placeholder="All severities" />
                   </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="">All Severities</SelectItem>
-                    <SelectItem value="low">Low</SelectItem>
-                    <SelectItem value="medium">Medium</SelectItem>
-                    <SelectItem value="high">High</SelectItem>
-                    <SelectItem value="critical">Critical</SelectItem>
+                  <SelectContent className="bg-white z-50">
+                    <SelectItem value="all" className="text-gray-900">All Severities</SelectItem>
+                    <SelectItem value="low" className="text-gray-900">Low</SelectItem>
+                    <SelectItem value="medium" className="text-gray-900">Medium</SelectItem>
+                    <SelectItem value="high" className="text-gray-900">High</SelectItem>
+                    <SelectItem value="critical" className="text-gray-900">Critical</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
-              <div className="space-y-2">
-                <Label className="text-xs font-bold uppercase text-gray-500">Status</Label>
+              <div className="space-y-2 w-full">
+                <Label className="text-xs font-bold uppercase text-gray-700 block">Status</Label>
                 <Select value={filters.success} onValueChange={(v) => handleFilterChange("success", v)}>
-                  <SelectTrigger className="h-11">
+                  <SelectTrigger className="h-11 bg-white text-gray-900 border-gray-300 w-full">
                     <SelectValue placeholder="All statuses" />
                   </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="">All Statuses</SelectItem>
-                    <SelectItem value="true">Success</SelectItem>
-                    <SelectItem value="false">Failed</SelectItem>
+                  <SelectContent className="bg-white z-50">
+                    <SelectItem value="all" className="text-gray-900">All Statuses</SelectItem>
+                    <SelectItem value="true" className="text-gray-900">Success</SelectItem>
+                    <SelectItem value="false" className="text-gray-900">Failed</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
-              <div className="space-y-2">
-                <Label className="text-xs font-bold uppercase text-gray-500">Date From</Label>
+              <div className="space-y-2 w-full">
+                <Label className="text-xs font-bold uppercase text-gray-700 block">Date From</Label>
                 <Input
                   type="date"
                   value={filters.dateFrom}
                   onChange={(e) => handleFilterChange("dateFrom", e.target.value)}
-                  className="h-11"
+                  className="h-11 bg-white text-gray-900 border-gray-300 w-full"
                 />
               </div>
 
-              <div className="space-y-2">
-                <Label className="text-xs font-bold uppercase text-gray-500">Date To</Label>
+              <div className="space-y-2 w-full">
+                <Label className="text-xs font-bold uppercase text-gray-700 block">Date To</Label>
                 <Input
                   type="date"
                   value={filters.dateTo}
                   onChange={(e) => handleFilterChange("dateTo", e.target.value)}
-                  className="h-11"
+                  className="h-11 bg-white text-gray-900 border-gray-300 w-full"
                 />
               </div>
 
-              <div className="col-span-2 flex items-end gap-2">
-                <Button variant="outline" onClick={clearFilters} className="h-11">
+              <div className="col-span-full md:col-span-2 flex items-end gap-2 w-full">
+                <Button variant="outline" onClick={clearFilters} className="h-11 bg-white text-gray-900 border-gray-300 hover:bg-gray-50 flex-1">
                   Clear Filters
                 </Button>
-                <Button onClick={fetchAuditLogs} className="h-11 bg-brand-blue hover:bg-blue-900">
+                <Button onClick={fetchAuditLogs} className="h-11 bg-brand-blue hover:bg-blue-900 text-white flex-1">
                   Apply Filters
                 </Button>
               </div>
@@ -425,62 +425,62 @@ export default function AuditLog() {
 
       {/* Detail Modal */}
       {selectedLog && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setSelectedLog(null)}>
-          <Card className="max-w-3xl w-full max-h-[90vh] overflow-auto" onClick={(e) => e.stopPropagation()}>
-            <CardContent className="p-6 space-y-6">
-              <div className="flex items-center justify-between">
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4" onClick={() => setSelectedLog(null)}>
+          <Card className="max-w-3xl w-full max-h-[90vh] overflow-auto bg-white shadow-2xl" onClick={(e) => e.stopPropagation()}>
+            <CardContent className="p-6 space-y-6 bg-white">
+              <div className="flex items-center justify-between border-b border-gray-200 pb-4">
                 <h2 className="text-xl font-black text-brand-blue">Audit Log Details</h2>
-                <Button variant="outline" size="sm" onClick={() => setSelectedLog(null)}>
+                <Button variant="outline" size="sm" onClick={() => setSelectedLog(null)} className="bg-white text-gray-900 border-gray-300 hover:bg-gray-50">
                   Close
                 </Button>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label className="text-xs font-bold uppercase text-gray-400">Timestamp</Label>
-                  <p className="text-sm font-semibold text-gray-900">
+              <div className="grid grid-cols-2 gap-6">
+                <div className="space-y-1">
+                  <Label className="text-xs font-bold uppercase text-gray-500">Timestamp</Label>
+                  <p className="text-base font-semibold text-gray-900 mt-1">
                     {format(new Date(selectedLog.timestamp), "PPpp")}
                   </p>
                 </div>
-                <div>
-                  <Label className="text-xs font-bold uppercase text-gray-400">User</Label>
-                  <p className="text-sm font-semibold text-gray-900">
+                <div className="space-y-1">
+                  <Label className="text-xs font-bold uppercase text-gray-500">User</Label>
+                  <p className="text-base font-semibold text-gray-900 mt-1">
                     {Array.isArray(selectedLog.user_id) ? selectedLog.user_id[1] : "System"}
                   </p>
                 </div>
-                <div>
-                  <Label className="text-xs font-bold uppercase text-gray-400">Action</Label>
-                  <p className="text-sm font-semibold text-gray-900">{selectedLog.action}</p>
+                <div className="space-y-1">
+                  <Label className="text-xs font-bold uppercase text-gray-500">Action</Label>
+                  <p className="text-base font-semibold text-gray-900 mt-1">{selectedLog.action}</p>
                 </div>
-                <div>
-                  <Label className="text-xs font-bold uppercase text-gray-400">Category</Label>
-                  <p className="text-sm font-semibold text-gray-900">{selectedLog.action_category}</p>
+                <div className="space-y-1">
+                  <Label className="text-xs font-bold uppercase text-gray-500">Category</Label>
+                  <p className="text-base font-semibold text-gray-900 mt-1">{selectedLog.action_category || "N/A"}</p>
                 </div>
-                <div>
-                  <Label className="text-xs font-bold uppercase text-gray-400">Severity</Label>
-                  <div className="mt-1">
+                <div className="space-y-1">
+                  <Label className="text-xs font-bold uppercase text-gray-500">Severity</Label>
+                  <div className="mt-2">
                     <SeverityBadge severity={selectedLog.severity} />
                   </div>
                 </div>
-                <div>
-                  <Label className="text-xs font-bold uppercase text-gray-400">Status</Label>
-                  <div className="mt-1">
+                <div className="space-y-1">
+                  <Label className="text-xs font-bold uppercase text-gray-500">Status</Label>
+                  <div className="mt-2">
                     <StatusBadge success={selectedLog.success} />
                   </div>
                 </div>
-                <div className="col-span-2">
-                  <Label className="text-xs font-bold uppercase text-gray-400">Resource</Label>
-                  <p className="text-sm font-semibold text-gray-900">
-                    {selectedLog.resource_display_name || `${selectedLog.resource_model} #${selectedLog.resource_id}`}
+                <div className="col-span-2 space-y-1">
+                  <Label className="text-xs font-bold uppercase text-gray-500">Resource</Label>
+                  <p className="text-base font-semibold text-gray-900 mt-1">
+                    {selectedLog.resource_display_name || `${selectedLog.resource_model || "N/A"} #${selectedLog.resource_id || ""}`}
                   </p>
                 </div>
-                <div className="col-span-2">
-                  <Label className="text-xs font-bold uppercase text-gray-400">Description</Label>
-                  <p className="text-sm text-gray-700 mt-1">{selectedLog.description}</p>
+                <div className="col-span-2 space-y-1">
+                  <Label className="text-xs font-bold uppercase text-gray-500">Description</Label>
+                  <p className="text-base text-gray-900 mt-1 leading-relaxed">{selectedLog.description}</p>
                 </div>
-                <div>
-                  <Label className="text-xs font-bold uppercase text-gray-400">IP Address</Label>
-                  <p className="text-sm font-semibold text-gray-900">{selectedLog.ip_address || "N/A"}</p>
+                <div className="space-y-1">
+                  <Label className="text-xs font-bold uppercase text-gray-500">IP Address</Label>
+                  <p className="text-base font-semibold text-gray-900 mt-1">{selectedLog.ip_address || "N/A"}</p>
                 </div>
               </div>
             </CardContent>
