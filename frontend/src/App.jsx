@@ -29,6 +29,7 @@ import RealTimeDashboard from "./features/dispatcher/RealTimeDashboard";
 import TripTracking from "./features/tracking/TripTracking";
 import TripSelection from "./features/tracking/TripSelection";
 import MaintenanceAlerts from "./features/maintenance/MaintenanceAlerts";
+import AuditLog from "./features/admin/AuditLog";
 
 export default function App() {
   return (
@@ -73,6 +74,7 @@ export default function App() {
               <Route path="admin/drivers" element={<DriverManagement />} />
               <Route path="admin/reports" element={<Reports />} />
               <Route path="admin/fuel-analytics" element={<FuelAnalytics />} />
+              <Route path="admin/audit-log" element={<AuditLog />} />
               <Route path="fleet" element={<ManageFleet />} />
             </Route>
 

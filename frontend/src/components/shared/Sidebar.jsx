@@ -7,6 +7,7 @@ import {
   Gauge, 
   LogOut,
   ShieldCheck,
+  Shield,
   Users,
   UserCheck,
   FileText,
@@ -103,6 +104,12 @@ const menuItems = [
     path: "/dashboard/admin/fuel-analytics",
     icon: Gauge,
     roles: ["Admin", "Dispatcher"],
+  },
+  {
+    name: "Audit Log",
+    path: "/dashboard/admin/audit-log",
+    icon: Shield,
+    roles: ["Admin"],
   },
   // Maintainer (Mechanic)
   {
