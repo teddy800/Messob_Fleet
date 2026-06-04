@@ -295,9 +295,82 @@ class MessobFmsMaintenanceAlert(models.Model):
         self.message_post(body=f"Alert dismissed by {self.env.user.name}")
 
     def action_complete_maintenance(self):
-        """Mark maintenance as completed."""
-        self.write({'status': 'completed'})
-        self.message_post(body=f"Maintenance marked as completed by {self.env.user.name}")
+        """
+        Mark maintenance as completed and create maintenance log entry.
+        
+        This method should be called when the mechanic confirms that
+        the maintenance work has been completed. It:
+        1. Creates a maintenance log entry to document the work
+        2. Marks the alert as completed
+        3. Links the alert to the maintenance log
+        4. Removes from dashboard notifications
+        
+        NOTE: For proper workflow, this should be called with context
+        containing maintenance details (cost, date, etc.). If no context
+        is provided, it creates a basic log entry.
+        """
+        self.ensure_one()
+        
+        # Get maintenance details from context (if provided)
+        ctx = self.env.context
+        service_date = ctx.get('service_date', fields.Date.today())
+        cost = ctx.get('cost', 0.0)
+        parts_cost = ctx.get('parts_cost', 0.0)
+        labor_cost = ctx.get('labor_cost', 0.0)
+        description = ctx.get('description', 'Maintenance completed as per alert')
+        service_provider = ctx.get('service_provider', 'Internal')
+        odometer = ctx.get('odometer', self.current_odometer or 0)
+        next_service_date = ctx.get('next_service_date', False)
+        next_service_odometer = ctx.get('next_service_odometer', False)
+        
+        # Get current user as mechanic
+        mechanic = self.env.user.partner_id
+        
+        # Create maintenance log entry
+        maintenance_log = self.env['messob.fms.maintenance.log'].create({
+            'vehicle_id': self.vehicle_id.id,
+            'service_type': self.service_type,
+            'date': service_date,
+            'cost': cost,
+            'parts_cost': parts_cost,
+            'labor_cost': labor_cost,
+            'description': description,
+            'service_provider': service_provider,
+            'mechanic_id': mechanic.id,
+            'odometer': odometer,
+            'next_service_date': next_service_date,
+            'next_service_odometer': next_service_odometer,
+            'vehicle_state': 'active',
+        })
+        
+        # Link alert to maintenance log
+        self.write({
+            'status': 'completed',
+            'maintenance_log_id': maintenance_log.id,
+            'dashboard_notification': False,  # Remove from dashboard
+        })
+        
+        # Post message to alert
+        self.message_post(
+            body=_(f"Maintenance completed by {self.env.user.name} on {service_date}. "
+                   f"Cost: {cost} ETB. Maintenance Log #{maintenance_log.id}")
+        )
+        
+        # Post message to maintenance log
+        maintenance_log.message_post(
+            body=_(f"Created from Maintenance Alert #{self.id}")
+        )
+        
+        return {
+            'type': 'ir.actions.client',
+            'tag': 'display_notification',
+            'params': {
+                'title': _('Maintenance Completed'),
+                'message': _('Maintenance logged successfully. Alert has been resolved.'),
+                'type': 'success',
+                'sticky': False,
+            }
+        }
 
     def action_send_notifications(self):
         """Send email and SMS notifications."""

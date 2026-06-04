@@ -23,6 +23,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { searchRead, callMethod } from '@/lib/odooApi';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
+import CompleteMaintenanceDialog from '@/components/shared/CompleteMaintenanceDialog';
 
 const priorityConfig = {
   critical: { 
@@ -76,6 +77,8 @@ export default function MaintenanceAlerts() {
   const [loading, setLoading] = useState(true);
   const [selectedAlert, setSelectedAlert] = useState(null);
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
+  const [completeDialogOpen, setCompleteDialogOpen] = useState(false);
+  const [alertToComplete, setAlertToComplete] = useState(null);
   const [activeTab, setActiveTab] = useState('pending');
   const [stats, setStats] = useState({
     critical: 0,
@@ -314,7 +317,10 @@ export default function MaintenanceAlerts() {
 
             {!['completed', 'dismissed'].includes(alert.status) && (
               <Button
-                onClick={() => handleAlertAction(alert.id, 'action_complete_maintenance')}
+                onClick={() => {
+                  setAlertToComplete(alert);
+                  setCompleteDialogOpen(true);
+                }}
                 variant="outline"
                 size="sm"
                 className="text-green-600 hover:text-green-700"
@@ -565,6 +571,14 @@ export default function MaintenanceAlerts() {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Complete Maintenance Dialog */}
+      <CompleteMaintenanceDialog
+        open={completeDialogOpen}
+        onOpenChange={setCompleteDialogOpen}
+        alert={alertToComplete}
+        onComplete={fetchAlerts}
+      />
     </div>
   );
 }
