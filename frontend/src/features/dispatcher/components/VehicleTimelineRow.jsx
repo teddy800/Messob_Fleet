@@ -6,6 +6,13 @@ export default function VehicleTimelineRow({ vehicle, date, onRefresh }) {
   const dayStart = startOfDay(date);
   const minutesInDay = 1440; // 24 hours * 60 minutes
 
+  // Debug: Log vehicle trips
+  console.log(`🚗 Vehicle ${vehicle.plate_no}:`, {
+    trips: vehicle.trips?.length || 0,
+    tripDetails: vehicle.trips,
+    maintenance: vehicle.maintenance?.length || 0
+  });
+
   // Calculate position and width for a time block
   const calculateBlockStyle = (startDt, endDt) => {
     const start = new Date(startDt);
@@ -79,14 +86,16 @@ export default function VehicleTimelineRow({ vehicle, date, onRefresh }) {
         </div>
 
         {/* Trip Blocks */}
-        {vehicle.trips && vehicle.trips.map(trip => (
-          <TripBlock
-            key={trip.id}
-            trip={trip}
-            style={calculateBlockStyle(trip.start_dt, trip.end_dt)}
-            onRefresh={onRefresh}
-          />
-        ))}
+        {vehicle.trips && vehicle.trips.length > 0 ? (
+          vehicle.trips.map(trip => (
+            <TripBlock
+              key={trip.id}
+              trip={trip}
+              style={calculateBlockStyle(trip.start_dt, trip.end_dt)}
+              onRefresh={onRefresh}
+            />
+          ))
+        ) : null}
 
         {/* Maintenance Blocks */}
         {vehicle.maintenance && vehicle.maintenance.map(maint => (

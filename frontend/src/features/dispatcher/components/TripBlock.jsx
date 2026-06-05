@@ -12,7 +12,7 @@ export default function TripBlock({ trip, style, onRefresh }) {
   const getStateColor = (state) => {
     switch (state) {
       case 'approved':
-        return 'bg-emerald-500/80 hover:bg-emerald-600/80';
+        return 'bg-blue-500 hover:bg-blue-600';
       case 'in_progress':
         return 'bg-emerald-500/80 hover:bg-emerald-600/80';
       case 'completed':
@@ -35,12 +35,16 @@ export default function TripBlock({ trip, style, onRefresh }) {
       <Tooltip>
         <TooltipTrigger asChild>
           <div
-            className={`absolute top-2 bottom-2 ${getStateColor(trip.state)} rounded-lg px-2 py-1 text-white text-xs font-bold cursor-pointer hover:shadow-lg hover:scale-105 transition-all overflow-hidden`}
+            key={trip.id}
+            className={`absolute top-2 bottom-2 ${getStateColor(trip.state)} rounded-lg px-2 py-1 text-white text-xs font-bold cursor-pointer hover:shadow-lg hover:scale-105 transition-all overflow-hidden z-10`}
             style={style}
           >
             <div className="flex flex-col h-full justify-center">
               <div className="truncate font-bold">{trip.request_id}</div>
               <div className="truncate text-[10px] opacity-90">{trip.requester}</div>
+              <div className="truncate text-[9px] opacity-75">
+                {trip.state === 'approved' ? '✓ APPROVED' : '● IN PROGRESS'}
+              </div>
             </div>
           </div>
         </TooltipTrigger>
@@ -51,8 +55,8 @@ export default function TripBlock({ trip, style, onRefresh }) {
               <FileText className="h-4 w-4 text-brand-blue flex-shrink-0" />
               <span className="font-bold text-brand-blue">{trip.request_id}</span>
               <span className={`ml-auto text-xs px-2 py-1 rounded-full ${
-                trip.state === 'approved' ? 'bg-emerald-100/40 text-emerald-600/80' :
-                trip.state === 'in_progress' ? 'bg-emerald-100/40 text-emerald-600/80' :
+                trip.state === 'approved' ? 'bg-blue-100 text-blue-600' :
+                trip.state === 'in_progress' ? 'bg-emerald-100 text-emerald-600' :
                 'bg-gray-100 text-gray-700'
               }`}>
                 {trip.state.replace('_', ' ').toUpperCase()}
