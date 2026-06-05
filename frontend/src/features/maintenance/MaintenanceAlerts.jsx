@@ -24,6 +24,7 @@ import { searchRead, callMethod } from '@/lib/odooApi';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import CompleteMaintenanceDialog from '@/components/shared/CompleteMaintenanceDialog';
+import { useUserStore } from '@/store/useUserStore';
 
 const priorityConfig = {
   critical: { 
@@ -88,6 +89,10 @@ export default function MaintenanceAlerts() {
     overdue: 0,
     total: 0
   });
+
+  // Get user role for permission checks
+  const user = useUserStore((state) => state.user);
+  const canCompleteMaintenance = user?.role === 'Maintainer' || user?.role === 'Admin';
 
   useEffect(() => {
     fetchAlerts();
@@ -315,7 +320,7 @@ export default function MaintenanceAlerts() {
               </Button>
             )}
 
-            {!['completed', 'dismissed'].includes(alert.status) && (
+            {!['completed', 'dismissed'].includes(alert.status) && canCompleteMaintenance && (
               <Button
                 onClick={() => {
                   setAlertToComplete(alert);
@@ -543,17 +548,19 @@ export default function MaintenanceAlerts() {
                   Acknowledge
                 </Button>
                 
-                <Button
-                  onClick={() => {
-                    handleAlertAction(selectedAlert.id, 'action_complete_maintenance');
-                    setViewDialogOpen(false);
-                  }}
-                  disabled={['completed', 'dismissed'].includes(selectedAlert.status)}
-                  variant="outline"
-                  className="text-green-600 hover:text-green-700"
-                >
-                  Mark Complete
-                </Button>
+                {canCompleteMaintenance && (
+                  <Button
+                    onClick={() => {
+                      handleAlertAction(selectedAlert.id, 'action_complete_maintenance');
+                      setViewDialogOpen(false);
+                    }}
+                    disabled={['completed', 'dismissed'].includes(selectedAlert.status)}
+                    variant="outline"
+                    className="text-green-600 hover:text-green-700"
+                  >
+                    Mark Complete
+                  </Button>
+                )}
                 
                 <Button
                   onClick={() => {
