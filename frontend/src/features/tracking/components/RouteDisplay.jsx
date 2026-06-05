@@ -163,7 +163,7 @@ export default function RouteDisplay({ tripId, className = "" }) {
           <div className="flex items-center gap-2">
             <Badge 
               variant={trip.state === 'approved' ? 'default' : 'secondary'}
-              className={trip.state === 'approved' ? 'bg-blue-500' : 'bg-amber-500'}
+              className={trip.state === 'approved' ? 'bg-emerald-500/70' : trip.state === 'in_progress' ? 'bg-emerald-500/70' : 'bg-amber-500'}
             >
               {trip.state.replace('_', ' ').toUpperCase()}
             </Badge>

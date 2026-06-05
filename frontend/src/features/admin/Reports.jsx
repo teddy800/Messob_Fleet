@@ -158,7 +158,7 @@ export default function Reports() {
     pending:     "bg-gradient-to-r from-amber-400 to-yellow-500 dark:from-amber-600 dark:to-yellow-700 text-white shadow-md",
     approved:    "bg-gradient-to-r from-green-500 to-emerald-600 dark:from-green-600 dark:to-emerald-700 text-white shadow-md",
     rejected:    "bg-gradient-to-r from-red-500 to-rose-600 dark:from-red-600 dark:to-rose-700 text-white shadow-md",
-    in_progress: "bg-gradient-to-r from-blue-500 to-cyan-600 dark:from-blue-600 dark:to-cyan-700 text-white shadow-md",
+    in_progress: "bg-gradient-to-r from-green-500 to-emerald-600 dark:from-green-600 dark:to-emerald-700 text-white shadow-md",
     completed:   "bg-gradient-to-r from-purple-500 to-indigo-600 dark:from-purple-600 dark:to-indigo-700 text-white shadow-md",
     closed:      "bg-gradient-to-r from-gray-500 to-slate-600 dark:from-gray-700 dark:to-slate-800 text-white shadow-md",
   };
@@ -209,7 +209,7 @@ export default function Reports() {
                 { label: "Total Trips",  value: analytics?.stats.total || 0,     icon: Car,         color: "text-blue-950 dark:text-blue-50", bg: "bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950 dark:to-blue-900", iconBg: "bg-blue-500 dark:bg-blue-600", border: "border-blue-300 dark:border-blue-700", labelColor: "text-blue-800 dark:text-blue-200" },
                 { label: "Pending",      value: analytics?.stats.pending || 0,   icon: Clock,       color: "text-amber-950 dark:text-amber-50", bg: "bg-gradient-to-br from-amber-50 to-amber-100 dark:from-amber-950 dark:to-amber-900", iconBg: "bg-amber-500 dark:bg-amber-600", border: "border-amber-300 dark:border-amber-700", labelColor: "text-amber-800 dark:text-amber-200" },
                 { label: "Approved",     value: analytics?.stats.approved || 0,  icon: CheckCircle, color: "text-emerald-900/80 dark:text-emerald-50", bg: "bg-gradient-to-br from-emerald-50/40 to-emerald-100/40 dark:from-emerald-950 dark:to-emerald-900", iconBg: "bg-emerald-400/70 dark:bg-emerald-500/70", border: "border-emerald-200/50 dark:border-emerald-700", labelColor: "text-emerald-700/80 dark:text-emerald-200" },
-                { label: "In Progress",  value: analytics?.stats.inProgress || 0, icon: Activity,   color: "text-blue-950 dark:text-blue-50", bg: "bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950 dark:to-blue-900", iconBg: "bg-blue-500 dark:bg-blue-600", border: "border-blue-300 dark:border-blue-700", labelColor: "text-blue-800 dark:text-blue-200" },
+                { label: "In Progress",  value: analytics?.stats.inProgress || 0, icon: Activity,   color: "text-emerald-900/80 dark:text-emerald-50", bg: "bg-gradient-to-br from-emerald-50/40 to-emerald-100/40 dark:from-emerald-950 dark:to-emerald-900", iconBg: "bg-emerald-400/70 dark:bg-emerald-500/70", border: "border-emerald-200/50 dark:border-emerald-700", labelColor: "text-emerald-700/80 dark:text-emerald-200" },
                 { label: "Completed",    value: analytics?.stats.completed || 0, icon: BadgeCheck,  color: "text-purple-950 dark:text-purple-50", bg: "bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-950 dark:to-purple-900", iconBg: "bg-purple-500 dark:bg-purple-600", border: "border-purple-300 dark:border-purple-700", labelColor: "text-purple-800 dark:text-purple-200" },
                 { label: "Rejected",     value: analytics?.stats.rejected || 0,  icon: XCircle,     color: "text-rose-900/80 dark:text-rose-50", bg: "bg-gradient-to-br from-rose-50/40 to-rose-100/40 dark:from-rose-950 dark:to-rose-900", iconBg: "bg-rose-400/70 dark:bg-rose-500/70", border: "border-rose-200/50 dark:border-rose-700", labelColor: "text-rose-700/80 dark:text-rose-200" },
               ].map((s) => (
@@ -258,12 +258,12 @@ export default function Reports() {
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2 text-sm">
-                    <Activity className="h-4 w-4 text-blue-600" />
+                    <Activity className="h-4 w-4 text-emerald-600" />
                     Active Trips
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-3xl font-black text-blue-600">{analytics?.stats.inProgress || 0}</p>
+                  <p className="text-3xl font-black text-emerald-600">{analytics?.stats.inProgress || 0}</p>
                   <p className="text-xs text-gray-500 mt-1">Currently in progress</p>
                 </CardContent>
               </Card>

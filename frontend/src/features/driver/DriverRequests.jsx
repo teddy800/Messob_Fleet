@@ -8,9 +8,9 @@ import { useUserStore } from "@/store/useUserStore";
 import { searchRead, writeRecord } from "@/lib/odooApi";
 
 const statusStyle = {
-  approved:    { label: "Assigned",    cls: "bg-blue-50 text-blue-600 border-blue-100" },
-  in_progress: { label: "In Progress", cls: "bg-amber-50 text-amber-600 border-amber-100" },
-  completed:   { label: "Completed",   cls: "bg-green-50 text-green-600 border-green-100" },
+  approved:    { label: "Assigned",    cls: "bg-emerald-50 text-emerald-600 border-emerald-100" },
+  in_progress: { label: "In Progress", cls: "bg-emerald-50 text-emerald-600 border-emerald-100" },
+  completed:   { label: "Completed",   cls: "bg-purple-50 text-purple-600 border-purple-100" },
 };
 
 export default function DriverRequests() {

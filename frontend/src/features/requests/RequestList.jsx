@@ -16,10 +16,30 @@ const statusConfig = {
     color: "text-emerald-500/70", bg: "bg-emerald-50/40",
     border: "border-emerald-200/50", badgeClass: "bg-emerald-100/40 text-emerald-600/80 border-emerald-200/40",
   },
+  in_progress: {
+    label: "In Progress", icon: CheckCircle,
+    color: "text-emerald-500/70", bg: "bg-emerald-50/40",
+    border: "border-emerald-200/50", badgeClass: "bg-emerald-100/40 text-emerald-600/80 border-emerald-200/40",
+  },
   rejected: {
     label: "Rejected", icon: XCircle,
     color: "text-rose-400/70", bg: "bg-rose-50/40",
     border: "border-rose-200/50", badgeClass: "bg-rose-100/40 text-rose-600/80 border-rose-200/40",
+  },
+  completed: {
+    label: "Completed", icon: CheckCircle,
+    color: "text-purple-500/70", bg: "bg-purple-50/40",
+    border: "border-purple-200/50", badgeClass: "bg-purple-100/40 text-purple-600/80 border-purple-200/40",
+  },
+  draft: {
+    label: "Draft", icon: Clock,
+    color: "text-gray-400/70", bg: "bg-gray-50/40",
+    border: "border-gray-200/50", badgeClass: "bg-gray-100/40 text-gray-600/80 border-gray-200/40",
+  },
+  closed: {
+    label: "Closed", icon: CheckCircle,
+    color: "text-slate-500/70", bg: "bg-slate-50/40",
+    border: "border-slate-200/50", badgeClass: "bg-slate-100/40 text-slate-600/80 border-slate-200/40",
   },
 };
 

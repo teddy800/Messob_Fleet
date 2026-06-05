@@ -334,7 +334,7 @@ export default function AuditLog() {
                     <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
                       Resource
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider hidden">
                       Description
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">
@@ -375,7 +375,7 @@ export default function AuditLog() {
                       <td className="px-6 py-4 text-sm text-gray-900">
                         {log.resource_display_name || `${log.resource_model || "N/A"} #${log.resource_id || ""}`}
                       </td>
-                      <td className="px-6 py-4 text-sm text-gray-700 max-w-md truncate">
+                      <td className="px-6 py-4 text-sm text-gray-700 max-w-md truncate hidden">
                         {log.description}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">

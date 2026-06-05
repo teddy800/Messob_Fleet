@@ -19,7 +19,7 @@ const statusBadge = {
   Pending:  "bg-amber-50/40 dark:bg-amber-900/10 text-amber-600/80 dark:text-amber-400/60 border-2 border-amber-200/50 dark:border-amber-700/30",
   Approved: "bg-emerald-50/40 dark:bg-emerald-900/10 text-emerald-600/80 dark:text-emerald-400/60 border-2 border-emerald-200/50 dark:border-emerald-700/30",
   Rejected: "bg-rose-50/40 dark:bg-rose-900/10 text-rose-600/80 dark:text-rose-400/60 border-2 border-rose-200/50 dark:border-rose-700/30",
-  "In Progress": "bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 border-2 border-blue-200 dark:border-blue-700",
+  "In Progress": "bg-emerald-50/40 dark:bg-emerald-900/10 text-emerald-600/80 dark:text-emerald-400/60 border-2 border-emerald-200/50 dark:border-emerald-700/30",
   Completed: "bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-400 border-2 border-purple-200 dark:border-purple-700",
 };
 

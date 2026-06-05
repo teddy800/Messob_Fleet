@@ -178,7 +178,7 @@ export default function Dashboard() {
   const getStatusColor = (state) => {
     const colors = {
       approved: 'bg-emerald-100/40 text-emerald-600/80',
-      in_progress: 'bg-blue-100 text-blue-700',
+      in_progress: 'bg-emerald-100/40 text-emerald-600/80',
       departed: 'bg-purple-100 text-purple-700',
       en_route: 'bg-orange-100 text-orange-700',
       arrived: 'bg-indigo-100 text-indigo-700'

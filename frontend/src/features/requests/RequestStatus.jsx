@@ -16,10 +16,30 @@ const statusConfig = {
     color: "text-emerald-600 dark:text-emerald-400", bg: "bg-emerald-50 dark:bg-emerald-900/30",
     border: "border-emerald-300 dark:border-emerald-600", activeBg: "bg-emerald-100 dark:bg-emerald-800/30",
   },
+  in_progress: {
+    label: "In Progress", icon: CheckCircle,
+    color: "text-emerald-600 dark:text-emerald-400", bg: "bg-emerald-50 dark:bg-emerald-900/30",
+    border: "border-emerald-300 dark:border-emerald-600", activeBg: "bg-emerald-100 dark:bg-emerald-800/30",
+  },
   rejected: {
     label: "Rejected", icon: XCircle,
     color: "text-rose-600 dark:text-rose-400", bg: "bg-rose-50 dark:bg-rose-900/30",
     border: "border-rose-300 dark:border-rose-600", activeBg: "bg-rose-100 dark:bg-rose-800/30",
+  },
+  completed: {
+    label: "Completed", icon: CheckCircle,
+    color: "text-blue-600 dark:text-blue-400", bg: "bg-blue-50 dark:bg-blue-900/30",
+    border: "border-blue-300 dark:border-blue-600", activeBg: "bg-blue-100 dark:bg-blue-800/30",
+  },
+  draft: {
+    label: "Draft", icon: Clock,
+    color: "text-gray-600 dark:text-gray-400", bg: "bg-gray-50 dark:bg-gray-900/30",
+    border: "border-gray-300 dark:border-gray-600", activeBg: "bg-gray-100 dark:bg-gray-800/30",
+  },
+  closed: {
+    label: "Closed", icon: CheckCircle,
+    color: "text-slate-600 dark:text-slate-400", bg: "bg-slate-50 dark:bg-slate-900/30",
+    border: "border-slate-300 dark:border-slate-600", activeBg: "bg-slate-100 dark:bg-slate-800/30",
   },
 };
 
@@ -48,6 +68,9 @@ export default function RequestStatus() {
     rejected: trips.filter((r) => r.state === "rejected").length,
   };
 
+  // Staff dashboard shows only these 3 summary cards
+  const displayedCardStates = ['pending', 'approved', 'rejected'];
+
   const recent = trips.slice(0, 3);
 
   return (
@@ -64,7 +87,8 @@ export default function RequestStatus() {
       ) : (
         <>
           <div className="grid gap-5 sm:grid-cols-3">
-            {Object.entries(statusConfig).map(([status, config]) => {
+            {displayedCardStates.map((status) => {
+              const config = statusConfig[status];
               const Icon = config.icon;
               return (
                 <Card
@@ -93,7 +117,8 @@ export default function RequestStatus() {
             <h2 className="text-base font-black uppercase tracking-widest text-gray-700 dark:text-gray-200 mb-4">Recent Requests</h2>
             <div className="space-y-3">
               {recent.map((req) => {
-                const displayState = ["approved", "in_progress"].includes(req.state) ? "approved" : req.state;
+                // Map each backend state directly to statusConfig
+                const displayState = req.state;
                 const config = statusConfig[displayState] || statusConfig.pending;
                 const Icon = config.icon;
                 return (
