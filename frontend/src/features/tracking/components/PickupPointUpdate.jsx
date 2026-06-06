@@ -1,5 +1,5 @@
-import { useState, useRef } from 'react';
-import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
+import { useState, useRef, useMemo } from 'react';
+import { MapContainer, TileLayer, Marker, useMapEvents, Popup } from 'react-leaflet';
 import L from 'leaflet';
 import { 
   MapPin, 
@@ -8,7 +8,9 @@ import {
   X, 
   Navigation, 
   AlertCircle,
-  CheckCircle
+  CheckCircle,
+  Move,
+  Info
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -16,6 +18,7 @@ import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { usePickupUpdate } from '../hooks/useRouteTracking';
 import { toast } from 'sonner';
+import './pickup-marker.css'; // FR-3.4: Draggable marker styles
 
 // Custom marker icon
 const createCustomIcon = (color) => {
@@ -63,6 +66,50 @@ function MapClickHandler({ onLocationSelect, isEditing }) {
   return null;
 }
 
+// Draggable Marker Component (FR-3.4: Dynamic Pickup Point Update)
+function DraggableMarker({ position, onDragEnd, icon, isEditable }) {
+  const markerRef = useRef(null);
+
+  const eventHandlers = useMemo(
+    () => ({
+      dragend() {
+        const marker = markerRef.current;
+        if (marker != null) {
+          const newPos = marker.getLatLng();
+          onDragEnd(newPos);
+        }
+      },
+    }),
+    [onDragEnd]
+  );
+
+  return (
+    <Marker
+      ref={markerRef}
+      position={position}
+      icon={icon}
+      draggable={isEditable}
+      eventHandlers={isEditable ? eventHandlers : {}}
+    >
+      <Popup>
+        <div className="text-center">
+          <div className="font-bold text-green-600 mb-1">
+            {isEditable ? '📍 Drag to Move' : '📍 Pickup Point'}
+          </div>
+          <div className="text-xs text-gray-600 mb-2">
+            {position[0].toFixed(5)}, {position[1].toFixed(5)}
+          </div>
+          {isEditable && (
+            <div className="text-xs text-blue-600 font-medium animate-pulse">
+              ✨ Drag this pin to adjust location
+            </div>
+          )}
+        </div>
+      </Popup>
+    </Marker>
+  );
+}
+
 export default function PickupPointUpdate({ 
   tripId, 
   currentPickup, 
@@ -95,6 +142,16 @@ export default function PickupPointUpdate({
     // Simple reverse geocoding simulation
     const address = `Location at ${latlng.lat.toFixed(4)}, ${latlng.lng.toFixed(4)}`;
     setNewAddress(address);
+    toast.success("📍 Location selected! You can also drag the marker to fine-tune.");
+  };
+
+  const handleMarkerDrag = (latlng) => {
+    setTempCoordinates({ lat: latlng.lat, lng: latlng.lng });
+    
+    // Update address when marker is dragged
+    const address = `Adjusted location at ${latlng.lat.toFixed(4)}, ${latlng.lng.toFixed(4)}`;
+    setNewAddress(address);
+    toast.success("📍 Pickup point adjusted via drag!");
   };
 
   const getCurrentLocation = () => {
@@ -245,7 +302,9 @@ export default function PickupPointUpdate({
             <Alert>
               <AlertCircle className="h-4 w-4" />
               <AlertDescription className="text-sm">
-                Click on the map below to select your new pickup location, or use "My Location" button.
+                <strong>Two ways to set location:</strong>
+                <br />• Click anywhere on the map
+                <br />• Or drag the green pin to fine-tune position
               </AlertDescription>
             </Alert>
           </div>
@@ -263,11 +322,12 @@ export default function PickupPointUpdate({
       )}
 
       {/* Map */}
-      <div className="h-64">
+      <div className="h-64 relative">
         <MapContainer
           center={displayCoordinates ? [displayCoordinates.lat, displayCoordinates.lng] : [9.0320, 38.7469]}
           zoom={15}
           style={{ height: '100%', width: '100%' }}
+          className={isEditing ? 'editing-mode' : ''}
           ref={mapRef}
         >
           <TileLayer
@@ -280,11 +340,13 @@ export default function PickupPointUpdate({
             isEditing={isEditing}
           />
 
-          {/* Pickup Marker */}
+          {/* Draggable Pickup Marker (FR-3.4) */}
           {displayCoordinates && (
-            <Marker 
-              position={[displayCoordinates.lat, displayCoordinates.lng]} 
+            <DraggableMarker
+              position={[displayCoordinates.lat, displayCoordinates.lng]}
+              onDragEnd={handleMarkerDrag}
               icon={pickupIcon}
+              isEditable={isEditing}
             />
           )}
         </MapContainer>
@@ -293,22 +355,40 @@ export default function PickupPointUpdate({
       {/* Instructions */}
       <div className="p-4 bg-gray-50">
         {isEditing ? (
-          <div className="flex items-start gap-2">
-            <Edit3 className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
-            <div>
-              <p className="text-sm font-medium text-blue-800">Editing Mode</p>
-              <p className="text-xs text-blue-700 mt-1">
-                Click anywhere on the map to set your new pickup location. The driver and dispatcher will be notified of the change.
-              </p>
+          <div className="space-y-3">
+            <div className="flex items-start gap-2">
+              <Edit3 className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
+              <div>
+                <p className="text-sm font-medium text-blue-800">✨ Editing Mode - FR-3.4 Enhanced</p>
+                <p className="text-xs text-blue-700 mt-1">
+                  <strong>Method 1:</strong> Click anywhere on the map to set location
+                  <br />
+                  <strong>Method 2:</strong> Drag the green pin for precise positioning
+                </p>
+              </div>
+            </div>
+            
+            <div className="flex items-center gap-2 text-xs text-blue-600 bg-blue-50 p-2 rounded-md border border-blue-200">
+              <Move className="h-4 w-4 animate-pulse" />
+              <span className="font-medium">
+                💡 Pro Tip: Click the pin on the map, then drag it to your exact pickup spot!
+              </span>
+            </div>
+
+            <div className="flex items-start gap-2 bg-amber-50 p-2 rounded-md border border-amber-200">
+              <Info className="h-4 w-4 text-amber-600 mt-0.5 flex-shrink-0" />
+              <div className="text-xs text-amber-800">
+                <strong>Notification:</strong> Driver and dispatcher will be automatically notified when you save the updated pickup location.
+              </div>
             </div>
           </div>
         ) : (
           <div className="flex items-start gap-2">
             <CheckCircle className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
             <div>
-              <p className="text-sm font-medium text-green-800">Pickup Point Set</p>
+              <p className="text-sm font-medium text-green-800">✅ Pickup Point Confirmed</p>
               <p className="text-xs text-green-700 mt-1">
-                Click "Update" to change your pickup location. Only approved trips can be updated.
+                Click "Update" to change your pickup location with drag-and-drop precision. Only approved trips can be updated.
               </p>
             </div>
           </div>

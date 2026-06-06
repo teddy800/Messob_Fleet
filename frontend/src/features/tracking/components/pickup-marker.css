@@ -1,0 +1,225 @@
+/* ========================================================================
+   FR-3.4: Dynamic Pickup Point Update - Draggable Marker Styles
+   ======================================================================== */
+
+/* Draggable marker hover effect */
+.leaflet-marker-icon.custom-marker {
+  transition: transform 0.2s ease, filter 0.2s ease;
+  cursor: move;
+}
+
+.leaflet-marker-draggable .custom-marker:hover {
+  transform: scale(1.15);
+  filter: drop-shadow(0 6px 16px rgba(0, 0, 0, 0.4));
+  z-index: 1000 !important;
+}
+
+/* Active dragging state */
+.leaflet-marker-dragging .custom-marker {
+  transform: scale(1.2);
+  filter: drop-shadow(0 8px 20px rgba(16, 185, 129, 0.6));
+  opacity: 0.9;
+  transition: none;
+  cursor: grabbing !important;
+}
+
+/* Pulse animation for draggable markers */
+@keyframes marker-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+  }
+  50% {
+    box-shadow: 0 0 0 10px rgba(16, 185, 129, 0);
+  }
+}
+
+.leaflet-marker-draggable .custom-marker::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  transform: translate(-50%, -50%) rotate(45deg);
+  animation: marker-pulse 2s ease-in-out infinite;
+}
+
+/* Cursor feedback for editing mode */
+.leaflet-container.editing-mode {
+  cursor: crosshair !important;
+}
+
+.leaflet-container.editing-mode .leaflet-marker-draggable {
+  cursor: move !important;
+}
+
+/* Popup styling for draggable marker */
+.leaflet-popup-content-wrapper {
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.leaflet-popup-content {
+  margin: 12px 16px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* Map click indicator */
+@keyframes click-ripple {
+  0% {
+    transform: scale(0);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(4);
+    opacity: 0;
+  }
+}
+
+.map-click-indicator {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background-color: rgba(16, 185, 129, 0.3);
+  border: 2px solid rgb(16, 185, 129);
+  animation: click-ripple 0.6s ease-out;
+  pointer-events: none;
+  z-index: 10000;
+}
+
+/* Loading state for map */
+.map-loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  backdrop-filter: blur(2px);
+}
+
+.map-loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid rgba(59, 130, 246, 0.1);
+  border-top-color: rgb(59, 130, 246);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Touch device optimizations */
+@media (hover: none) and (pointer: coarse) {
+  .leaflet-marker-draggable .custom-marker {
+    transform: scale(1.2);
+  }
+  
+  .leaflet-marker-draggable .custom-marker:active {
+    transform: scale(1.3);
+  }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .leaflet-popup-content-wrapper {
+    background-color: #1f2937;
+    color: #f3f4f6;
+  }
+  
+  .leaflet-popup-tip {
+    background-color: #1f2937;
+  }
+}
+
+/* Accessibility - Focus states */
+.leaflet-marker-icon:focus {
+  outline: 3px solid rgb(59, 130, 246);
+  outline-offset: 4px;
+}
+
+/* Animation for marker placement */
+@keyframes marker-drop {
+  0% {
+    transform: translateY(-100px) scale(0.5);
+    opacity: 0;
+  }
+  50% {
+    transform: translateY(0) scale(1.1);
+  }
+  100% {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
+.marker-just-placed .custom-marker {
+  animation: marker-drop 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+/* Grid overlay for precision (optional, can be toggled) */
+.map-precision-grid {
+  pointer-events: none;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-image: 
+    linear-gradient(rgba(0, 0, 0, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 0, 0, 0.05) 1px, transparent 1px);
+  background-size: 50px 50px;
+  z-index: 400;
+  opacity: 0.3;
+}
+
+/* Coordinate display tooltip */
+.coordinate-tooltip {
+  position: absolute;
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-family: monospace;
+  pointer-events: none;
+  z-index: 10000;
+  white-space: nowrap;
+}
+
+/* Success indicator after drag */
+.drag-success-indicator {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(16, 185, 129, 0.9);
+  color: white;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 600;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  animation: fade-in-out 2s ease-in-out;
+  z-index: 10000;
+  pointer-events: none;
+}
+
+@keyframes fade-in-out {
+  0%, 100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.8);
+  }
+  10%, 90% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
