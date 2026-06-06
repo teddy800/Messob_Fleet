@@ -79,12 +79,13 @@ export async function createTripRequest(formData) {
   const vehicle_category =
     VEHICLE_CATEGORY_TO_ODOO[formData.vehicleCategory] || formData.vehicleCategory;
 
-  const start_dt = toOdooDatetime(formData.departureDate, 8, 0);
-  let end_dt = toOdooDatetime(formData.arrivalDate, 17, 0);
+  // Parse time strings (format: "HH:MM")
+  const [startHour, startMinute] = formData.departureTime.split(':').map(Number);
+  const [endHour, endMinute] = formData.arrivalTime.split(':').map(Number);
 
-  if (new Date(end_dt.replace(" ", "T")) <= new Date(start_dt.replace(" ", "T"))) {
-    end_dt = toOdooDatetime(formData.arrivalDate, 18, 0);
-  }
+  // Use user-selected times
+  const start_dt = toOdooDatetime(formData.departureDate, startHour, startMinute);
+  const end_dt = toOdooDatetime(formData.arrivalDate, endHour, endMinute);
 
   return createRecord("messob.fms.trip", {
     purpose: formData.purpose.trim(),

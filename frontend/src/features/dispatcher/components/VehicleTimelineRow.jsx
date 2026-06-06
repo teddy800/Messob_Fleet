@@ -32,13 +32,17 @@ export default function VehicleTimelineRow({ vehicle, date, onRefresh }) {
   };
 
   // Determine vehicle status
+  // Priority: Active trips override maintenance status
   const getVehicleStatus = () => {
-    if (vehicle.maintenance && vehicle.maintenance.length > 0) {
-      return { color: 'yellow', label: 'Maintenance', icon: Wrench };
-    }
+    // If vehicle is actively on a trip, show as Occupied (highest priority)
     if (vehicle.trips && vehicle.trips.length > 0) {
       return { color: 'red', label: 'Occupied', icon: Car };
     }
+    // If vehicle has maintenance but no active trip, show as Maintenance
+    if (vehicle.maintenance && vehicle.maintenance.length > 0) {
+      return { color: 'yellow', label: 'Maintenance', icon: Wrench };
+    }
+    // Otherwise, vehicle is available
     return { color: 'green', label: 'Available', icon: Car };
   };
 
