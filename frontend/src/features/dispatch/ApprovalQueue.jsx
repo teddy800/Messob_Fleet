@@ -84,6 +84,17 @@ export default function ApprovalQueue() {
   };
 
   const handleApprove = async () => {
+    // CRITICAL VALIDATION: Check if trip schedule has passed
+    if (selected.start_dt) {
+      const scheduledDateTime = new Date(selected.start_dt);
+      const now = new Date();
+      
+      if (scheduledDateTime <= now) {
+        setError(`Cannot approve this request. The scheduled departure time (${scheduledDateTime.toLocaleString()}) has already passed. Please ask the requester to submit a new request with a future date/time.`);
+        return;
+      }
+    }
+
     setSubmitting(true);
     setError(null);
     try {
@@ -148,10 +159,16 @@ export default function ApprovalQueue() {
         <p className="text-sm text-gray-400">Loading...</p>
       ) : (
         <div className="space-y-3">
-          {sorted.map((req) => (
+          {sorted.map((req) => {
+            // Check if trip schedule has passed
+            const isExpired = req.start_dt && new Date(req.start_dt) <= new Date() && req.state === "pending";
+            
+            return (
             <div
               key={req.id}
-              className="bg-white dark:bg-gray-600 border border-gray-100 dark:border-gray-600 rounded-xl px-5 py-4 flex items-center justify-between hover:shadow-md transition-shadow"
+              className={`bg-white dark:bg-gray-600 border rounded-xl px-5 py-4 flex items-center justify-between hover:shadow-md transition-shadow ${
+                isExpired ? "border-red-300 bg-red-50/30" : "border-gray-100 dark:border-gray-600"
+              }`}
             >
               <div className="flex items-center gap-4 min-w-0">
                 <div className="hidden sm:flex flex-col items-center justify-center bg-brand-blue/5 rounded-lg px-3 py-2 shrink-0 dark:bg-gray-800">
@@ -168,6 +185,11 @@ export default function ApprovalQueue() {
                     <Badge className={`text-xs font-black uppercase tracking-widest border-2 shadow-md flex items-center gap-1.5 px-3 py-1.5 ${statusBadge[stateLabel(req.state)] || statusBadge.Pending}`}>
                       {statusIcon[stateLabel(req.state)] || statusIcon.Pending} {stateLabel(req.state)}
                     </Badge>
+                    {isExpired && (
+                      <Badge className="text-xs font-black uppercase tracking-widest border-2 shadow-md flex items-center gap-1.5 px-3 py-1.5 bg-red-50 text-red-600 border-red-300">
+                        <XCircle className="h-3 w-3" /> EXPIRED
+                      </Badge>
+                    )}
                   </div>
                   <p className="text-sm text-gray-600 font-medium mt-0.5 truncate">
                     <span className="font-bold text-gray-800">
@@ -176,8 +198,9 @@ export default function ApprovalQueue() {
                     {" · "}
                     {req.pickup} <ChevronRight className="inline h-3 w-3" /> {req.destination}
                   </p>
-                  <p className="text-xs text-gray-400 mt-0.5">
+                  <p className={`text-xs mt-0.5 ${isExpired ? "text-red-600 font-bold" : "text-gray-400"}`}>
                     {req.start_dt ? new Date(req.start_dt).toLocaleString() : "—"} · {req.purpose}
+                    {isExpired && " (Schedule has passed)"}
                   </p>
                 </div>
               </div>
@@ -190,7 +213,7 @@ export default function ApprovalQueue() {
                 <Eye className="h-4 w-4 mr-1.5" /> View
               </Button>
             </div>
-          ))}
+          )})}
         </div>
       )}
 
@@ -220,6 +243,20 @@ export default function ApprovalQueue() {
                       {stateLabel(selected.state)}
                     </Badge>
                   </div>
+
+                  {/* WARNING: Check if trip schedule has passed */}
+                  {selected.start_dt && new Date(selected.start_dt) <= new Date() && selected.state === "pending" && (
+                    <div className="bg-red-50 border-2 border-red-300 rounded-xl p-4 flex items-start gap-3">
+                      <XCircle className="h-5 w-5 text-red-600 shrink-0 mt-0.5" />
+                      <div>
+                        <p className="font-black text-red-700 text-sm">⚠️ EXPIRED REQUEST</p>
+                        <p className="text-xs text-red-600 mt-1">
+                          The scheduled departure time ({new Date(selected.start_dt).toLocaleString()}) has already passed. 
+                          This request cannot be approved. The requester must submit a new request with a future date/time.
+                        </p>
+                      </div>
+                    </div>
+                  )}
 
                   <div className="grid grid-cols-2 gap-4">
                     <DetailRow icon={MapPin}   label="Route"       value={`${selected.pickup} → ${selected.destination}`} />
@@ -252,10 +289,13 @@ export default function ApprovalQueue() {
                         <XCircle className="h-4 w-4 mr-2" /> Reject
                       </Button>
                       <Button
-                        className="flex-1 bg-green-600 hover:bg-green-700 text-white"
+                        className="flex-1 bg-green-600 hover:bg-green-700 text-white disabled:opacity-50 disabled:cursor-not-allowed"
                         onClick={() => setApproving(true)}
+                        disabled={selected.start_dt && new Date(selected.start_dt) <= new Date()}
+                        title={selected.start_dt && new Date(selected.start_dt) <= new Date() ? "Cannot approve expired trip request" : ""}
                       >
-                        <CheckCircle className="h-4 w-4 mr-2" /> Approve
+                        <CheckCircle className="h-4 w-4 mr-2" /> 
+                        {selected.start_dt && new Date(selected.start_dt) <= new Date() ? "Expired - Cannot Approve" : "Approve"}
                       </Button>
                     </DialogFooter>
                   )}

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -16,6 +16,7 @@ import {
   ChevronLeft,
   ClipboardCheck,
   Pencil,
+  XCircle,
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -37,22 +38,55 @@ const requestSchema = z
       .min(10, "Purpose must be at least 10 characters"),
     vehicleCategory: z.string().min(1, "Please select a vehicle category"),
     departureDate: z.date({ required_error: "Departure date is required" }),
+    departureTime: z.string().min(1, "Departure time is required"),
     arrivalDate: z.date({ required_error: "Arrival date is required" }),
+    arrivalTime: z.string().min(1, "Arrival time is required"),
     startPoint: z.string().min(1, "Starting point is required"),
     destination: z.string().min(1, "Destination is required"),
     passengers: z.string().optional(),
     tripType: z.string().optional(),
   })
-  .refine((data) => data.arrivalDate >= data.departureDate, {
-    message: "Arrival date must be on or after departure date",
-    path: ["arrivalDate"],
+  .refine((data) => {
+    // Check if departure date/time is in the past
+    if (!data.departureDate || !data.departureTime) return true; // Skip if not filled
+    
+    const now = new Date();
+    
+    // Work directly with the Date object to avoid timezone issues
+    const depDate = new Date(data.departureDate.getTime()); // Create a copy
+    const [hours, minutes] = data.departureTime.split(':');
+    depDate.setHours(parseInt(hours, 10), parseInt(minutes, 10), 0, 0);
+    
+    // Allow if departure is in the future
+    return depDate > now;
+  }, {
+    message: "Departure date/time cannot be in the past",
+    path: ["departureTime"],
+  })
+  .refine((data) => {
+    // Combine date and time for comparison - arrival must be after departure
+    if (!data.departureDate || !data.departureTime || !data.arrivalDate || !data.arrivalTime) return true;
+    
+    // Work directly with Date objects to avoid timezone issues
+    const departureDateTime = new Date(data.departureDate.getTime());
+    const [depHours, depMinutes] = data.departureTime.split(':');
+    departureDateTime.setHours(parseInt(depHours, 10), parseInt(depMinutes, 10), 0, 0);
+    
+    const arrivalDateTime = new Date(data.arrivalDate.getTime());
+    const [arrHours, arrMinutes] = data.arrivalTime.split(':');
+    arrivalDateTime.setHours(parseInt(arrHours, 10), parseInt(arrMinutes, 10), 0, 0);
+    
+    return arrivalDateTime > departureDateTime;
+  }, {
+    message: "Arrival date/time must be after departure date/time",
+    path: ["arrivalTime"],
   });
 
 const TOTAL_STEPS = 5;
 
 const STEP_FIELDS = {
   1: ["purpose", "vehicleCategory"],
-  2: ["departureDate", "arrivalDate"],
+  2: ["departureDate", "departureTime", "arrivalDate", "arrivalTime"],
   3: ["startPoint", "destination"],
 };
 
@@ -73,7 +107,7 @@ function FieldError({ message }) {
 
 function stepForErrors(errors) {
   if (errors.purpose || errors.vehicleCategory) return 1;
-  if (errors.departureDate || errors.arrivalDate) return 2;
+  if (errors.departureDate || errors.departureTime || errors.arrivalDate || errors.arrivalTime) return 2;
   if (errors.startPoint || errors.destination) return 3;
   return 1;
 }
@@ -93,15 +127,19 @@ function ReviewSummary({ data, onEdit }) {
     },
     {
       step: 2,
-      title: "Travel dates",
+      title: "Travel schedule",
       items: [
         {
           label: "Departure",
-          value: data.departureDate ? format(data.departureDate, "PPP") : null,
+          value: data.departureDate && data.departureTime 
+            ? `${format(data.departureDate, "PPP")} at ${data.departureTime}` 
+            : null,
         },
         {
           label: "Arrival",
-          value: data.arrivalDate ? format(data.arrivalDate, "PPP") : null,
+          value: data.arrivalDate && data.arrivalTime 
+            ? `${format(data.arrivalDate, "PPP")} at ${data.arrivalTime}` 
+            : null,
         },
       ],
     },
@@ -180,7 +218,9 @@ export default function RequestWizard() {
       purpose: "",
       vehicleCategory: "",
       departureDate: undefined,
+      departureTime: "08:00",
       arrivalDate: undefined,
+      arrivalTime: "17:00",
       passengers: "1",
       startPoint: "MESSOB Center HQ",
       destination: "",
@@ -189,6 +229,51 @@ export default function RequestWizard() {
   });
 
   const formData = watch();
+
+  // Helper function to get minimum time for date picker
+  const getMinimumTime = (selectedDate) => {
+    if (!selectedDate) return "00:00";
+    
+    const now = new Date();
+    const selected = new Date(selectedDate);
+    
+    // Check if selected date is today
+    const isToday = selected.toDateString() === now.toDateString();
+    
+    if (isToday) {
+      // Return current time + 1 hour as minimum (rounded to next hour)
+      const minTime = new Date(now.getTime() + 60 * 60 * 1000);
+      const hours = String(minTime.getHours()).padStart(2, '0');
+      const minutes = String(minTime.getMinutes()).padStart(2, '0');
+      return `${hours}:${minutes}`;
+    }
+    
+    return "00:00";
+  };
+
+  // Helper function to get minimum time for arrival based on departure
+  const getMinimumArrivalTime = (departureDate, departureTime, arrivalDate) => {
+    if (!departureDate || !departureTime || !arrivalDate) return "00:00";
+    
+    const depDate = new Date(departureDate);
+    const arrDate = new Date(arrivalDate);
+    
+    // If arrival is on same day as departure
+    if (depDate.toDateString() === arrDate.toDateString()) {
+      // Parse departure time and add minimum 30 minutes
+      const [hours, minutes] = departureTime.split(':');
+      const depDateTime = new Date(depDate);
+      depDateTime.setHours(parseInt(hours), parseInt(minutes), 0, 0);
+      
+      // Add 30 minutes minimum
+      const minArrivalTime = new Date(depDateTime.getTime() + 30 * 60 * 1000);
+      const minHours = String(minArrivalTime.getHours()).padStart(2, '0');
+      const minMinutes = String(minArrivalTime.getMinutes()).padStart(2, '0');
+      return `${minHours}:${minMinutes}`;
+    }
+    
+    return "00:00";
+  };
 
   const goToStep = (target) => {
     setStep(target);
@@ -202,7 +287,9 @@ export default function RequestWizard() {
       const valid = await trigger(Object.values(STEP_FIELDS).flat());
       if (!valid) {
         setStep(stepForErrors(errors));
-        toast.error("Please fill in all required fields before reviewing.");
+        // Show specific error message if available
+        const errorMessage = errors.arrivalTime?.message || errors.departureTime?.message || "Please fill in all required fields before reviewing.";
+        toast.error(errorMessage);
         return;
       }
       goToStep(4);
@@ -213,7 +300,9 @@ export default function RequestWizard() {
       const valid = await trigger();
       if (!valid) {
         setStep(stepForErrors(errors));
-        toast.error("Some required fields are missing. Please edit and try again.");
+        // Show specific error message if available
+        const errorMessage = errors.arrivalTime?.message || errors.departureTime?.message || "Some required fields are missing. Please edit and try again.";
+        toast.error(errorMessage);
         return;
       }
       goToStep(5);
@@ -223,7 +312,10 @@ export default function RequestWizard() {
     const fields = STEP_FIELDS[step];
     const valid = await trigger(fields);
     if (!valid) {
-      toast.error("Please fill in all required fields before continuing.");
+      // Show specific error message if available
+      const firstError = Object.values(errors).find(e => e?.message);
+      const errorMessage = firstError?.message || "Please fill in all required fields before continuing.";
+      toast.error(errorMessage);
       return;
     }
     goToStep(step + 1);
@@ -309,7 +401,7 @@ export default function RequestWizard() {
               {step === 1
                 ? "Trip Basics"
                 : step === 2
-                  ? "Travel Dates"
+                  ? "Schedule (Date & Time)"
                   : step === 3
                     ? "Destination"
                     : step === 4
@@ -369,6 +461,20 @@ export default function RequestWizard() {
 
               {step === 2 && (
                 <div className="grid gap-5 animate-in fade-in slide-in-from-right-4">
+                  {/* Validation Error Alert */}
+                  {(errors.departureTime || errors.arrivalTime) && (
+                    <div className="flex items-start gap-3 p-4 bg-red-50 rounded-xl border-l-4 border-red-500 dark:bg-red-900/20 dark:border-red-400">
+                      <XCircle className="h-5 w-5 text-red-600 shrink-0 mt-0.5 dark:text-red-400" />
+                      <div>
+                        <h4 className="text-xs font-black uppercase tracking-widest text-red-700 dark:text-red-400">Validation Error</h4>
+                        <p className="text-[11px] text-red-600 mt-1 font-medium dark:text-red-300">
+                          {errors.departureTime?.message || errors.arrivalTime?.message}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Departure Date & Time */}
                   <div className="grid gap-2">
                     <Label className="text-brand-blue font-black uppercase text-[10px] tracking-widest">
                       Departure Date <span className="text-red-500">*</span>
@@ -391,12 +497,20 @@ export default function RequestWizard() {
                               {field.value ? format(field.value, "PPP") : <span>Pick a date</span>}
                             </Button>
                           </PopoverTrigger>
-                          <PopoverContent className="w-auto p-0 rounded-2xl shadow-2xl dark:bg-gray-700">
+                          <PopoverContent className="w-auto p-0 rounded-2xl shadow-2xl dark:bg-gray-700" align="start">
                             <Calendar
                               mode="single"
                               selected={field.value}
-                              onSelect={field.onChange}
-                              disabled={(d) => d < new Date(new Date().setHours(0, 0, 0, 0))}
+                              onSelect={(date) => {
+                                field.onChange(date);
+                              }}
+                              disabled={(date) => {
+                                // Get today at midnight
+                                const today = new Date();
+                                today.setHours(0, 0, 0, 0);
+                                // Block ALL dates before today (yesterday, last week, last month, etc.)
+                                return date < today;
+                              }}
                               initialFocus
                             />
                           </PopoverContent>
@@ -405,6 +519,30 @@ export default function RequestWizard() {
                     />
                     <FieldError message={errors.departureDate?.message} />
                   </div>
+
+                  <div className="grid gap-2">
+                    <Label className="text-brand-blue font-black uppercase text-[10px] tracking-widest">
+                      Departure Time <span className="text-red-500">*</span>
+                    </Label>
+                    <input
+                      type="time"
+                      {...register("departureTime")}
+                      min={getMinimumTime(formData.departureDate)}
+                      className={cn(
+                        "h-11 border-2 rounded-xl text-sm px-3.5 w-full outline-none focus:border-brand-blue transition-colors dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300",
+                        errors.departureTime ? "border-red-400" : "border-gray-100 hover:border-brand-blue dark:border-gray-600"
+                      )}
+                    />
+                    <FieldError message={errors.departureTime?.message} />
+                    {formData.departureDate && new Date(formData.departureDate).toDateString() === new Date().toDateString() && (
+                      <p className="text-[10px] text-amber-600 font-medium flex items-center gap-1 dark:text-yellow-400">
+                        <span className="inline-block h-1 w-1 bg-amber-500 rounded-full" />
+                        Cannot schedule past times for today. Minimum: {getMinimumTime(formData.departureDate)}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Arrival Date & Time */}
                   <div className="grid gap-2">
                     <Label className="text-brand-blue font-black uppercase text-[10px] tracking-widest">
                       Arrival Date <span className="text-red-500">*</span>
@@ -427,12 +565,30 @@ export default function RequestWizard() {
                               {field.value ? format(field.value, "PPP") : <span>Pick a date</span>}
                             </Button>
                           </PopoverTrigger>
-                          <PopoverContent className="w-auto p-0 rounded-2xl shadow-2xl dark:bg-gray-700">
+                          <PopoverContent className="w-auto p-0 rounded-2xl shadow-2xl dark:bg-gray-700" align="start">
                             <Calendar
                               mode="single"
                               selected={field.value}
-                              onSelect={field.onChange}
-                              disabled={(d) => d < new Date(new Date().setHours(0, 0, 0, 0))}
+                              onSelect={(date) => {
+                                field.onChange(date);
+                              }}
+                              disabled={(date) => {
+                                // Get today at midnight
+                                const today = new Date();
+                                today.setHours(0, 0, 0, 0);
+                                
+                                // Block ALL dates before today (yesterday, last week, last month, etc.)
+                                if (date < today) return true;
+                                
+                                // If departure date is set, also block dates before departure
+                                if (formData.departureDate) {
+                                  const depDate = new Date(formData.departureDate);
+                                  depDate.setHours(0, 0, 0, 0);
+                                  return date < depDate;
+                                }
+                                
+                                return false;
+                              }}
                               initialFocus
                             />
                           </PopoverContent>
@@ -440,6 +596,29 @@ export default function RequestWizard() {
                       )}
                     />
                     <FieldError message={errors.arrivalDate?.message} />
+                  </div>
+
+                  <div className="grid gap-2">
+                    <Label className="text-brand-blue font-black uppercase text-[10px] tracking-widest">
+                      Arrival Time <span className="text-red-500">*</span>
+                    </Label>
+                    <input
+                      type="time"
+                      {...register("arrivalTime")}
+                      min={getMinimumArrivalTime(formData.departureDate, formData.departureTime, formData.arrivalDate)}
+                      className={cn(
+                        "h-11 border-2 rounded-xl text-sm px-3.5 w-full outline-none focus:border-brand-blue transition-colors dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300",
+                        errors.arrivalTime ? "border-red-400" : "border-gray-100 hover:border-brand-blue dark:border-gray-600"
+                      )}
+                    />
+                    <FieldError message={errors.arrivalTime?.message} />
+                    {formData.departureDate && formData.arrivalDate && 
+                     new Date(formData.departureDate).toDateString() === new Date(formData.arrivalDate).toDateString() && (
+                      <p className="text-[10px] text-amber-600 font-medium flex items-center gap-1 dark:text-yellow-400">
+                        <span className="inline-block h-1 w-1 bg-amber-500 rounded-full" />
+                        Same-day trip: Arrival must be at least 30 minutes after departure
+                      </p>
+                    )}
                   </div>
                 </div>
               )}

@@ -119,17 +119,13 @@ class MessobFmsTrip(models.Model):
     
     @api.constrains('start_dt')
     def _check_past_date(self):
-        """Prevent scheduling trips in the past (only for new records)."""
-        # Temporarily disabled to allow testing with any dates
-        # Uncomment to enforce past date validation in production
-        return
-        
-        # for rec in self:
-        #     if rec.start_dt and rec.start_dt < fields.Datetime.now():
-        #         # Allow editing existing records or draft records
-        #         if rec.id or rec.state == 'draft':
-        #             continue
-        #         raise UserError(_('Cannot schedule trips in the past.'))
+        """Prevent scheduling trips in the past."""
+        for rec in self:
+            if rec.start_dt and rec.start_dt < fields.Datetime.now():
+                # Allow editing existing approved/in-progress records
+                if rec.state in ['approved', 'in_progress', 'completed', 'closed']:
+                    continue
+                raise UserError(_('Cannot schedule trips in the past. Please select a future date/time.'))
     
     # =========================================================================
     # LOCATIONS (Wizard Step 3 — FR-1.1)
@@ -876,10 +872,12 @@ class MessobFmsTrip(models.Model):
         ])
         
         # NFR-1: Batch fetch all maintenance in date range (single query)
+        # Only show ACTIVE maintenance (vehicle is currently unavailable)
         all_maintenance = Maintenance.search([
             ('vehicle_id', 'in', vehicles.ids),
             ('date', '<=', end_dt),
             ('date', '>=', start_dt),
+            ('vehicle_state', '=', 'inactive'),  # Only inactive vehicles (under maintenance)
         ])
         
         # NFR-1: Group trips and maintenance by vehicle (in-memory, no DB queries)
@@ -921,10 +919,11 @@ class MessobFmsTrip(models.Model):
                 } for trip in trips],
                 'maintenance': [{
                     'id': maint.id,
-                    'type': maint.service_type if hasattr(maint, 'service_type') else 'Maintenance',
-                    'start_dt': maint.date.isoformat() if maint.date else None,
-                    'end_dt': maint.next_service_date.isoformat() if maint.next_service_date else None,
-                    'description': maint.description if hasattr(maint, 'description') else 'Scheduled maintenance',
+                    'type': dict(maint._fields['service_type'].selection).get(maint.service_type, 'Maintenance') if hasattr(maint, 'service_type') and maint.service_type else 'Maintenance',
+                    'start_dt': f"{maint.date.isoformat()}T00:00:00",  # Start of maintenance day
+                    'end_dt': f"{maint.date.isoformat()}T23:59:59",    # End of maintenance day
+                    'description': maint.description or f"{dict(maint._fields['service_type'].selection).get(maint.service_type, 'Maintenance')} - {maint.service_provider or 'Workshop'}",
+                    'status': maint.vehicle_state,
                 } for maint in maintenance],
             })
         
