@@ -58,19 +58,29 @@ export default function DriverManagement() {
     try {
       const data = await searchRead("messob.fms.driver", [], ["id", "name", "license_no", "phone", "status", "is_active", "partner_id"], 200);
       
-      // Fetch email for each driver if partner_id exists
+      // Fetch email for each driver
       const driversWithEmail = await Promise.all(
         data.map(async (driver) => {
+          let email = "";
+          
           if (driver.partner_id) {
             const partnerId = Array.isArray(driver.partner_id) ? driver.partner_id[0] : driver.partner_id;
             try {
+              // Try to get partner email
               const [partner] = await searchRead("res.partner", [["id", "=", partnerId]], ["email"], 1);
-              return { ...driver, email: partner?.email || "" };
+              email = partner?.email || "";
+              
+              // If no email on partner, try to find associated user
+              if (!email) {
+                const [user] = await searchRead("res.users", [["partner_id", "=", partnerId]], ["login"], 1);
+                email = user?.login || "";
+              }
             } catch (e) {
-              return { ...driver, email: "" };
+              console.warn(`Failed to fetch email for driver ${driver.name}:`, e.message);
             }
           }
-          return { ...driver, email: "" };
+          
+          return { ...driver, email };
         })
       );
       
@@ -99,18 +109,38 @@ export default function DriverManagement() {
 
   const openEdit = async (d) => {
     setEditing(d); 
+    setError(null);
+    setShowPassword(false);
+    setShowConfirmPassword(false);
+    
+    // Fetch email if not already loaded
+    let email = d.email || "";
+    if (!email && d.partner_id) {
+      const partnerId = Array.isArray(d.partner_id) ? d.partner_id[0] : d.partner_id;
+      try {
+        // Try partner email first
+        const [partner] = await searchRead("res.partner", [["id", "=", partnerId]], ["email"], 1);
+        email = partner?.email || "";
+        
+        // If no email on partner, try user login
+        if (!email) {
+          const [user] = await searchRead("res.users", [["partner_id", "=", partnerId]], ["login"], 1);
+          email = user?.login || "";
+        }
+      } catch (e) {
+        console.warn("Failed to fetch email:", e.message);
+      }
+    }
+    
     setForm({ 
       name: d.name, 
       license_no: d.license_no || "", 
       phone: d.phone || "",
-      email: d.email || "",
+      email: email,
       password: "",
       confirmPassword: ""
     });
     setIsActive(d.is_active ? "active" : "inactive"); 
-    setShowPassword(false);
-    setShowConfirmPassword(false);
-    setError(null); 
     setDialogOpen(true);
   };
 
