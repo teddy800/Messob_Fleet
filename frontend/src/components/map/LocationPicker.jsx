@@ -73,13 +73,32 @@ const ETHIOPIA_CITIES = [
   { name: "Semera", lat: 11.7833, lng: 41.0000, region: "Afar" },
 ];
 
-// Component to handle map clicks
+// Component to handle map clicks with visual feedback
 function MapClickHandler({ onLocationSelect, markerType }) {
-  useMapEvents({
+  const map = useMapEvents({
     click(e) {
       onLocationSelect(e.latlng, markerType);
+      
+      // Visual feedback: briefly pulse the clicked location
+      const circle = L.circle(e.latlng, {
+        color: markerType === "start" ? '#10b981' : '#ef4444',
+        fillColor: markerType === "start" ? '#10b981' : '#ef4444',
+        fillOpacity: 0.3,
+        radius: 500,
+        weight: 2
+      }).addTo(map);
+      
+      // Remove the circle after animation
+      setTimeout(() => {
+        map.removeLayer(circle);
+      }, 800);
     },
+    mousemove() {
+      // Change cursor to crosshair when hovering over map
+      map.getContainer().style.cursor = 'crosshair';
+    }
   });
+  
   return null;
 }
 
@@ -291,19 +310,37 @@ export default function LocationPicker({
           )}
         </div>
 
-        <p className="text-xs text-blue-100 mt-2 text-center">
+        <p className="text-xs text-blue-100 mt-2 text-center flex items-center justify-center gap-2">
           {activeMarker === "start" 
-            ? "🟢 Click on map or search to set starting point" 
-            : "🔴 Click on map or search to set destination"}
+            ? <><span className="inline-block w-2 h-2 bg-green-400 rounded-full animate-pulse"></span> Click anywhere on map or search to set starting point</> 
+            : <><span className="inline-block w-2 h-2 bg-red-400 rounded-full animate-pulse"></span> Click anywhere on map or search to set destination</>}
         </p>
       </div>
 
-      {/* Map Container */}
-      <div className="rounded-xl overflow-hidden shadow-2xl border-4 border-brand-blue/20">
+      {/* Map Container with Click Instructions */}
+      <div className="rounded-xl overflow-hidden shadow-2xl border-4 border-brand-blue/20 relative">
+        {/* Click Instruction Overlay */}
+        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[1000] pointer-events-none">
+          <div className={`px-4 py-2 rounded-lg shadow-lg font-bold text-xs backdrop-blur-sm ${
+            activeMarker === "start" 
+              ? "bg-green-500/90 text-white border-2 border-green-300" 
+              : "bg-red-500/90 text-white border-2 border-red-300"
+          }`}>
+            <div className="flex items-center gap-2">
+              <MapPin className="h-4 w-4" />
+              <span>
+                {activeMarker === "start" 
+                  ? "Click map to set PICKUP location" 
+                  : "Click map to set DESTINATION"}
+              </span>
+            </div>
+          </div>
+        </div>
+
         <MapContainer
           center={[9.0320, 38.7469]} // Addis Ababa center
           zoom={6}
-          style={{ height: "400px", width: "100%" }}
+          style={{ height: "400px", width: "100%", cursor: "crosshair" }}
           ref={mapRef}
         >
           <TileLayer
@@ -321,8 +358,14 @@ export default function LocationPicker({
             <Marker position={[startCoords.lat, startCoords.lng]} icon={startIcon}>
               <Popup>
                 <div className="text-center">
-                  <div className="font-bold text-green-600">Starting Point</div>
-                  <div className="text-sm text-gray-600">{startPoint}</div>
+                  <div className="font-bold text-green-600 flex items-center justify-center gap-1">
+                    <MapPin className="h-4 w-4" />
+                    Starting Point
+                  </div>
+                  <div className="text-sm text-gray-600 mt-1">{startPoint}</div>
+                  <div className="text-xs text-gray-400 mt-1">
+                    Lat: {startCoords.lat.toFixed(4)}, Lng: {startCoords.lng.toFixed(4)}
+                  </div>
                 </div>
               </Popup>
             </Marker>
@@ -333,8 +376,14 @@ export default function LocationPicker({
             <Marker position={[destCoords.lat, destCoords.lng]} icon={destinationIcon}>
               <Popup>
                 <div className="text-center">
-                  <div className="font-bold text-red-600">Destination</div>
-                  <div className="text-sm text-gray-600">{destination}</div>
+                  <div className="font-bold text-red-600 flex items-center justify-center gap-1">
+                    <MapPin className="h-4 w-4" />
+                    Destination
+                  </div>
+                  <div className="text-sm text-gray-600 mt-1">{destination}</div>
+                  <div className="text-xs text-gray-400 mt-1">
+                    Lat: {destCoords.lat.toFixed(4)}, Lng: {destCoords.lng.toFixed(4)}
+                  </div>
                 </div>
               </Popup>
             </Marker>
