@@ -4,6 +4,7 @@ import {useUserStore} from "@/store/useUserStore"
 import { Menu, Moon, Sun, User } from "lucide-react";
 import Sidebar from "../shared/Sidebar";
 import UserAvatar from "../shared/UserAvatar";
+import HelpSystem from "../shared/HelpSystem";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Toaster } from "@/components/ui/sonner"; // For the "Check" notifications
@@ -96,6 +97,9 @@ export default function DashboardLayout() {
       {/* --- GLOBAL NOTIFICATIONS --- */}
       {/* This allows toast.success() to work throughout the app */}
       <Toaster position="top-right" richColors closeButton />
+      
+      {/* --- CONTEXT-SENSITIVE HELP SYSTEM --- */}
+      <HelpSystem />
     </div>
   );
 }
