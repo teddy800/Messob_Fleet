@@ -49,16 +49,136 @@ const createCustomIcon = (color) => {
 const startIcon = createCustomIcon("#10b981"); // Green for start
 const destinationIcon = createCustomIcon("#ef4444"); // Red for destination
 
-// Ethiopia major cities with coordinates
+// Ethiopia comprehensive locations (110+ locations matching backend)
 const ETHIOPIA_CITIES = [
-  { name: "Addis Ababa", lat: 9.0320, lng: 38.7469, region: "Addis Ababa" },
-  { name: "MESSOB Center HQ", lat: 9.0320, lng: 38.7469, region: "Addis Ababa" },
+  // =========================================================================
+  // ADDIS ABABA - Comprehensive Locations (90+ locations)
+  // =========================================================================
+  
+  // Central Addis Ababa
+  { name: "MESSOB Center HQ", lat: 9.0320, lng: 38.7469, region: "Addis Ababa - Central" },
+  { name: "Addis Ababa", lat: 9.0320, lng: 38.7469, region: "Addis Ababa - Central" },
+  { name: "Meskel Square", lat: 9.0105, lng: 38.7614, region: "Addis Ababa - Central" },
+  { name: "Mexico Square", lat: 9.0192, lng: 38.7525, region: "Addis Ababa - Central" },
+  { name: "Arat Kilo", lat: 9.0400, lng: 38.7600, region: "Addis Ababa - Central" },
+  { name: "Sidist Kilo", lat: 9.0380, lng: 38.7630, region: "Addis Ababa - Central" },
+  { name: "Saris", lat: 9.0150, lng: 38.7400, region: "Addis Ababa - Central" },
+  { name: "6 Kilo", lat: 9.0410, lng: 38.7640, region: "Addis Ababa - Central" },
+  
+  // Bole Area
+  { name: "Bole", lat: 8.9950, lng: 38.7850, region: "Addis Ababa - Bole" },
+  { name: "Bole Airport", lat: 8.9806, lng: 38.7992, region: "Addis Ababa - Bole" },
+  { name: "Bole International Airport", lat: 8.9779, lng: 38.7993, region: "Addis Ababa - Bole" },
+  { name: "Bole Medhanialem", lat: 9.0050, lng: 38.7850, region: "Addis Ababa - Bole" },
+  { name: "Bole Arabsa", lat: 8.9950, lng: 38.8100, region: "Addis Ababa - Bole" },
+  { name: "Bole Bulbula", lat: 8.9806, lng: 38.7578, region: "Addis Ababa - Bole" },
+  { name: "Bole Road", lat: 8.9900, lng: 38.7700, region: "Addis Ababa - Bole" },
+  { name: "Bole Michael", lat: 9.0000, lng: 38.7800, region: "Addis Ababa - Bole" },
+  { name: "Bole Rwanda", lat: 8.9980, lng: 38.7920, region: "Addis Ababa - Bole" },
+  { name: "Bole Atlas", lat: 8.9930, lng: 38.7880, region: "Addis Ababa - Bole" },
+  { name: "Edna Mall", lat: 8.9970, lng: 38.7920, region: "Addis Ababa - Bole" },
+  
+  // Kirkos Sub-city
+  { name: "Kirkos", lat: 9.0250, lng: 38.7550, region: "Addis Ababa - Kirkos" },
+  { name: "CMC", lat: 9.0100, lng: 38.7650, region: "Addis Ababa - Kirkos" },
+  { name: "Mekanisa", lat: 9.0050, lng: 38.7700, region: "Addis Ababa - Kirkos" },
+  { name: "Akaki Kality", lat: 8.8950, lng: 38.7650, region: "Addis Ababa - Kirkos" },
+  
+  // Arada Sub-city
+  { name: "Piazza", lat: 9.0420, lng: 38.7500, region: "Addis Ababa - Arada" },
+  { name: "Arada", lat: 9.0380, lng: 38.7450, region: "Addis Ababa - Arada" },
+  { name: "De Gaulle Square", lat: 9.0330, lng: 38.7420, region: "Addis Ababa - Arada" },
+  { name: "Tewodros Square", lat: 9.0390, lng: 38.7480, region: "Addis Ababa - Arada" },
+  { name: "Churchill Avenue", lat: 9.0280, lng: 38.7450, region: "Addis Ababa - Arada" },
+  { name: "Arada Giorgis", lat: 9.0360, lng: 38.7460, region: "Addis Ababa - Arada" },
+  
+  // Lideta Sub-city
+  { name: "Mercato", lat: 9.0370, lng: 38.7444, region: "Addis Ababa - Lideta" },
+  { name: "Merkato", lat: 9.0300, lng: 38.7350, region: "Addis Ababa - Lideta" },
+  { name: "Lideta", lat: 9.0320, lng: 38.7380, region: "Addis Ababa - Lideta" },
+  { name: "Autobus Tera", lat: 9.0340, lng: 38.7360, region: "Addis Ababa - Lideta" },
+  { name: "Legehar", lat: 9.0450, lng: 38.7550, region: "Addis Ababa - Lideta" },
+  
+  // Gulele Sub-city
+  { name: "Gulele", lat: 9.0650, lng: 38.7300, region: "Addis Ababa - Gulele" },
+  { name: "Entoto", lat: 9.0800, lng: 38.7400, region: "Addis Ababa - Gulele" },
+  { name: "Shiromeda", lat: 9.0550, lng: 38.7350, region: "Addis Ababa - Gulele" },
+  { name: "Gullele Botanic Garden", lat: 9.0680, lng: 38.7320, region: "Addis Ababa - Gulele" },
+  
+  // Yeka Sub-city
+  { name: "Megenagna", lat: 9.0250, lng: 38.7950, region: "Addis Ababa - Yeka" },
+  { name: "Gerji", lat: 9.0100, lng: 38.8050, region: "Addis Ababa - Yeka" },
+  { name: "Summit", lat: 9.0200, lng: 38.8100, region: "Addis Ababa - Yeka" },
+  { name: "Ayat", lat: 9.0450, lng: 38.8300, region: "Addis Ababa - Yeka" },
+  { name: "CMC Mazoria", lat: 9.0080, lng: 38.8000, region: "Addis Ababa - Yeka" },
+  { name: "Kality", lat: 8.9200, lng: 38.7500, region: "Addis Ababa - Yeka" },
+  { name: "Yeka Abado", lat: 9.0350, lng: 38.8200, region: "Addis Ababa - Yeka" },
+  { name: "Megenagna 2", lat: 9.0280, lng: 38.7980, region: "Addis Ababa - Yeka" },
+  
+  // Nifas Silk-Lafto
+  { name: "Nifas Silk", lat: 8.9800, lng: 38.7200, region: "Addis Ababa - Nifas Silk" },
+  { name: "Lafto", lat: 8.9650, lng: 38.7300, region: "Addis Ababa - Lafto" },
+  { name: "Gotera", lat: 8.9700, lng: 38.7350, region: "Addis Ababa - Nifas Silk" },
+  
+  // Addis Ketema
+  { name: "Addis Ketema", lat: 9.0380, lng: 38.7350, region: "Addis Ababa - Addis Ketema" },
+  { name: "Shiro Meda", lat: 9.0550, lng: 38.7350, region: "Addis Ababa - Addis Ketema" },
+  
+  // Kolfe Keranio
+  { name: "Kolfe", lat: 9.0150, lng: 38.6950, region: "Addis Ababa - Kolfe" },
+  { name: "Keranio", lat: 9.0200, lng: 38.6900, region: "Addis Ababa - Keranio" },
+  { name: "Sebategna", lat: 9.0100, lng: 38.7000, region: "Addis Ababa - Kolfe" },
+  
+  // Lemi Kura
+  { name: "Lemi Kura", lat: 9.0000, lng: 38.6800, region: "Addis Ababa - Lemi Kura" },
+  { name: "Gurd Shola", lat: 9.0050, lng: 38.6850, region: "Addis Ababa - Lemi Kura" },
+  
+  // Akaki Kaliti
+  { name: "Akaki", lat: 8.8800, lng: 38.7600, region: "Addis Ababa - Akaki" },
+  { name: "Kaliti", lat: 8.9100, lng: 38.7450, region: "Addis Ababa - Kaliti" },
+  
+  // Major Landmarks & Institutions
+  { name: "National Stadium", lat: 9.0180, lng: 38.7580, region: "Addis Ababa - Landmarks" },
+  { name: "Stadium", lat: 9.0180, lng: 38.7580, region: "Addis Ababa - Landmarks" },
+  { name: "University", lat: 9.0370, lng: 38.7620, region: "Addis Ababa - Education" },
+  { name: "Addis Ababa University", lat: 9.0370, lng: 38.7620, region: "Addis Ababa - Education" },
+  { name: "Black Lion Hospital", lat: 9.0380, lng: 38.7650, region: "Addis Ababa - Healthcare" },
+  { name: "Menelik II Hospital", lat: 9.0350, lng: 38.7600, region: "Addis Ababa - Healthcare" },
+  { name: "National Theatre", lat: 9.0310, lng: 38.7440, region: "Addis Ababa - Culture" },
+  { name: "Hilton Hotel", lat: 9.0320, lng: 38.7490, region: "Addis Ababa - Hotels" },
+  { name: "Sheraton Hotel", lat: 9.0380, lng: 38.7520, region: "Addis Ababa - Hotels" },
+  { name: "African Union", lat: 9.0150, lng: 38.7630, region: "Addis Ababa - Diplomatic" },
+  { name: "AU Headquarters", lat: 9.0150, lng: 38.7630, region: "Addis Ababa - Diplomatic" },
+  { name: "ECA Conference Center", lat: 9.0130, lng: 38.7620, region: "Addis Ababa - Diplomatic" },
+  { name: "Millennium Hall", lat: 9.0280, lng: 38.7580, region: "Addis Ababa - Events" },
+  { name: "National Palace", lat: 9.0330, lng: 38.7470, region: "Addis Ababa - Government" },
+  { name: "Menelik Palace", lat: 9.0340, lng: 38.7460, region: "Addis Ababa - Government" },
+  { name: "Holy Trinity Cathedral", lat: 9.0350, lng: 38.7550, region: "Addis Ababa - Religious" },
+  
+  // Shopping & Commercial Areas
+  { name: "Shola Market", lat: 9.0400, lng: 38.7500, region: "Addis Ababa - Shopping" },
+  { name: "Asko", lat: 9.0100, lng: 38.7400, region: "Addis Ababa - Shopping" },
+  { name: "Tor Hailoch", lat: 9.0150, lng: 38.7300, region: "Addis Ababa - Shopping" },
+  
+  // Residential Areas
+  { name: "Old Airport", lat: 9.0080, lng: 38.7850, region: "Addis Ababa - Residential" },
+  { name: "Kazanchis", lat: 9.0220, lng: 38.7620, region: "Addis Ababa - Residential" },
+  { name: "Sarbet", lat: 9.0200, lng: 38.7500, region: "Addis Ababa - Residential" },
+  { name: "Mexico", lat: 9.0192, lng: 38.7525, region: "Addis Ababa - Residential" },
+  { name: "22 Mazoria", lat: 9.0150, lng: 38.7950, region: "Addis Ababa - Residential" },
+  { name: "CMC Area", lat: 9.0100, lng: 38.7650, region: "Addis Ababa - Residential" },
+  
+  // =========================================================================
+  // MAJOR ETHIOPIAN CITIES (20 locations)
+  // =========================================================================
   { name: "Dire Dawa", lat: 9.5930, lng: 41.8661, region: "Dire Dawa" },
   { name: "Mekelle", lat: 13.4967, lng: 39.4753, region: "Tigray" },
   { name: "Gondar", lat: 12.6000, lng: 37.4667, region: "Amhara" },
   { name: "Bahir Dar", lat: 11.5933, lng: 37.3905, region: "Amhara" },
   { name: "Hawassa", lat: 7.0500, lng: 38.4667, region: "Sidama" },
   { name: "Adama (Nazret)", lat: 8.5400, lng: 39.2700, region: "Oromia" },
+  { name: "Adama", lat: 8.5400, lng: 39.2700, region: "Oromia" },
+  { name: "Nazret", lat: 8.5400, lng: 39.2700, region: "Oromia" },
   { name: "Jimma", lat: 7.6667, lng: 36.8333, region: "Oromia" },
   { name: "Jijiga", lat: 9.3500, lng: 42.8000, region: "Somali" },
   { name: "Dessie", lat: 11.1333, lng: 39.6333, region: "Amhara" },

@@ -1256,32 +1256,159 @@ class MessobFmsTrip(models.Model):
 
     def _geocode_location(self, address):
         """Simulate geocoding service - convert address to coordinates."""
-        import random
-        
-        # Ethiopian cities coordinates (simulate geocoding)
+        # Ethiopian cities coordinates (comprehensive list)
         city_coords = {
+            # =====================================================================
+            # ADDIS ABABA - Comprehensive Locations (60+ locations)
+            # =====================================================================
+            
+            # Central Addis Ababa
             'MESSOB Center HQ': {'lat': 9.0320, 'lng': 38.7469},
             'Addis Ababa': {'lat': 9.0320, 'lng': 38.7469},
+            'Meskel Square': {'lat': 9.0105, 'lng': 38.7614},
+            'Mexico Square': {'lat': 9.0192, 'lng': 38.7525},
+            'Arat Kilo': {'lat': 9.0400, 'lng': 38.7600},
+            'Sidist Kilo': {'lat': 9.0380, 'lng': 38.7630},
+            'Saris': {'lat': 9.0150, 'lng': 38.7400},
+            '6 Kilo': {'lat': 9.0410, 'lng': 38.7640},
+            
+            # Bole Area
+            'Bole': {'lat': 8.9950, 'lng': 38.7850},
             'Bole Airport': {'lat': 8.9806, 'lng': 38.7992},
+            'Bole International Airport': {'lat': 8.9779, 'lng': 38.7993},
+            'Bole Medhanialem': {'lat': 9.0050, 'lng': 38.7850},
+            'Bole Arabsa': {'lat': 8.9950, 'lng': 38.8100},
+            'Bole Bulbula': {'lat': 8.9806, 'lng': 38.7578},
+            'Bole Road': {'lat': 8.9900, 'lng': 38.7700},
+            'Bole Michael': {'lat': 9.0000, 'lng': 38.7800},
+            'Bole Rwanda': {'lat': 8.9980, 'lng': 38.7920},
+            'Bole Atlas': {'lat': 8.9930, 'lng': 38.7880},
+            'Edna Mall': {'lat': 8.9970, 'lng': 38.7920},
+            
+            # Kirkos Sub-city
+            'Kirkos': {'lat': 9.0250, 'lng': 38.7550},
+            'CMC': {'lat': 9.0100, 'lng': 38.7650},
+            'Mekanisa': {'lat': 9.0050, 'lng': 38.7700},
+            'Akaki Kality': {'lat': 8.8950, 'lng': 38.7650},
+            
+            # Arada Sub-city  
+            'Piazza': {'lat': 9.0420, 'lng': 38.7500},
+            'Arada': {'lat': 9.0380, 'lng': 38.7450},
+            'De Gaulle Square': {'lat': 9.0330, 'lng': 38.7420},
+            'Tewodros Square': {'lat': 9.0390, 'lng': 38.7480},
+            'Churchill Avenue': {'lat': 9.0280, 'lng': 38.7450},
+            'Arada Giorgis': {'lat': 9.0360, 'lng': 38.7460},
+            
+            # Lideta Sub-city
             'Mercato': {'lat': 9.0370, 'lng': 38.7444},
-            'Piazza': {'lat': 9.0420, 'lng': 38.7469},
+            'Merkato': {'lat': 9.0300, 'lng': 38.7350},
+            'Lideta': {'lat': 9.0320, 'lng': 38.7380},
+            'Autobus Tera': {'lat': 9.0340, 'lng': 38.7360},
+            'Legehar': {'lat': 9.0450, 'lng': 38.7550},
+            
+            # Gulele Sub-city
+            'Gulele': {'lat': 9.0650, 'lng': 38.7300},
+            'Entoto': {'lat': 9.0800, 'lng': 38.7400},
+            'Shiromeda': {'lat': 9.0550, 'lng': 38.7350},
+            'Gullele Botanic Garden': {'lat': 9.0680, 'lng': 38.7320},
+            
+            # Yeka Sub-city
+            'Megenagna': {'lat': 9.0250, 'lng': 38.7950},
+            'Gerji': {'lat': 9.0100, 'lng': 38.8050},
+            'Summit': {'lat': 9.0200, 'lng': 38.8100},
+            'Ayat': {'lat': 9.0450, 'lng': 38.8300},
+            'CMC Mazoria': {'lat': 9.0080, 'lng': 38.8000},
+            'Kality': {'lat': 8.9200, 'lng': 38.7500},
+            'Yeka Abado': {'lat': 9.0350, 'lng': 38.8200},
+            'Megenagna 2': {'lat': 9.0280, 'lng': 38.7980},
+            
+            # Nifas Silk-Lafto
+            'Nifas Silk': {'lat': 8.9800, 'lng': 38.7200},
+            'Lafto': {'lat': 8.9650, 'lng': 38.7300},
+            'Gotera': {'lat': 8.9700, 'lng': 38.7350},
+            
+            # Addis Ketema
+            'Addis Ketema': {'lat': 9.0380, 'lng': 38.7350},
+            'Shiro Meda': {'lat': 9.0550, 'lng': 38.7350},
+            
+            # Kolfe Keranio
+            'Kolfe': {'lat': 9.0150, 'lng': 38.6950},
+            'Keranio': {'lat': 9.0200, 'lng': 38.6900},
+            'Sebategna': {'lat': 9.0100, 'lng': 38.7000},
+            
+            # Lemi Kura
+            'Lemi Kura': {'lat': 9.0000, 'lng': 38.6800},
+            'Gurd Shola': {'lat': 9.0050, 'lng': 38.6850},
+            
+            # Akaki Kaliti
+            'Akaki': {'lat': 8.8800, 'lng': 38.7600},
+            'Kaliti': {'lat': 8.9100, 'lng': 38.7450},
+            
+            # Major Landmarks & Institutions
+            'National Stadium': {'lat': 9.0180, 'lng': 38.7580},
             'Stadium': {'lat': 9.0180, 'lng': 38.7580},
             'University': {'lat': 9.0370, 'lng': 38.7620},
-            'Bole': {'lat': 8.9806, 'lng': 38.7992},
-            'Kirkos': {'lat': 9.0250, 'lng': 38.7550},
-            'Gulele': {'lat': 9.0650, 'lng': 38.7300},
+            'Addis Ababa University': {'lat': 9.0370, 'lng': 38.7620},
+            'Black Lion Hospital': {'lat': 9.0380, 'lng': 38.7650},
+            'Menelik II Hospital': {'lat': 9.0350, 'lng': 38.7600},
+            'National Theatre': {'lat': 9.0310, 'lng': 38.7440},
+            'Hilton Hotel': {'lat': 9.0320, 'lng': 38.7490},
+            'Sheraton Hotel': {'lat': 9.0380, 'lng': 38.7520},
+            'African Union': {'lat': 9.0150, 'lng': 38.7630},
+            'AU Headquarters': {'lat': 9.0150, 'lng': 38.7630},
+            'ECA Conference Center': {'lat': 9.0130, 'lng': 38.7620},
+            'Millennium Hall': {'lat': 9.0280, 'lng': 38.7580},
+            'National Palace': {'lat': 9.0330, 'lng': 38.7470},
+            'Menelik Palace': {'lat': 9.0340, 'lng': 38.7460},
+            'Holy Trinity Cathedral': {'lat': 9.0350, 'lng': 38.7550},
+            
+            # Shopping & Commercial Areas
+            'Shola Market': {'lat': 9.0400, 'lng': 38.7500},
+            'Asko': {'lat': 9.0100, 'lng': 38.7400},
+            'Tor Hailoch': {'lat': 9.0150, 'lng': 38.7300},
+            
+            # Residential Areas
+            'Old Airport': {'lat': 9.0080, 'lng': 38.7850},
+            'Kazanchis': {'lat': 9.0220, 'lng': 38.7620},
+            'Sarbet': {'lat': 9.0200, 'lng': 38.7500},
+            'Mexico': {'lat': 9.0192, 'lng': 38.7525},
+            '22 Mazoria': {'lat': 9.0150, 'lng': 38.7950},
+            'CMC Area': {'lat': 9.0100, 'lng': 38.7650},
+            
+            # =====================================================================
+            # MAJOR ETHIOPIAN CITIES
+            # =====================================================================
+            'Dire Dawa': {'lat': 9.5930, 'lng': 41.8661},
+            'Mekelle': {'lat': 13.4967, 'lng': 39.4753},
+            'Gondar': {'lat': 12.6000, 'lng': 37.4667},
+            'Bahir Dar': {'lat': 11.5933, 'lng': 37.3905},
+            'Hawassa': {'lat': 7.0500, 'lng': 38.4667},
+            'Adama': {'lat': 8.5400, 'lng': 39.2700},
+            'Adama (Nazret)': {'lat': 8.5400, 'lng': 39.2700},
+            'Nazret': {'lat': 8.5400, 'lng': 39.2700},
+            'Jimma': {'lat': 7.6667, 'lng': 36.8333},
+            'Jijiga': {'lat': 9.3500, 'lng': 42.8000},
+            'Dessie': {'lat': 11.1333, 'lng': 39.6333},
+            'Harar': {'lat': 9.3100, 'lng': 42.1200},
+            'Shashamane': {'lat': 7.2000, 'lng': 38.6000},
+            'Debre Birhan': {'lat': 9.6833, 'lng': 39.5333},
+            'Arba Minch': {'lat': 6.0333, 'lng': 37.5500},
+            'Nekemte': {'lat': 9.0833, 'lng': 36.5333},
+            'Debre Markos': {'lat': 10.3500, 'lng': 37.7167},
+            'Asella': {'lat': 7.9500, 'lng': 39.1333},
+            'Gambela': {'lat': 8.2500, 'lng': 34.5833},
+            'Semera': {'lat': 11.7833, 'lng': 41.0000},
         }
         
-        # Check if address matches known locations
+        # Check if address matches known locations (case-insensitive)
+        address_lower = address.lower().strip()
         for city, coords in city_coords.items():
-            if city.lower() in address.lower():
+            if city.lower() in address_lower:
                 return coords
         
-        # Default to Addis Ababa with slight random offset
-        return {
-            'lat': 9.0320 + (random.random() - 0.5) * 0.1,
-            'lng': 38.7469 + (random.random() - 0.5) * 0.1
-        }
+        # If no match found, return Addis Ababa as default
+        _logger.warning(f"Location not found in database: {address}. Defaulting to Addis Ababa.")
+        return {'lat': 9.0320, 'lng': 38.7469}
 
     def _generate_route_line(self, start_coords, end_coords):
         """Simulate routing service - generate route line between two points."""
@@ -1306,20 +1433,51 @@ class MessobFmsTrip(models.Model):
         return route_points
 
     def _calculate_distance(self, start_coords, end_coords):
-        """Calculate approximate distance between two coordinates."""
-        # Simplified distance calculation (Haversine formula approximation)
-        lat_diff = abs(end_coords['lat'] - start_coords['lat'])
-        lng_diff = abs(end_coords['lng'] - start_coords['lng'])
+        """Calculate distance between two coordinates using Haversine formula."""
+        import math
         
-        # Rough conversion: 1 degree ≈ 111 km
-        distance = ((lat_diff ** 2 + lng_diff ** 2) ** 0.5) * 111
-        return round(distance, 2)
+        # Earth's radius in kilometers
+        R = 6371.0
+        
+        # Convert coordinates to radians
+        lat1 = math.radians(start_coords['lat'])
+        lon1 = math.radians(start_coords['lng'])
+        lat2 = math.radians(end_coords['lat'])
+        lon2 = math.radians(end_coords['lng'])
+        
+        # Haversine formula (straight-line distance)
+        dlat = lat2 - lat1
+        dlon = lon2 - lon1
+        
+        a = math.sin(dlat / 2)**2 + math.cos(lat1) * math.cos(lat2) * math.sin(dlon / 2)**2
+        c = 2 * math.asin(math.sqrt(a))
+        
+        straight_distance = R * c
+        
+        # Apply road distance multiplier for more realistic estimates
+        # Roads in mountainous Ethiopia are rarely straight
+        if straight_distance < 50:  # Short urban distances
+            road_distance = straight_distance * 1.3  # 30% longer due to streets
+        elif straight_distance < 200:  # Medium distances
+            road_distance = straight_distance * 1.5  # 50% longer due to terrain
+        else:  # Long distances
+            road_distance = straight_distance * 1.8  # 80% longer due to mountains/valleys
+        
+        return round(road_distance, 2)
 
     def _estimate_duration(self, start_coords, end_coords):
         """Estimate travel duration based on distance."""
         distance = self._calculate_distance(start_coords, end_coords)
-        # Assume average speed of 30 km/h in city traffic
-        duration_hours = distance / 30
+        
+        # Use realistic average speeds based on distance
+        if distance < 20:  # City driving
+            avg_speed = 25  # km/h in heavy traffic
+        elif distance < 100:  # Regional roads
+            avg_speed = 50  # km/h
+        else:  # Highway/long distance
+            avg_speed = 65  # km/h (accounting for road conditions in Ethiopia)
+        
+        duration_hours = distance / avg_speed
         return round(duration_hours * 60)  # Convert to minutes
 
     def _simulate_gps_position(self, trip):
