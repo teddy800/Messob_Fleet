@@ -1,0 +1,255 @@
+{
+  "pages": {
+    "default": {
+      "title": "MESSOB Fleet Management Help",
+      "description": "Welcome to the MESSOB Fleet Management System. Select a section from the guides to learn more.",
+      "quickTips": [
+        "Use the navigation menu to access different features",
+        "Your role determines which features you can access",
+        "Check your profile in the top right corner"
+      ]
+    },
+    "requests/new": {
+      "route": "/dashboard/requests/new",
+      "title": "Create New Trip Request",
+      "description": "Submit a vehicle request for your official travel needs",
+      "quickTips": [
+        "Complete all 4 steps of the wizard",
+        "Provide detailed trip justification (minimum 10 characters)",
+        "Select appropriate vehicle category for your needs",
+        "Requests are reviewed by dispatchers within 24 hours"
+      ],
+      "steps": [
+        "Enter trip purpose and select vehicle category",
+        "Choose start and end date/time for your trip",
+        "Specify pickup location and destination",
+        "Review all details and submit your request"
+      ],
+      "faq": [
+        {
+          "question": "How long does approval take?",
+          "answer": "Most requests are reviewed within 24 hours. Urgent requests are prioritized."
+        },
+        {
+          "question": "Can I edit my request after submission?",
+          "answer": "You can cancel pending requests and create new ones. Contact your dispatcher for changes to approved requests."
+        },
+        {
+          "question": "What vehicle category should I choose?",
+          "answer": "Choose based on passenger count and trip type: Sedan (1-4 people), SUV (rough terrain), Bus (8+ people)."
+        }
+      ]
+    },
+    "requests/status": {
+      "route": "/dashboard/requests/status",
+      "title": "My Trip Requests",
+      "description": "View and manage all your trip requests",
+      "quickTips": [
+        "Filter requests by status (Pending, Approved, In Progress, etc.)",
+        "Click on any request to view full details",
+        "Track your approved trips in real-time",
+        "You can cancel pending requests if plans change"
+      ],
+      "faq": [
+        {
+          "question": "What do the status colors mean?",
+          "answer": "Yellow = Pending review, Green = Approved, Blue = In Progress, Gray = Completed"
+        },
+        {
+          "question": "How do I track my vehicle?",
+          "answer": "Click on an approved or in-progress trip to see live GPS tracking"
+        }
+      ]
+    },
+    "dispatch/approvals": {
+      "route": "/dashboard/dispatch/approvals",
+      "title": "Approve Trip Requests",
+      "description": "Review and process pending vehicle requests",
+      "quickTips": [
+        "Requests are sorted by priority score automatically",
+        "Check vehicle and driver availability before assignment",
+        "Provide clear rejection reasons when declining requests",
+        "Use the calendar view to visualize fleet schedule"
+      ],
+      "steps": [
+        "Review request details and priority level",
+        "Check requester information and trip purpose",
+        "Assign available vehicle matching the category",
+        "Assign available driver for the time slot",
+        "Approve to notify the requester and driver"
+      ],
+      "faq": [
+        {
+          "question": "How is priority calculated?",
+          "answer": "Priority is based on urgency, wait time, trip start time, and requester history. You can manually override if needed."
+        },
+        {
+          "question": "What if no vehicles are available?",
+          "answer": "You can reject with reason or check alternative time slots in the fleet calendar."
+        }
+      ]
+    },
+    "dispatch/fleet-calendar": {
+      "route": "/dashboard/dispatch/fleet-calendar",
+      "title": "Fleet Calendar",
+      "description": "Visual overview of vehicle schedules and assignments",
+      "quickTips": [
+        "Drag and drop to reschedule trips",
+        "Click on any trip to view or edit details",
+        "Color coding shows vehicle status and availability",
+        "Use filters to show specific vehicles or drivers"
+      ]
+    },
+    "tracking": {
+      "route": "/dashboard/tracking",
+      "title": "Live GPS Tracking",
+      "description": "Monitor your vehicle in real-time",
+      "quickTips": [
+        "Blue marker shows your vehicle's current location",
+        "Route line shows planned path",
+        "Speed and heading are updated every second",
+        "Click 'View Progress' to center map on vehicle"
+      ],
+      "faq": [
+        {
+          "question": "Why isn't my vehicle moving on the map?",
+          "answer": "The vehicle may be stopped. Check if ignition status shows 'On'. GPS updates may have a slight delay."
+        },
+        {
+          "question": "Can I see other passengers' locations?",
+          "answer": "Yes, if multiple staff share the same vehicle, you'll see all pickup points for coordination."
+        }
+      ]
+    },
+    "driver/requests": {
+      "route": "/dashboard/driver/requests",
+      "title": "My Assigned Trips",
+      "description": "View and manage your assigned trips",
+      "quickTips": [
+        "Start trip when you begin the journey",
+        "Update fuel and odometer readings",
+        "Complete trip when you reach destination",
+        "Report any incidents immediately"
+      ],
+      "steps": [
+        "Review trip details and passenger information",
+        "Click 'Start Trip' when beginning journey",
+        "Follow GPS navigation to destination",
+        "Update status and click 'Complete Trip' when finished"
+      ],
+      "faq": [
+        {
+          "question": "What if I'm running late?",
+          "answer": "Contact the passenger and dispatcher immediately. You can add notes to the trip."
+        },
+        {
+          "question": "How do I log fuel?",
+          "answer": "Use the 'Fuel Log' section to enter refueling details including volume, cost, and odometer."
+        }
+      ]
+    },
+    "mechanic": {
+      "route": "/dashboard/mechanic",
+      "title": "Maintenance Dashboard",
+      "description": "Manage vehicle maintenance and repairs",
+      "quickTips": [
+        "Check maintenance alerts daily",
+        "Log all repairs with complete details",
+        "Update vehicle status after service",
+        "Schedule next maintenance based on odometer or date"
+      ]
+    },
+    "admin": {
+      "route": "/dashboard/admin",
+      "title": "System Administration",
+      "description": "Manage users, vehicles, and system settings",
+      "quickTips": [
+        "Assign roles carefully - they control access levels",
+        "Review audit logs regularly for security",
+        "Keep vehicle and driver records up to date",
+        "Monitor system performance metrics"
+      ]
+    }
+  },
+  "manuals": [
+    {
+      "title": "Staff User Manual",
+      "description": "Complete guide for staff members requesting vehicles",
+      "url": "/docs/manuals/Staff_User_Manual.md",
+      "role": "Staff",
+      "pages": 15
+    },
+    {
+      "title": "Dispatcher Operations Manual",
+      "description": "Fleet management and trip approval procedures",
+      "url": "/docs/manuals/Dispatcher_Manual.md",
+      "role": "Dispatcher",
+      "pages": 28
+    },
+    {
+      "title": "Driver Handbook",
+      "description": "Driver responsibilities and mobile app usage",
+      "url": "/docs/manuals/Driver_Handbook.md",
+      "role": "Driver",
+      "pages": 12
+    },
+    {
+      "title": "Mechanic Service Guide",
+      "description": "Maintenance logging and alert management",
+      "url": "/docs/manuals/Mechanic_Guide.md",
+      "role": "Maintainer",
+      "pages": 18
+    },
+    {
+      "title": "Administrator's Guide",
+      "description": "System configuration, user management, and troubleshooting",
+      "url": "/docs/manuals/Administrator_Guide.md",
+      "role": "Admin",
+      "pages": 45
+    }
+  ],
+  "videos": [
+    {
+      "title": "Getting Started with MESSOB Fleet",
+      "duration": "5:30",
+      "url": "/docs/videos/getting-started"
+    },
+    {
+      "title": "Creating Your First Trip Request",
+      "duration": "3:45",
+      "url": "/docs/videos/trip-request"
+    },
+    {
+      "title": "Dispatcher Quick Start",
+      "duration": "8:20",
+      "url": "/docs/videos/dispatcher-quickstart"
+    },
+    {
+      "title": "Live GPS Tracking Tutorial",
+      "duration": "4:15",
+      "url": "/docs/videos/gps-tracking"
+    }
+  ],
+  "documentation": [
+    {
+      "title": "API Documentation",
+      "url": "/docs/API_DOCS.md"
+    },
+    {
+      "title": "System Architecture",
+      "url": "/docs/ARCHITECTURE.md"
+    },
+    {
+      "title": "Deployment Guide",
+      "url": "/docs/DEPLOYMENT.md"
+    },
+    {
+      "title": "Security Best Practices",
+      "url": "/docs/SECURITY.md"
+    },
+    {
+      "title": "Troubleshooting Guide",
+      "url": "/docs/TROUBLESHOOTING.md"
+    }
+  ]
+}
