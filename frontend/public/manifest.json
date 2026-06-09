@@ -1,43 +1,86 @@
 {
-  "name": "MESSOB Fleet Driver",
-  "short_name": "MESSOB Driver",
-  "description": "MESSOB Fleet Management System - Driver Mobile App",
-  "start_url": "/dashboard/driver/mobile",
+  "name": "MESSOB Fleet Management",
+  "short_name": "MESSOB Fleet",
+  "description": "Enterprise Fleet Management System for MESSOB",
+  "theme_color": "#7C3AED",
+  "background_color": "#ffffff",
   "display": "standalone",
-  "background_color": "#1e3a8a",
-  "theme_color": "#1e3a8a",
   "orientation": "portrait",
+  "scope": "/",
+  "start_url": "/",
   "icons": [
     {
-      "src": "/icon-192.png",
+      "src": "/icons/icon-72x72.png",
+      "sizes": "72x72",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-96x96.png",
+      "sizes": "96x96",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-128x128.png",
+      "sizes": "128x128",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-144x144.png",
+      "sizes": "144x144",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-152x152.png",
+      "sizes": "152x152",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-192x192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "/icon-512.png",
+      "src": "/icons/icon-384x384.png",
+      "sizes": "384x384",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-512x512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
     }
   ],
-  "categories": ["business", "productivity", "utilities"],
-  "screenshots": [],
   "shortcuts": [
     {
-      "name": "Active Trip",
-      "short_name": "Active",
-      "description": "View active trip",
-      "url": "/dashboard/driver/mobile?view=home",
-      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+      "name": "New Trip Request",
+      "short_name": "New Trip",
+      "description": "Create a new vehicle trip request",
+      "url": "/requests/new",
+      "icons": [{ "src": "/icons/shortcut-new.png", "sizes": "96x96" }]
     },
     {
-      "name": "Log Fuel",
-      "short_name": "Fuel",
-      "description": "Log fuel transaction",
-      "url": "/dashboard/driver/fuel",
-      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+      "name": "My Trips",
+      "short_name": "Trips",
+      "description": "View my trip requests",
+      "url": "/requests",
+      "icons": [{ "src": "/icons/shortcut-trips.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "Track Vehicle",
+      "short_name": "Track",
+      "description": "Track vehicle in real-time",
+      "url": "/tracking",
+      "icons": [{ "src": "/icons/shortcut-track.png", "sizes": "96x96" }]
     }
   ],
+  "categories": ["business", "productivity", "utilities"],
   "prefer_related_applications": false
 }

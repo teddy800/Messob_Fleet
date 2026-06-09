@@ -1,176 +1,259 @@
-// ============================================================================
-// MESSOB Fleet Management System
-// Service Worker for Progressive Web App (PWA)
-// Enables offline functionality and push notifications for Driver Mobile App
-// ============================================================================
+// MESSOB Fleet Management - Service Worker
+// Implements offline functionality and background sync for PWA
 
-const CACHE_NAME = 'messob-fms-v1.0.1';
-const OFFLINE_URL = '/offline.html';
+const CACHE_NAME = 'messob-fleet-v1.1.0';
+const RUNTIME_CACHE = 'messob-runtime-v1';
 
-// Assets to cache for offline functionality (excluding HTML files)
-const ASSETS_TO_CACHE = [
+// Assets to cache on install
+const STATIC_ASSETS = [
+  '/',
+  '/index.html',
   '/offline.html',
   '/manifest.json',
+  '/icons/icon-192x192.png',
+  '/icons/icon-512x512.png'
 ];
 
-// Install event - cache essential assets
+// Install event - cache static assets
 self.addEventListener('install', (event) => {
-  console.log('[Service Worker] Installing...');
-  
+  console.log('[SW] Installing service worker...');
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      console.log('[Service Worker] Caching essential assets');
-      return cache.addAll(ASSETS_TO_CACHE).catch((error) => {
-        console.error('[Service Worker] Cache addAll failed:', error);
-      });
-    })
+    caches.open(CACHE_NAME)
+      .then((cache) => {
+        console.log('[SW] Caching static assets');
+        return cache.addAll(STATIC_ASSETS);
+      })
+      .then(() => self.skipWaiting())
   );
-  
-  // Force the waiting service worker to become the active service worker
-  self.skipWaiting();
 });
 
-// Activate event - clean up old caches
+// Activate event - clean old caches
 self.addEventListener('activate', (event) => {
-  console.log('[Service Worker] Activating...');
-  
+  console.log('[SW] Activating service worker...');
   event.waitUntil(
-    caches.keys().then((cacheNames) => {
-      return Promise.all(
-        cacheNames.map((cacheName) => {
-          if (cacheName !== CACHE_NAME) {
-            console.log('[Service Worker] Deleting old cache:', cacheName);
-            return caches.delete(cacheName);
-          }
-        })
-      );
-    })
+    caches.keys()
+      .then((cacheNames) => {
+        return Promise.all(
+          cacheNames
+            .filter((name) => name !== CACHE_NAME && name !== RUNTIME_CACHE)
+            .map((name) => {
+              console.log('[SW] Deleting old cache:', name);
+              return caches.delete(name);
+            })
+        );
+      })
+      .then(() => self.clients.claim())
   );
-  
-  // Take control of all pages immediately
-  return self.clients.claim();
 });
 
-// Fetch event - serve from cache, fallback to network
+// Fetch event - network first, fallback to cache
 self.addEventListener('fetch', (event) => {
-  // Skip non-GET requests
-  if (event.request.method !== 'GET') {
+  const { request } = event;
+  const url = new URL(request.url);
+
+  // Skip cross-origin requests
+  if (url.origin !== location.origin) {
     return;
   }
-  
-  // Skip API calls - always fetch fresh
-  if (event.request.url.includes('/api/') || event.request.url.includes('/odoo/')) {
-    return;
-  }
-  
-  // Skip HTML files - always fetch fresh to avoid stale content
-  if (event.request.url.endsWith('.html') || event.request.mode === 'navigate') {
+
+  // API requests - network first, fallback to cache
+  if (url.pathname.startsWith('/messob/api/') || url.pathname.startsWith('/api/')) {
     event.respondWith(
-      fetch(event.request).catch(() => caches.match(OFFLINE_URL))
+      fetch(request)
+        .then((response) => {
+          // Cache successful API responses for offline access
+          if (response.ok) {
+            const responseClone = response.clone();
+            caches.open(RUNTIME_CACHE).then((cache) => {
+              cache.put(request, responseClone);
+            });
+          }
+          return response;
+        })
+        .catch(() => {
+          // Fallback to cached response when offline
+          return caches.match(request)
+            .then((cachedResponse) => {
+              if (cachedResponse) {
+                console.log('[SW] Serving cached API response:', request.url);
+                return cachedResponse;
+              }
+              // Return offline page for failed API requests
+              return new Response(JSON.stringify({ 
+                error: 'Offline', 
+                message: 'No network connection available' 
+              }), {
+                status: 503,
+                headers: { 'Content-Type': 'application/json' }
+              });
+            });
+        })
     );
     return;
   }
-  
+
+  // Static assets - cache first, fallback to network
   event.respondWith(
-    caches.match(event.request).then((cachedResponse) => {
-      if (cachedResponse) {
-        // Return cached version
-        return cachedResponse;
-      }
-      
-      // Fetch from network
-      return fetch(event.request).then((response) => {
-        // Don't cache non-successful responses
-        if (!response || response.status !== 200 || response.type !== 'basic') {
-          return response;
+    caches.match(request)
+      .then((cachedResponse) => {
+        if (cachedResponse) {
+          // Serve from cache, update cache in background
+          fetch(request).then((response) => {
+            if (response.ok) {
+              caches.open(CACHE_NAME).then((cache) => {
+                cache.put(request, response);
+              });
+            }
+          }).catch(() => {}); // Ignore network errors
+          
+          return cachedResponse;
         }
-        
-        // Clone the response
-        const responseToCache = response.clone();
-        
-        // Cache the fetched response
-        caches.open(CACHE_NAME).then((cache) => {
-          cache.put(event.request, responseToCache);
-        });
-        
-        return response;
-      }).catch(() => {
-        // Network failed, return offline page
-        return caches.match(OFFLINE_URL);
-      });
-    })
+
+        // Not in cache, fetch from network
+        return fetch(request)
+          .then((response) => {
+            // Cache successful responses
+            if (response.ok) {
+              const responseClone = response.clone();
+              caches.open(CACHE_NAME).then((cache) => {
+                cache.put(request, responseClone);
+              });
+            }
+            return response;
+          })
+          .catch(() => {
+            // Fallback to offline page for navigation requests
+            if (request.mode === 'navigate') {
+              return caches.match('/offline.html');
+            }
+            return new Response('Offline', { status: 503 });
+          });
+      })
   );
 });
 
-// Push notification event
+// Background Sync - sync trip requests when back online
+self.addEventListener('sync', (event) => {
+  console.log('[SW] Background sync triggered:', event.tag);
+  
+  if (event.tag === 'sync-trip-requests') {
+    event.waitUntil(syncTripRequests());
+  }
+  
+  if (event.tag === 'sync-gps-positions') {
+    event.waitUntil(syncGPSPositions());
+  }
+});
+
+// Push Notifications - receive maintenance alerts, trip updates
 self.addEventListener('push', (event) => {
-  console.log('[Service Worker] Push notification received');
+  console.log('[SW] Push notification received');
   
+  const data = event.data ? event.data.json() : {};
+  const title = data.title || 'MESSOB Fleet Management';
   const options = {
-    body: event.data ? event.data.text() : 'New notification from MESSOB Fleet',
-    icon: '/icon-192.png',
-    badge: '/icon-192.png',
-    vibrate: [200, 100, 200],
-    tag: 'messob-notification',
-    requireInteraction: false,
+    body: data.body || 'You have a new notification',
+    icon: '/icons/icon-192x192.png',
+    badge: '/icons/badge-72x72.png',
+    tag: data.tag || 'default',
+    requireInteraction: data.requireInteraction || false,
+    actions: data.actions || [],
+    data: data.data || {}
   };
-  
+
   event.waitUntil(
-    self.registration.showNotification('MESSOB Fleet', options)
+    self.registration.showNotification(title, options)
   );
 });
 
-// Notification click event
+// Notification Click - handle notification actions
 self.addEventListener('notificationclick', (event) => {
-  console.log('[Service Worker] Notification clicked');
+  console.log('[SW] Notification clicked:', event.action);
   
   event.notification.close();
   
+  const urlToOpen = event.notification.data?.url || '/';
+  
   event.waitUntil(
-    clients.openWindow('/dashboard/driver/mobile')
+    clients.matchAll({ type: 'window', includeUncontrolled: true })
+      .then((clientList) => {
+        // Focus existing window if available
+        for (const client of clientList) {
+          if (client.url === urlToOpen && 'focus' in client) {
+            return client.focus();
+          }
+        }
+        // Open new window
+        if (clients.openWindow) {
+          return clients.openWindow(urlToOpen);
+        }
+      })
   );
 });
 
-// Background sync event (for offline actions)
-self.addEventListener('sync', (event) => {
-  console.log('[Service Worker] Background sync:', event.tag);
+// Helper: Sync trip requests
+async function syncTripRequests() {
+  try {
+    const cache = await caches.open('messob-pending-requests');
+    const requests = await cache.keys();
+    
+    for (const request of requests) {
+      try {
+        const response = await fetch(request);
+        if (response.ok) {
+          await cache.delete(request);
+          console.log('[SW] Synced trip request:', request.url);
+        }
+      } catch (error) {
+        console.error('[SW] Failed to sync trip request:', error);
+      }
+    }
+  } catch (error) {
+    console.error('[SW] Sync failed:', error);
+    throw error;
+  }
+}
+
+// Helper: Sync GPS positions
+async function syncGPSPositions() {
+  try {
+    const cache = await caches.open('messob-pending-gps');
+    const requests = await cache.keys();
+    
+    for (const request of requests) {
+      try {
+        const response = await fetch(request);
+        if (response.ok) {
+          await cache.delete(request);
+          console.log('[SW] Synced GPS position:', request.url);
+        }
+      } catch (error) {
+        console.error('[SW] Failed to sync GPS position:', error);
+      }
+    }
+  } catch (error) {
+    console.error('[SW] GPS sync failed:', error);
+    throw error;
+  }
+}
+
+// Message handler - receive commands from app
+self.addEventListener('message', (event) => {
+  console.log('[SW] Message received:', event.data);
   
-  if (event.tag === 'sync-trip-status') {
-    event.waitUntil(syncTripStatus());
+  if (event.data.action === 'skipWaiting') {
+    self.skipWaiting();
+  }
+  
+  if (event.data.action === 'clearCache') {
+    event.waitUntil(
+      caches.keys().then((cacheNames) => {
+        return Promise.all(
+          cacheNames.map((name) => caches.delete(name))
+        );
+      })
+    );
   }
 });
 
-// Sync trip status updates when back online
-async function syncTripStatus() {
-  try {
-    // Get pending updates from IndexedDB or localStorage
-    const pendingUpdates = await getPendingUpdates();
-    
-    for (const update of pendingUpdates) {
-      await fetch('/api/trip/update-status', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(update),
-      });
-    }
-    
-    // Clear pending updates
-    await clearPendingUpdates();
-    
-    console.log('[Service Worker] Trip status synced successfully');
-  } catch (error) {
-    console.error('[Service Worker] Sync failed:', error);
-  }
-}
-
-// Helper functions (implement based on your storage strategy)
-async function getPendingUpdates() {
-  // Implement retrieval from IndexedDB or localStorage
-  return [];
-}
-
-async function clearPendingUpdates() {
-  // Implement clearing from IndexedDB or localStorage
-}
-
-console.log('[Service Worker] Loaded successfully');
+console.log('[SW] Service Worker loaded successfully');

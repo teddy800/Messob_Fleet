@@ -142,15 +142,15 @@ export default function DriverMobileApp() {
   };
 
   const MobileHeader = () => (
-    <div className="sticky top-0 z-50 bg-brand-blue text-white shadow-lg">
+    <div className="sticky top-0 z-50 bg-brand-blue dark:bg-gray-900 text-white shadow-lg">
       <div className="flex items-center justify-between p-4">
         <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-full bg-white/20 flex items-center justify-center">
+          <div className="h-10 w-10 rounded-full bg-white/20 dark:bg-gray-700 flex items-center justify-center">
             <span className="text-lg font-black">{user?.name?.charAt(0)}</span>
           </div>
           <div>
             <p className="font-bold text-sm">Driver Mode</p>
-            <p className="text-xs opacity-80">{user?.name}</p>
+            <p className="text-xs opacity-80 dark:opacity-70">{user?.name}</p>
           </div>
         </div>
         <button onClick={() => setMenuOpen(!menuOpen)} className="p-2">
@@ -159,31 +159,31 @@ export default function DriverMobileApp() {
       </div>
 
       {menuOpen && (
-        <div className="bg-white text-gray-800 border-t">
+        <div className="bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 border-t dark:border-gray-700">
           <button 
             onClick={() => { setCurrentView('home'); setMenuOpen(false); }}
-            className="w-full flex items-center gap-3 p-4 hover:bg-gray-50 border-b"
+            className="w-full flex items-center gap-3 p-4 hover:bg-gray-50 dark:hover:bg-gray-700 border-b dark:border-gray-700"
           >
             <Home className="h-5 w-5" />
             <span>Home</span>
           </button>
           <button 
             onClick={() => { setCurrentView('trips'); setMenuOpen(false); }}
-            className="w-full flex items-center gap-3 p-4 hover:bg-gray-50 border-b"
+            className="w-full flex items-center gap-3 p-4 hover:bg-gray-50 dark:hover:bg-gray-700 border-b dark:border-gray-700"
           >
             <List className="h-5 w-5" />
             <span>All Trips</span>
           </button>
           <button 
             onClick={() => { setCurrentView('fuel'); setMenuOpen(false); }}
-            className="w-full flex items-center gap-3 p-4 hover:bg-gray-50 border-b"
+            className="w-full flex items-center gap-3 p-4 hover:bg-gray-50 dark:hover:bg-gray-700 border-b dark:border-gray-700"
           >
             <Fuel className="h-5 w-5" />
             <span>Log Fuel</span>
           </button>
           <button 
             onClick={callDispatcher}
-            className="w-full flex items-center gap-3 p-4 hover:bg-gray-50"
+            className="w-full flex items-center gap-3 p-4 hover:bg-gray-50 dark:hover:bg-gray-700"
           >
             <Phone className="h-5 w-5" />
             <span>Call Dispatcher</span>
@@ -194,38 +194,38 @@ export default function DriverMobileApp() {
   );
 
   const ActiveTripCard = ({ trip }) => (
-    <Card className="border-2 border-green-500 shadow-lg">
+    <Card className="border-2 border-green-500 dark:border-green-600 shadow-lg dark:bg-gray-800">
       <CardContent className="p-4 space-y-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Activity className="h-5 w-5 text-green-600 animate-pulse" />
-            <span className="font-black text-green-600 uppercase text-sm">Active Trip</span>
+            <Activity className="h-5 w-5 text-green-600 dark:text-green-400 animate-pulse" />
+            <span className="font-black text-green-600 dark:text-green-400 uppercase text-sm">Active Trip</span>
           </div>
-          <span className="text-xs font-bold text-gray-500">{trip.name}</span>
+          <span className="text-xs font-bold text-gray-500 dark:text-gray-400">{trip.name}</span>
         </div>
 
         <div className="space-y-3">
           <div className="flex items-start gap-3">
-            <MapPin className="h-5 w-5 text-blue-600 mt-1 flex-shrink-0" />
+            <MapPin className="h-5 w-5 text-blue-600 dark:text-blue-400 mt-1 flex-shrink-0" />
             <div className="flex-1">
-              <p className="text-xs text-gray-500 uppercase font-bold">Pickup</p>
-              <p className="font-semibold">{trip.pickup}</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 uppercase font-bold">Pickup</p>
+              <p className="font-semibold dark:text-gray-200">{trip.pickup}</p>
             </div>
           </div>
 
           <div className="flex items-start gap-3">
-            <Navigation className="h-5 w-5 text-purple-600 mt-1 flex-shrink-0" />
+            <Navigation className="h-5 w-5 text-purple-600 dark:text-purple-400 mt-1 flex-shrink-0" />
             <div className="flex-1">
-              <p className="text-xs text-gray-500 uppercase font-bold">Destination</p>
-              <p className="font-semibold">{trip.destination}</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 uppercase font-bold">Destination</p>
+              <p className="font-semibold dark:text-gray-200">{trip.destination}</p>
             </div>
           </div>
 
           <div className="flex items-start gap-3">
-            <Clock className="h-5 w-5 text-orange-600 mt-1 flex-shrink-0" />
+            <Clock className="h-5 w-5 text-orange-600 dark:text-orange-400 mt-1 flex-shrink-0" />
             <div className="flex-1">
-              <p className="text-xs text-gray-500 uppercase font-bold">Passenger</p>
-              <p className="font-semibold">{Array.isArray(trip.requester_id) ? trip.requester_id[1] : 'N/A'}</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 uppercase font-bold">Passenger</p>
+              <p className="font-semibold dark:text-gray-200">{Array.isArray(trip.requester_id) ? trip.requester_id[1] : 'N/A'}</p>
             </div>
           </div>
         </div>
@@ -233,14 +233,14 @@ export default function DriverMobileApp() {
         <div className="grid grid-cols-2 gap-2 pt-2">
           <Button 
             onClick={() => openNavigation(trip.destination)}
-            className="w-full bg-blue-600 hover:bg-blue-700"
+            className="w-full bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-800"
           >
             <Navigation className="h-4 w-4 mr-2" />
             Navigate
           </Button>
           <Button 
             onClick={() => completeTrip(trip.id)}
-            className="w-full bg-green-600 hover:bg-green-700"
+            className="w-full bg-green-600 hover:bg-green-700 dark:bg-green-700 dark:hover:bg-green-800"
           >
             <CheckCircle className="h-4 w-4 mr-2" />
             Complete
@@ -250,7 +250,7 @@ export default function DriverMobileApp() {
         <Button 
           onClick={reportIncident}
           variant="outline"
-          className="w-full border-red-300 text-red-600 hover:bg-red-50"
+          className="w-full border-red-300 dark:border-red-700 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
         >
           <AlertCircle className="h-4 w-4 mr-2" />
           Report Incident
@@ -260,27 +260,27 @@ export default function DriverMobileApp() {
   );
 
   const UpcomingTripCard = ({ trip }) => (
-    <Card className="shadow-sm">
+    <Card className="shadow-sm dark:bg-gray-800 dark:border-gray-700">
       <CardContent className="p-4 space-y-3">
         <div className="flex items-center justify-between">
-          <span className="text-xs font-bold text-gray-500">{trip.name}</span>
-          <span className="text-xs px-2 py-1 bg-amber-50 text-amber-600 rounded-full font-bold">
+          <span className="text-xs font-bold text-gray-500 dark:text-gray-400">{trip.name}</span>
+          <span className="text-xs px-2 py-1 bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 rounded-full font-bold">
             Upcoming
           </span>
         </div>
 
         <div className="space-y-2 text-sm">
           <div className="flex items-center gap-2">
-            <MapPin className="h-4 w-4 text-blue-600 flex-shrink-0" />
-            <span className="text-gray-700">{trip.pickup}</span>
+            <MapPin className="h-4 w-4 text-blue-600 dark:text-blue-400 flex-shrink-0" />
+            <span className="text-gray-700 dark:text-gray-300">{trip.pickup}</span>
           </div>
           <div className="flex items-center gap-2">
-            <Navigation className="h-4 w-4 text-purple-600 flex-shrink-0" />
-            <span className="text-gray-700">{trip.destination}</span>
+            <Navigation className="h-4 w-4 text-purple-600 dark:text-purple-400 flex-shrink-0" />
+            <span className="text-gray-700 dark:text-gray-300">{trip.destination}</span>
           </div>
           <div className="flex items-center gap-2">
-            <Clock className="h-4 w-4 text-orange-600 flex-shrink-0" />
-            <span className="text-gray-700">
+            <Clock className="h-4 w-4 text-orange-600 dark:text-orange-400 flex-shrink-0" />
+            <span className="text-gray-700 dark:text-gray-300">
               {new Date(trip.start_dt).toLocaleString()}
             </span>
           </div>
@@ -288,7 +288,7 @@ export default function DriverMobileApp() {
 
         <Button 
           onClick={() => startTrip(trip.id)}
-          className="w-full bg-brand-blue hover:bg-blue-700"
+          className="w-full bg-brand-blue hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-800"
         >
           Start Trip
         </Button>
@@ -300,18 +300,18 @@ export default function DriverMobileApp() {
     <div className="space-y-4">
       {activeTrip ? (
         <>
-          <h2 className="text-lg font-black text-brand-blue px-4">Active Trip</h2>
+          <h2 className="text-lg font-black text-brand-blue dark:text-blue-400 px-4">Active Trip</h2>
           <div className="px-4">
             <ActiveTripCard trip={activeTrip} />
           </div>
         </>
       ) : (
         <div className="px-4">
-          <Card className="bg-gray-50">
+          <Card className="bg-gray-50 dark:bg-gray-800">
             <CardContent className="p-8 text-center">
-              <CheckCircle className="h-12 w-12 text-gray-400 mx-auto mb-3" />
-              <p className="text-gray-600 font-semibold">No active trip</p>
-              <p className="text-sm text-gray-500 mt-1">Check upcoming trips below</p>
+              <CheckCircle className="h-12 w-12 text-gray-400 dark:text-gray-500 mx-auto mb-3" />
+              <p className="text-gray-600 dark:text-gray-300 font-semibold">No active trip</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Check upcoming trips below</p>
             </CardContent>
           </Card>
         </div>
@@ -319,7 +319,7 @@ export default function DriverMobileApp() {
 
       {upcomingTrips.length > 0 && (
         <>
-          <h2 className="text-lg font-black text-brand-blue px-4 pt-4">
+          <h2 className="text-lg font-black text-brand-blue dark:text-blue-400 px-4 pt-4">
             Upcoming Trips ({upcomingTrips.length})
           </h2>
           <div className="px-4 space-y-3">
@@ -332,11 +332,11 @@ export default function DriverMobileApp() {
 
       {!activeTrip && upcomingTrips.length === 0 && (
         <div className="px-4 pt-8">
-          <Card className="bg-blue-50">
+          <Card className="bg-blue-50 dark:bg-blue-900/20">
             <CardContent className="p-8 text-center">
-              <Clock className="h-12 w-12 text-blue-400 mx-auto mb-3" />
-              <p className="text-blue-900 font-semibold">No trips assigned</p>
-              <p className="text-sm text-blue-700 mt-1">You'll be notified when trips are assigned</p>
+              <Clock className="h-12 w-12 text-blue-400 dark:text-blue-500 mx-auto mb-3" />
+              <p className="text-blue-900 dark:text-blue-300 font-semibold">No trips assigned</p>
+              <p className="text-sm text-blue-700 dark:text-blue-400 mt-1">You'll be notified when trips are assigned</p>
             </CardContent>
           </Card>
         </div>
@@ -346,7 +346,7 @@ export default function DriverMobileApp() {
         <Button 
           onClick={callDispatcher}
           variant="outline"
-          className="w-full border-brand-blue text-brand-blue"
+          className="w-full border-brand-blue dark:border-blue-600 text-brand-blue dark:text-blue-400"
         >
           <Phone className="h-4 w-4 mr-2" />
           Contact Dispatcher
@@ -356,7 +356,7 @@ export default function DriverMobileApp() {
   );
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <MobileHeader />
       
       {/* Incident Report Modal */}
@@ -371,8 +371,8 @@ export default function DriverMobileApp() {
         {loading ? (
           <div className="flex items-center justify-center h-64">
             <div className="text-center">
-              <div className="animate-spin h-8 w-8 border-4 border-brand-blue border-t-transparent rounded-full mx-auto mb-3"></div>
-              <p className="text-gray-500">Loading trips...</p>
+              <div className="animate-spin h-8 w-8 border-4 border-brand-blue dark:border-blue-400 border-t-transparent rounded-full mx-auto mb-3"></div>
+              <p className="text-gray-500 dark:text-gray-400">Loading trips...</p>
             </div>
           </div>
         ) : (
@@ -381,11 +381,11 @@ export default function DriverMobileApp() {
             {currentView === 'trips' && <HomeView />}
             {currentView === 'fuel' && (
               <div className="p-4">
-                <Card>
+                <Card className="dark:bg-gray-800 dark:border-gray-700">
                   <CardContent className="p-6 text-center">
-                    <Fuel className="h-12 w-12 text-brand-blue mx-auto mb-3" />
-                    <p className="text-gray-600 font-semibold">Fuel Logging</p>
-                    <p className="text-sm text-gray-500 mt-1">Feature available in desktop view</p>
+                    <Fuel className="h-12 w-12 text-brand-blue dark:text-blue-400 mx-auto mb-3" />
+                    <p className="text-gray-600 dark:text-gray-300 font-semibold">Fuel Logging</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Feature available in desktop view</p>
                   </CardContent>
                 </Card>
               </div>
@@ -395,12 +395,12 @@ export default function DriverMobileApp() {
       </div>
 
       {/* Bottom Navigation */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t shadow-lg">
+      <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t dark:border-gray-700 shadow-lg">
         <div className="grid grid-cols-3 gap-1 p-2">
           <button
             onClick={() => setCurrentView('home')}
             className={`flex flex-col items-center gap-1 p-3 rounded-lg ${
-              currentView === 'home' ? 'bg-brand-blue text-white' : 'text-gray-600'
+              currentView === 'home' ? 'bg-brand-blue dark:bg-blue-700 text-white' : 'text-gray-600 dark:text-gray-300'
             }`}
           >
             <Home className="h-5 w-5" />
@@ -409,7 +409,7 @@ export default function DriverMobileApp() {
           <button
             onClick={() => setCurrentView('trips')}
             className={`flex flex-col items-center gap-1 p-3 rounded-lg ${
-              currentView === 'trips' ? 'bg-brand-blue text-white' : 'text-gray-600'
+              currentView === 'trips' ? 'bg-brand-blue dark:bg-blue-700 text-white' : 'text-gray-600 dark:text-gray-300'
             }`}
           >
             <List className="h-5 w-5" />
@@ -418,7 +418,7 @@ export default function DriverMobileApp() {
           <button
             onClick={() => setCurrentView('fuel')}
             className={`flex flex-col items-center gap-1 p-3 rounded-lg ${
-              currentView === 'fuel' ? 'bg-brand-blue text-white' : 'text-gray-600'
+              currentView === 'fuel' ? 'bg-brand-blue dark:bg-blue-700 text-white' : 'text-gray-600 dark:text-gray-300'
             }`}
           >
             <Fuel className="h-5 w-5" />

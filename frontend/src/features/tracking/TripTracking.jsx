@@ -68,8 +68,8 @@ export default function TripTracking() {
       <div className="p-6">
         <div className="flex items-center justify-center h-64">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-blue mx-auto mb-2"></div>
-            <p className="text-gray-600">Loading trip details...</p>
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-blue dark:border-blue-400 mx-auto mb-2"></div>
+            <p className="text-gray-600 dark:text-gray-300">Loading trip details...</p>
           </div>
         </div>
       </div>
@@ -81,8 +81,8 @@ export default function TripTracking() {
       <div className="p-6">
         <div className="flex items-center justify-center h-64">
           <div className="text-center">
-            <p className="text-red-500 mb-4">{error}</p>
-            <Button onClick={() => navigate(-1)} variant="outline">
+            <p className="text-red-500 dark:text-red-400 mb-4">{error}</p>
+            <Button onClick={() => navigate(-1)} variant="outline" className="dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600">
               <ArrowLeft className="h-4 w-4 mr-2" />
               Go Back
             </Button>
@@ -96,7 +96,7 @@ export default function TripTracking() {
     return (
       <div className="p-6">
         <div className="flex items-center justify-center h-64">
-          <p className="text-gray-500">No trip data available</p>
+          <p className="text-gray-500 dark:text-gray-400">No trip data available</p>
         </div>
       </div>
     );
@@ -110,18 +110,18 @@ export default function TripTracking() {
     return (
       <div className="p-6">
         <div className="mb-6">
-          <Button onClick={() => navigate(-1)} variant="ghost" className="mb-4">
+          <Button onClick={() => navigate(-1)} variant="ghost" className="mb-4 dark:text-gray-300 dark:hover:bg-gray-800">
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to Requests
           </Button>
           
-          <div className="bg-white rounded-xl shadow-lg p-8 text-center">
-            <Route className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-            <h2 className="text-xl font-bold text-gray-700 mb-2">Trip Tracking Not Available</h2>
-            <p className="text-gray-500 mb-4">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8 text-center border dark:border-gray-700">
+            <Route className="h-16 w-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
+            <h2 className="text-xl font-bold text-gray-700 dark:text-gray-200 mb-2">Trip Tracking Not Available</h2>
+            <p className="text-gray-500 dark:text-gray-400 mb-4">
               Route tracking is only available for approved and in-progress trips.
             </p>
-            <p className="text-sm text-gray-400">
+            <p className="text-sm text-gray-400 dark:text-gray-500">
               Current status: <span className="font-medium">{tripData.state.replace('_', ' ').toUpperCase()}</span>
             </p>
           </div>
@@ -135,30 +135,30 @@ export default function TripTracking() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <Button onClick={() => navigate(-1)} variant="ghost">
+          <Button onClick={() => navigate(-1)} variant="ghost" className="dark:text-gray-300 dark:hover:bg-gray-800">
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back
           </Button>
           
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Trip Tracking</h1>
-            <p className="text-gray-600">{tripData.name} • {tripData.requester_id[1]}</p>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Trip Tracking</h1>
+            <p className="text-gray-600 dark:text-gray-400">{tripData.name} • {tripData.requester_id[1]}</p>
           </div>
         </div>
       </div>
 
       {/* Tracking Interface */}
       <Tabs defaultValue="route" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="route" className="flex items-center gap-2">
+        <TabsList className="grid w-full grid-cols-3 dark:bg-gray-800 dark:border-gray-700">
+          <TabsTrigger value="route" className="flex items-center gap-2 dark:text-gray-300 dark:data-[state=active]:bg-gray-700 dark:data-[state=active]:text-white">
             <Route className="h-4 w-4" />
             Route & GPS
           </TabsTrigger>
-          <TabsTrigger value="collaborative" className="flex items-center gap-2">
+          <TabsTrigger value="collaborative" className="flex items-center gap-2 dark:text-gray-300 dark:data-[state=active]:bg-gray-700 dark:data-[state=active]:text-white">
             <Users className="h-4 w-4" />
             Service Users
           </TabsTrigger>
-          <TabsTrigger value="pickup" className="flex items-center gap-2" disabled={!canUpdatePickup}>
+          <TabsTrigger value="pickup" className="flex items-center gap-2 dark:text-gray-300 dark:data-[state=active]:bg-gray-700 dark:data-[state=active]:text-white" disabled={!canUpdatePickup}>
             <Edit3 className="h-4 w-4" />
             Update Pickup
           </TabsTrigger>
@@ -184,10 +184,10 @@ export default function TripTracking() {
               onUpdate={handlePickupUpdate}
             />
           ) : (
-            <div className="bg-white rounded-xl shadow-lg p-8 text-center">
-              <Edit3 className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-              <h3 className="text-lg font-bold text-gray-700 mb-2">Pickup Update Not Available</h3>
-              <p className="text-gray-500">
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8 text-center border dark:border-gray-700">
+              <Edit3 className="h-16 w-16 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
+              <h3 className="text-lg font-bold text-gray-700 dark:text-gray-200 mb-2">Pickup Update Not Available</h3>
+              <p className="text-gray-500 dark:text-gray-400">
                 Pickup points can only be updated for approved trips that haven't started yet.
               </p>
             </div>

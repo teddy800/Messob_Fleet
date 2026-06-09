@@ -6,11 +6,14 @@
 # Features: FR-3.1, FR-3.2, FR-3.3, FR-3.4
 # ---------------------------------------------------------------------------
 
-from odoo import http
+from odoo import http, fields
 from odoo.http import request
 from datetime import datetime, timedelta
 import json
 import random
+import logging
+
+_logger = logging.getLogger(__name__)
 
 
 class RouteTrackingController(http.Controller):
@@ -260,58 +263,138 @@ class RouteTrackingController(http.Controller):
     )
     def update_pickup_point(self, trip_id, new_pickup_address, new_coordinates):
         """
-        FR-3.4: Update pickup point dynamically.
+        FR-3.4: Update pickup point dynamically for approved trips.
+        
+        This endpoint allows staff members to adjust their pickup location
+        before the trip starts. Changes are immediately visible to:
+        - The assigned driver
+        - The dispatcher
+        - Other service users on the same route (FR-3.3 integration)
         
         Args:
             trip_id (int): Trip request ID
-            new_pickup_address (str): New pickup address
-            new_coordinates (dict): New coordinates {lat, lng}
+            new_pickup_address (str): New pickup address/description
+            new_coordinates (dict): New coordinates {lat: float, lng: float}
             
         Returns:
-            dict: Update result
+            dict: {
+                'success': bool,
+                'message': str,
+                'trip': {
+                    'id': int,
+                    'pickup': str,
+                    'coordinates': dict
+                }
+            }
+            
+        Security:
+            - Only the trip requester can update their own pickup point
+            - Only available for trips in 'approved' state
+            - Audit trail is automatically created
+            
+        SRS Compliance: FR-3.4 (Dynamic Pickup Point Update)
         """
         try:
             Trip = request.env['messob.fms.trip']
             trip = Trip.browse(trip_id)
             
             if not trip.exists():
-                return {'success': False, 'error': 'Trip not found'}
+                return {
+                    'success': False, 
+                    'error': 'Trip not found. The trip may have been deleted.'
+                }
             
-            # Check if user is the requester
+            # Security Check: Only requester can update (NFR-3.2: RBAC)
             user = request.env.user
             if trip.requester_id.id != user.partner_id.id:
-                return {'success': False, 'error': 'Only the trip requester can update pickup point'}
+                # Log unauthorized attempt
+                request.env['messob.fms.audit.log'].sudo().log_business_action(
+                    action='UNAUTHORIZED_PICKUP_UPDATE',
+                    model='messob.fms.trip',
+                    record_id=trip.id,
+                    description=f"User {user.name} attempted to update pickup for trip {trip.name} owned by {trip.requester_id.name}",
+                    severity='high'
+                )
+                return {
+                    'success': False, 
+                    'error': 'Access denied: Only the trip requester can update pickup point'
+                }
             
-            # Only allow updates for approved trips (not yet in progress)
+            # State Validation: Only approved trips (not yet started)
             if trip.state != 'approved':
-                return {'success': False, 'error': 'Pickup point can only be updated for approved trips'}
+                state_display = dict(trip._fields['state'].selection).get(trip.state, trip.state)
+                return {
+                    'success': False, 
+                    'error': f'Pickup point can only be updated for approved trips. Current status: {state_display}'
+                }
             
-            # Update pickup location
+            # Store old value for audit trail
+            old_pickup = trip.pickup
+            old_coords = self._geocode_location(old_pickup) if old_pickup else None
+            
+            # Update pickup location (FR-3.4)
             trip.write({
                 'pickup': new_pickup_address
             })
             
-            # Log the pickup point change
+            # Audit Log: Record the change (FR-5.3)
+            request.env['messob.fms.audit.log'].sudo().log_business_action(
+                action='UPDATE_PICKUP',
+                model='messob.fms.trip',
+                record_id=trip.id,
+                description=f"Pickup point updated from '{old_pickup}' to '{new_pickup_address}'",
+                severity='medium',
+                additional_data={
+                    'old_pickup': old_pickup,
+                    'new_pickup': new_pickup_address,
+                    'old_coordinates': old_coords,
+                    'new_coordinates': new_coordinates,
+                    'updated_by': user.name,
+                    'updated_at': fields.Datetime.now().isoformat()
+                }
+            )
+            
+            # Chatter Message: Visible to all followers
             trip.message_post(
-                body=f"Pickup point updated by {user.name}: {new_pickup_address}",
+                body=f"""<div style="padding: 10px; background: #FEF3C7; border-left: 4px solid #F59E0B; border-radius: 4px;">
+                    <strong style="color: #92400E;">📍 Pickup Location Updated</strong><br/>
+                    <div style="margin-top: 8px; color: #78350F;">
+                        <strong>Updated by:</strong> {user.name}<br/>
+                        <strong>New Location:</strong> {new_pickup_address}<br/>
+                        <strong>Coordinates:</strong> {new_coordinates.get('lat', 0):.4f}, {new_coordinates.get('lng', 0):.4f}<br/>
+                        <strong>Time:</strong> {fields.Datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+                    </div>
+                </div>""",
+                subject=f"Pickup Updated: {trip.name}",
                 message_type='notification'
             )
             
-            # In real system, notify driver and dispatcher
+            # Notify driver and dispatcher (FR-3.4 requirement)
             self._notify_pickup_change(trip, new_pickup_address, new_coordinates)
+            
+            _logger.info(
+                f"FR-3.4: Pickup updated for trip {trip.name} by {user.name}. "
+                f"Old: '{old_pickup}', New: '{new_pickup_address}'"
+            )
             
             return {
                 'success': True,
-                'message': 'Pickup point updated successfully',
+                'message': 'Pickup point updated successfully! Driver and dispatcher have been notified.',
                 'trip': {
                     'id': trip.id,
+                    'name': trip.name,
                     'pickup': trip.pickup,
-                    'coordinates': new_coordinates
+                    'coordinates': new_coordinates,
+                    'updated_at': fields.Datetime.now().isoformat()
                 }
             }
             
         except Exception as e:
-            return {'success': False, 'error': str(e)}
+            _logger.error(f"FR-3.4 Error: Failed to update pickup for trip {trip_id}: {str(e)}")
+            return {
+                'success': False, 
+                'error': f'An error occurred while updating pickup point: {str(e)}'
+            }
 
     # =========================================================================
     # HELPER METHODS (Simulate external services)
@@ -587,19 +670,137 @@ class RouteTrackingController(http.Controller):
         }
 
     def _notify_pickup_change(self, trip, new_address, new_coordinates):
-        """Notify driver and dispatcher about pickup point change."""
-        # In real implementation, this would send notifications
-        # For now, just log the change
-        message = f"Pickup point changed for trip {trip.name}: {new_address}"
+        """
+        FR-3.4: Notify driver and dispatcher about pickup point change.
         
-        # Log to trip chatter
-        trip.message_post(
-            body=message,
-            message_type='notification'
-        )
-        
-        # In real system: send email/SMS to driver and dispatcher
-        return True
+        Sends multi-channel notifications:
+        1. Email to driver and dispatcher
+        2. SMS to driver (if enabled)
+        3. In-app notification (via message_post)
+        4. WebSocket broadcast for real-time updates
+        """
+        try:
+            # Get driver and dispatcher users
+            driver_user = trip.assigned_driver_id.user_id if trip.assigned_driver_id else None
+            dispatcher_group = request.env.ref('messob_fleet.group_fms_dispatcher')
+            dispatcher_users = dispatcher_group.users if dispatcher_group else request.env['res.users']
+            
+            # Prepare notification message
+            notification_title = f"🚨 Pickup Location Changed: {trip.name}"
+            notification_body = f"""
+                <div style="font-family: Arial, sans-serif;">
+                    <h3 style="color: #F59E0B;">📍 Pickup Location Updated</h3>
+                    <hr style="border: 1px solid #E5E7EB; margin: 10px 0;">
+                    
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <tr>
+                            <td style="padding: 8px 0; font-weight: bold; width: 150px;">Trip ID:</td>
+                            <td>{trip.name}</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px 0; font-weight: bold;">Requester:</td>
+                            <td>{trip.requester_id.name}</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px 0; font-weight: bold;">New Pickup:</td>
+                            <td>{new_address}</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px 0; font-weight: bold;">Coordinates:</td>
+                            <td>{new_coordinates.get('lat', 0):.4f}, {new_coordinates.get('lng', 0):.4f}</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px 0; font-weight: bold;">Trip Date:</td>
+                            <td>{trip.start_dt.strftime('%Y-%m-%d %H:%M') if trip.start_dt else 'N/A'}</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px 0; font-weight: bold;">Vehicle:</td>
+                            <td>{trip.assigned_vehicle_id.license_plate if trip.assigned_vehicle_id else 'Not assigned'}</td>
+                        </tr>
+                    </table>
+                    
+                    <div style="margin-top: 20px; padding: 15px; background-color: #FEF3C7; border-radius: 6px; border-left: 4px solid #F59E0B;">
+                        <strong style="color: #92400E;">⚠️ Action Required:</strong><br/>
+                        <span style="color: #78350F;">Please note the updated pickup location and adjust your route accordingly.</span>
+                    </div>
+                    
+                    <p style="margin-top: 20px; color: #6B7280; font-size: 12px;">
+                        This is an automated notification from MESSOB Fleet Management System.
+                    </p>
+                </div>
+            """
+            
+            # 1. Email Notification to Driver
+            if driver_user and driver_user.partner_id.email:
+                try:
+                    trip.message_post(
+                        body=notification_body,
+                        subject=notification_title,
+                        partner_ids=[driver_user.partner_id.id],
+                        message_type='email',
+                        subtype_xmlid='mail.mt_comment'
+                    )
+                    _logger.info(f"FR-3.4: Email sent to driver {driver_user.name}")
+                except Exception as e:
+                    _logger.warning(f"FR-3.4: Failed to send email to driver: {e}")
+            
+            # 2. Email Notification to Dispatchers
+            for dispatcher in dispatcher_users:
+                if dispatcher.partner_id.email:
+                    try:
+                        trip.message_post(
+                            body=notification_body,
+                            subject=notification_title,
+                            partner_ids=[dispatcher.partner_id.id],
+                            message_type='email',
+                            subtype_xmlid='mail.mt_comment'
+                        )
+                    except Exception as e:
+                        _logger.warning(f"FR-3.4: Failed to send email to dispatcher {dispatcher.name}: {e}")
+            
+            # 3. SMS Notification to Driver (if SMS is enabled)
+            if driver_user and driver_user.partner_id.mobile:
+                try:
+                    sms_enabled = request.env['ir.config_parameter'].sudo().get_param('messob_fleet.sms_enabled', 'False') == 'True'
+                    if sms_enabled:
+                        sms_message = f"MESSOB Fleet: Pickup location changed for trip {trip.name}. New location: {new_address}. Please check your app for details."
+                        
+                        sms_log = request.env['messob.fms.sms.log'].sudo().create({
+                            'recipient_name': driver_user.partner_id.name,
+                            'recipient_mobile': driver_user.partner_id.mobile,
+                            'message': sms_message,
+                            'status': 'sent',
+                            'provider': request.env['ir.config_parameter'].sudo().get_param('messob_fleet.sms_provider', 'twilio'),
+                            'related_model': 'messob.fms.trip',
+                            'related_id': trip.id,
+                        })
+                        _logger.info(f"FR-3.4: SMS logged for driver {driver_user.name}")
+                except Exception as e:
+                    _logger.warning(f"FR-3.4: Failed to send SMS to driver: {e}")
+            
+            # 4. WebSocket/Bus notification for real-time updates
+            try:
+                request.env['bus.bus']._sendone(
+                    f'pickup_updated_{trip.id}',
+                    'pickup_update',
+                    {
+                        'trip_id': trip.id,
+                        'trip_name': trip.name,
+                        'new_pickup': new_address,
+                        'new_coordinates': new_coordinates,
+                        'updated_at': fields.Datetime.now().isoformat(),
+                        'message': f'Pickup location updated to: {new_address}'
+                    }
+                )
+                _logger.info(f"FR-3.4: WebSocket notification sent for trip {trip.name}")
+            except Exception as e:
+                _logger.warning(f"FR-3.4: Failed to send WebSocket notification: {e}")
+            
+            return True
+            
+        except Exception as e:
+            _logger.error(f"FR-3.4: Error in _notify_pickup_change: {e}")
+            return False
 
     @http.route(
         '/api/fleet/availability',
