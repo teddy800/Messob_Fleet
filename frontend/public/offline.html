@@ -1,127 +1,156 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Offline - MESSOB Fleet</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-        }
-        
-        .container {
-            background: white;
-            border-radius: 20px;
-            padding: 40px;
-            max-width: 400px;
-            text-align: center;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-        }
-        
-        .icon {
-            width: 80px;
-            height: 80px;
-            margin: 0 auto 20px;
-            background: #fee;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 40px;
-        }
-        
-        h1 {
-            color: #1e3a8a;
-            font-size: 24px;
-            margin-bottom: 10px;
-        }
-        
-        p {
-            color: #666;
-            line-height: 1.6;
-            margin-bottom: 20px;
-        }
-        
-        .retry-btn {
-            background: #1e3a8a;
-            color: white;
-            border: none;
-            padding: 12px 30px;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background 0.3s;
-        }
-        
-        .retry-btn:hover {
-            background: #3b82f6;
-        }
-        
-        .status {
-            margin-top: 20px;
-            padding: 10px;
-            background: #fef3c7;
-            border-radius: 8px;
-            color: #92400e;
-            font-size: 14px;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Offline - MESSOB Fleet Management</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #333;
+    }
+    
+    .offline-container {
+      background: white;
+      padding: 3rem;
+      border-radius: 1rem;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      max-width: 500px;
+      text-align: center;
+      animation: slideUp 0.5s ease-out;
+    }
+    
+    @keyframes slideUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    .icon {
+      width: 120px;
+      height: 120px;
+      margin: 0 auto 2rem;
+      background: #f3f4f6;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 4rem;
+    }
+    
+    h1 {
+      font-size: 2rem;
+      margin-bottom: 1rem;
+      color: #1f2937;
+    }
+    
+    p {
+      color: #6b7280;
+      line-height: 1.6;
+      margin-bottom: 2rem;
+    }
+    
+    .retry-button {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      padding: 1rem 2rem;
+      border-radius: 0.5rem;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    
+    .retry-button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+    }
+    
+    .retry-button:active {
+      transform: translateY(0);
+    }
+    
+    .status {
+      margin-top: 2rem;
+      font-size: 0.875rem;
+      color: #9ca3af;
+    }
+    
+    .pulse {
+      animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <div class="icon">📡</div>
-        <h1>You're Offline</h1>
-        <p>It looks like you've lost your internet connection. Please check your network settings and try again.</p>
-        <button class="retry-btn" onclick="window.location.reload()">Retry Connection</button>
-        <div class="status" id="status">
-            Checking connection status...
-        </div>
+  <div class="offline-container">
+    <div class="icon pulse">
+      📡
     </div>
-    
-    <script>
-        // Check connection status
-        function updateStatus() {
-            const status = document.getElementById('status');
-            if (navigator.onLine) {
-                status.textContent = '✓ Connection restored! Click retry to continue.';
-                status.style.background = '#d1fae5';
-                status.style.color = '#065f46';
-            } else {
-                status.textContent = '✗ Still offline. Waiting for connection...';
-                status.style.background = '#fee2e2';
-                status.style.color = '#991b1b';
-            }
-        }
-        
-        // Update status immediately
-        updateStatus();
-        
-        // Listen for online/offline events
-        window.addEventListener('online', updateStatus);
-        window.addEventListener('offline', updateStatus);
-        
-        // Check every 5 seconds
-        setInterval(updateStatus, 5000);
-        
-        // Auto-reload when back online
-        window.addEventListener('online', () => {
-            setTimeout(() => {
-                window.location.reload();
-            }, 2000);
-        });
-    </script>
+    <h1>You're Offline</h1>
+    <p>
+      It looks like you've lost your internet connection. Don't worry, your data is safe.
+      <br><br>
+      <strong>MESSOB Fleet Management</strong> will automatically sync your changes when you're back online.
+    </p>
+    <button class="retry-button" onclick="location.reload()">
+      Try Again
+    </button>
+    <div class="status">
+      <span id="connection-status">Checking connection...</span>
+    </div>
+  </div>
+
+  <script>
+    // Check connection status
+    function updateConnectionStatus() {
+      const status = document.getElementById('connection-status');
+      if (navigator.onLine) {
+        status.textContent = '✓ Connection restored';
+        status.style.color = '#10b981';
+        setTimeout(() => {
+          location.reload();
+        }, 1000);
+      } else {
+        status.textContent = '✗ No internet connection';
+        status.style.color = '#ef4444';
+      }
+    }
+
+    // Listen for online/offline events
+    window.addEventListener('online', updateConnectionStatus);
+    window.addEventListener('offline', updateConnectionStatus);
+
+    // Initial check
+    updateConnectionStatus();
+
+    // Periodic check every 5 seconds
+    setInterval(updateConnectionStatus, 5000);
+  </script>
 </body>
 </html>

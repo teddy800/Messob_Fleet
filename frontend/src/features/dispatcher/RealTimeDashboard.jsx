@@ -155,14 +155,14 @@ export default function RealTimeDashboard() {
     const position = vehiclePositions[vehicleId];
 
     return (
-      <Card className="hover:shadow-md transition-shadow">
+      <Card className="hover:shadow-md transition-shadow dark:bg-gray-800 dark:border-gray-700">
         <CardContent className="p-4 space-y-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Badge className={getStatusColor(trip.state)}>
                 {trip.state.replace('_', ' ').toUpperCase()}
               </Badge>
-              <span className="text-sm font-bold text-gray-600">{trip.name}</span>
+              <span className="text-sm font-bold text-gray-600 dark:text-gray-300">{trip.name}</span>
             </div>
             <div className="flex items-center gap-1">
               <vehicleStatus.icon className={`h-4 w-4 ${vehicleStatus.color}`} />
@@ -174,32 +174,32 @@ export default function RealTimeDashboard() {
 
           <div className="space-y-2 text-sm">
             <div className="flex items-start gap-2">
-              <MapPin className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
+              <MapPin className="h-4 w-4 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
               <div className="flex-1">
-                <p className="font-semibold text-gray-800">{trip.pickup}</p>
-                <p className="text-gray-600">→ {trip.destination}</p>
+                <p className="font-semibold text-gray-800 dark:text-gray-200">{trip.pickup}</p>
+                <p className="text-gray-600 dark:text-gray-400">→ {trip.destination}</p>
               </div>
             </div>
 
             <div className="flex items-center gap-2">
-              <Users className="h-4 w-4 text-purple-600 flex-shrink-0" />
-              <span className="text-gray-700">{requesterName}</span>
+              <Users className="h-4 w-4 text-purple-600 dark:text-purple-400 flex-shrink-0" />
+              <span className="text-gray-700 dark:text-gray-300">{requesterName}</span>
             </div>
 
             <div className="flex items-center gap-2">
-              <Car className="h-4 w-4 text-green-600 flex-shrink-0" />
-              <span className="text-gray-700">{vehicleName}</span>
+              <Car className="h-4 w-4 text-green-600 dark:text-green-400 flex-shrink-0" />
+              <span className="text-gray-700 dark:text-gray-300">{vehicleName}</span>
             </div>
 
             <div className="flex items-center gap-2">
-              <Users className="h-4 w-4 text-orange-600 flex-shrink-0" />
-              <span className="text-gray-700">{driverName}</span>
+              <Users className="h-4 w-4 text-orange-600 dark:text-orange-400 flex-shrink-0" />
+              <span className="text-gray-700 dark:text-gray-300">{driverName}</span>
             </div>
 
             {position && (
               <div className="flex items-center gap-2">
-                <Navigation className="h-4 w-4 text-indigo-600 flex-shrink-0" />
-                <span className="text-gray-700">
+                <Navigation className="h-4 w-4 text-indigo-600 dark:text-indigo-400 flex-shrink-0" />
+                <span className="text-gray-700 dark:text-gray-300">
                   {position.speed || 0} km/h • {new Date(position.timestamp).toLocaleTimeString()}
                 </span>
               </div>
@@ -210,7 +210,7 @@ export default function RealTimeDashboard() {
             <Button
               size="sm"
               variant="outline"
-              className="flex-1"
+              className="flex-1 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600"
               onClick={() => window.open(`/dashboard/tracking/${trip.id}`, '_blank')}
             >
               <MapPin className="h-3 w-3 mr-1" />
@@ -219,6 +219,7 @@ export default function RealTimeDashboard() {
             <Button
               size="sm"
               variant="outline"
+              className="dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600"
               onClick={() => callDriver(trip.assigned_driver_id, driverName)}
             >
               <Phone className="h-3 w-3 mr-1" />
@@ -231,14 +232,14 @@ export default function RealTimeDashboard() {
   };
 
   const AlertCard = ({ alert }) => (
-    <Card className="border-orange-200 bg-orange-50">
+    <Card className="border-orange-200 bg-orange-50 dark:bg-orange-900/20 dark:border-orange-800">
       <CardContent className="p-3">
         <div className="flex items-start gap-2">
-          <AlertTriangle className="h-4 w-4 text-orange-600 mt-0.5 flex-shrink-0" />
+          <AlertTriangle className="h-4 w-4 text-orange-600 dark:text-orange-400 mt-0.5 flex-shrink-0" />
           <div className="flex-1">
-            <p className="text-sm font-semibold text-orange-800">{alert.title}</p>
-            <p className="text-xs text-orange-700 mt-1">{alert.message}</p>
-            <p className="text-xs text-orange-600 mt-1">
+            <p className="text-sm font-semibold text-orange-800 dark:text-orange-300">{alert.title}</p>
+            <p className="text-xs text-orange-700 dark:text-orange-400 mt-1">{alert.message}</p>
+            <p className="text-xs text-orange-600 dark:text-orange-500 mt-1">
               {new Date(alert.created_at).toLocaleString()}
             </p>
           </div>
@@ -251,8 +252,8 @@ export default function RealTimeDashboard() {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
-          <div className="animate-spin h-8 w-8 border-4 border-brand-blue border-t-transparent rounded-full mx-auto mb-3"></div>
-          <p className="text-gray-500">Loading real-time dashboard...</p>
+          <div className="animate-spin h-8 w-8 border-4 border-brand-blue dark:border-blue-400 border-t-transparent rounded-full mx-auto mb-3"></div>
+          <p className="text-gray-500 dark:text-gray-400">Loading real-time dashboard...</p>
         </div>
       </div>
     );
@@ -261,9 +262,9 @@ export default function RealTimeDashboard() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-black text-brand-blue">Real-Time Operations Dashboard</h1>
+        <h1 className="text-2xl font-black text-brand-blue dark:text-blue-400">Real-Time Operations Dashboard</h1>
         <div className="flex items-center gap-3">
-          <span className="text-sm text-gray-500">
+          <span className="text-sm text-gray-500 dark:text-gray-400">
             Last updated: {lastUpdate.toLocaleTimeString()}
           </span>
           <Button
@@ -271,6 +272,7 @@ export default function RealTimeDashboard() {
             variant="outline"
             size="sm"
             disabled={loading}
+            className="dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600"
           >
             <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
             Refresh
@@ -280,48 +282,48 @@ export default function RealTimeDashboard() {
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card>
+        <Card className="dark:bg-gray-800 dark:border-gray-700">
           <CardContent className="p-4 flex items-center gap-3">
-            <Activity className="h-8 w-8 text-blue-600" />
+            <Activity className="h-8 w-8 text-blue-600 dark:text-blue-400" />
             <div>
-              <p className="text-xs text-gray-500 uppercase font-bold">Active Trips</p>
-              <p className="text-2xl font-black text-blue-600">
+              <p className="text-xs text-gray-500 dark:text-gray-400 uppercase font-bold">Active Trips</p>
+              <p className="text-2xl font-black text-blue-600 dark:text-blue-400">
                 {activeTrips.filter(t => t.state === 'in_progress').length}
               </p>
             </div>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="dark:bg-gray-800 dark:border-gray-700">
           <CardContent className="p-4 flex items-center gap-3">
-            <CheckCircle className="h-8 w-8 text-green-600" />
+            <CheckCircle className="h-8 w-8 text-green-600 dark:text-green-400" />
             <div>
-              <p className="text-xs text-gray-500 uppercase font-bold">Approved</p>
-              <p className="text-2xl font-black text-green-600">
+              <p className="text-xs text-gray-500 dark:text-gray-400 uppercase font-bold">Approved</p>
+              <p className="text-2xl font-black text-green-600 dark:text-green-400">
                 {activeTrips.filter(t => t.state === 'approved').length}
               </p>
             </div>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="dark:bg-gray-800 dark:border-gray-700">
           <CardContent className="p-4 flex items-center gap-3">
-            <Car className="h-8 w-8 text-purple-600" />
+            <Car className="h-8 w-8 text-purple-600 dark:text-purple-400" />
             <div>
-              <p className="text-xs text-gray-500 uppercase font-bold">Vehicles Online</p>
-              <p className="text-2xl font-black text-purple-600">
+              <p className="text-xs text-gray-500 dark:text-gray-400 uppercase font-bold">Vehicles Online</p>
+              <p className="text-2xl font-black text-purple-600 dark:text-purple-400">
                 {Object.keys(vehiclePositions).length}
               </p>
             </div>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="dark:bg-gray-800 dark:border-gray-700">
           <CardContent className="p-4 flex items-center gap-3">
-            <AlertTriangle className="h-8 w-8 text-orange-600" />
+            <AlertTriangle className="h-8 w-8 text-orange-600 dark:text-orange-400" />
             <div>
-              <p className="text-xs text-gray-500 uppercase font-bold">Alerts</p>
-              <p className="text-2xl font-black text-orange-600">{alerts.length}</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 uppercase font-bold">Alerts</p>
+              <p className="text-2xl font-black text-orange-600 dark:text-orange-400">{alerts.length}</p>
             </div>
           </CardContent>
         </Card>
@@ -330,16 +332,16 @@ export default function RealTimeDashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Active Trips */}
         <div className="lg:col-span-2 space-y-4">
-          <h2 className="text-lg font-black text-brand-blue">
+          <h2 className="text-lg font-black text-brand-blue dark:text-blue-400">
             Active Trips ({activeTrips.length})
           </h2>
           
           {activeTrips.length === 0 ? (
-            <Card>
+            <Card className="dark:bg-gray-800 dark:border-gray-700">
               <CardContent className="p-8 text-center">
-                <CheckCircle className="h-12 w-12 text-gray-400 mx-auto mb-3" />
-                <p className="text-gray-600 font-semibold">No active trips</p>
-                <p className="text-sm text-gray-500 mt-1">All trips are completed or pending</p>
+                <CheckCircle className="h-12 w-12 text-gray-400 dark:text-gray-500 mx-auto mb-3" />
+                <p className="text-gray-600 dark:text-gray-300 font-semibold">No active trips</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">All trips are completed or pending</p>
               </CardContent>
             </Card>
           ) : (
@@ -353,15 +355,15 @@ export default function RealTimeDashboard() {
 
         {/* Alerts Sidebar */}
         <div className="space-y-4">
-          <h2 className="text-lg font-black text-brand-blue">
+          <h2 className="text-lg font-black text-brand-blue dark:text-blue-400">
             System Alerts ({alerts.length})
           </h2>
           
           {alerts.length === 0 ? (
-            <Card>
+            <Card className="dark:bg-gray-800 dark:border-gray-700">
               <CardContent className="p-6 text-center">
-                <CheckCircle className="h-8 w-8 text-green-400 mx-auto mb-2" />
-                <p className="text-sm text-gray-600">No active alerts</p>
+                <CheckCircle className="h-8 w-8 text-green-400 dark:text-green-500 mx-auto mb-2" />
+                <p className="text-sm text-gray-600 dark:text-gray-300">No active alerts</p>
               </CardContent>
             </Card>
           ) : (

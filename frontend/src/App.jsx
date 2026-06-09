@@ -1,6 +1,7 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 import { Toaster } from "@/components/ui/sonner";
 import DashboardLayout from "./components/layouts/DashboardLayout";
+import PWAInstallPrompt from "./components/shared/PWAInstallPrompt";
 import Login from "./features/auth/Login";
 import ProtectedRoute from "./features/auth/ProtectedRoute";
 import RoleGuard from "./features/auth/RoleGuard";
@@ -95,6 +96,7 @@ export default function App() {
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
       <Toaster />
+      <PWAInstallPrompt />
     </>
   );
 }
