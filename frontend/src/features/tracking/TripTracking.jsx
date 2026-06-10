@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, MapPin, Users, Edit3, Route } from 'lucide-react';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
+import { ArrowLeft, MapPin, Users, Edit3, Route, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import RouteDisplay from './components/RouteDisplay';
@@ -12,9 +12,19 @@ import { toast } from 'sonner';
 export default function TripTracking() {
   const { tripId } = useParams();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [tripData, setTripData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [activeTab, setActiveTab] = useState('route');
+
+  // Check for tab query parameter on mount
+  useEffect(() => {
+    const tabParam = searchParams.get('tab');
+    if (tabParam && ['route', 'collaborative', 'pickup'].includes(tabParam)) {
+      setActiveTab(tabParam);
+    }
+  }, [searchParams]);
 
   // Fetch basic trip data
   useEffect(() => {
@@ -60,7 +70,35 @@ export default function TripTracking() {
         ...prev,
         pickup: newAddress
       }));
+      
+      // Show success message with route tab navigation
+      toast.success(
+        <div className="flex flex-col gap-1">
+          <div className="flex items-center gap-2 font-semibold">
+            <CheckCircle className="h-4 w-4" />
+            Pickup Point Updated!
+          </div>
+          <p className="text-xs">Your new pickup location has been saved and shared with the driver.</p>
+        </div>,
+        {
+          duration: 4000,
+          action: {
+            label: 'View Map',
+            onClick: () => setActiveTab('route')
+          }
+        }
+      );
+      
+      // Auto-switch to route view after 2 seconds
+      setTimeout(() => {
+        setActiveTab('route');
+      }, 2000);
     }
+  };
+
+  const handleEditPickupFromRoute = () => {
+    setActiveTab('pickup');
+    toast.info('Click on the map to update your pickup location', { duration: 3000 });
   };
 
   if (loading) {
@@ -148,7 +186,7 @@ export default function TripTracking() {
       </div>
 
       {/* Tracking Interface */}
-      <Tabs defaultValue="route" className="space-y-6">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
         <TabsList className="grid w-full grid-cols-3 dark:bg-gray-800 dark:border-gray-700">
           <TabsTrigger value="route" className="flex items-center gap-2 dark:text-gray-300 dark:data-[state=active]:bg-gray-700 dark:data-[state=active]:text-white">
             <Route className="h-4 w-4" />
@@ -158,15 +196,21 @@ export default function TripTracking() {
             <Users className="h-4 w-4" />
             Service Users
           </TabsTrigger>
-          <TabsTrigger value="pickup" className="flex items-center gap-2 dark:text-gray-300 dark:data-[state=active]:bg-gray-700 dark:data-[state=active]:text-white" disabled={!canUpdatePickup}>
+          <TabsTrigger value="pickup" className="flex items-center gap-2 dark:text-gray-300 dark:data-[state=active]:bg-gray-700 dark:data-[state=active]:text-white relative" disabled={!canUpdatePickup}>
             <Edit3 className="h-4 w-4" />
             Update Pickup
+            {canUpdatePickup && (
+              <span className="absolute -top-1 -right-1 h-2 w-2 bg-emerald-500/70 rounded-full animate-pulse"></span>
+            )}
           </TabsTrigger>
         </TabsList>
 
         {/* Route Display Tab (FR-3.1 & FR-3.2) */}
         <TabsContent value="route">
-          <RouteDisplay tripId={parseInt(tripId)} />
+          <RouteDisplay 
+            tripId={parseInt(tripId)} 
+            onEditPickup={canUpdatePickup ? handleEditPickupFromRoute : undefined}
+          />
         </TabsContent>
 
         {/* Collaborative Pickup Tab (FR-3.3) */}
