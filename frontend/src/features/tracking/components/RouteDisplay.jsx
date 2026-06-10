@@ -11,12 +11,15 @@ import {
   RefreshCw,
   Play,
   Pause,
-  Eye
+  Eye,
+  Edit3,
+  MapPinned
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useRouteTracking } from '../hooks/useRouteTracking';
 import { format } from 'date-fns';
+import { useNavigate } from 'react-router-dom';
 
 // Fix Leaflet default marker icons
 delete L.Icon.Default.prototype._getIconUrl;
@@ -60,7 +63,8 @@ const pickupIcon = createCustomIcon("#10b981"); // Green
 const destinationIcon = createCustomIcon("#ef4444"); // Red
 const vehicleIcon = createCustomIcon("#3b82f6", "car"); // Blue
 
-export default function RouteDisplay({ tripId, className = "" }) {
+export default function RouteDisplay({ tripId, className = "", onEditPickup }) {
+  const navigate = useNavigate();
   const { 
     routeData, 
     gpsPosition, 
@@ -74,6 +78,7 @@ export default function RouteDisplay({ tripId, className = "" }) {
 
   const mapRef = useRef(null);
   const [mapCenter, setMapCenter] = useState([9.0320, 38.7469]); // Default to Addis Ababa
+  const [showEditPickupTooltip, setShowEditPickupTooltip] = useState(false);
 
   // Update map center when route data loads
   useEffect(() => {
@@ -146,17 +151,29 @@ export default function RouteDisplay({ tripId, className = "" }) {
 
   const { trip, route } = routeData;
   const routeLineCoords = route.route_line?.map(point => [point.lat, point.lng]) || [];
+  
+  // Check if pickup can be edited (only for approved trips)
+  const canEditPickup = trip.state === 'approved';
+
+  const handleEditPickupClick = () => {
+    if (onEditPickup) {
+      onEditPickup();
+    } else {
+      // Fallback: navigate to tracking page with pickup tab
+      navigate(`/dashboard/tracking/${tripId}?tab=pickup`);
+    }
+  };
 
   return (
-    <div className={`bg-white rounded-xl shadow-lg overflow-hidden ${className}`}>
+    <div className={`bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden ${className}`}>
       {/* Header */}
-      <div className="bg-gradient-to-r from-brand-blue to-blue-700 p-4">
+      <div className="bg-gradient-to-r from-brand-blue to-blue-700 dark:from-blue-900 dark:to-blue-800 p-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Route className="h-6 w-6 text-brand-gold" />
+            <Route className="h-6 w-6 text-brand-gold dark:text-yellow-400" />
             <div>
               <h3 className="text-white font-bold text-lg">{trip.request_id}</h3>
-              <p className="text-blue-100 text-sm">{trip.requester}</p>
+              <p className="text-blue-100 dark:text-blue-200 text-sm">{trip.requester}</p>
             </div>
           </div>
           
@@ -173,7 +190,7 @@ export default function RouteDisplay({ tripId, className = "" }) {
                 onClick={isTracking ? stopTracking : startTracking}
                 size="sm"
                 variant="ghost"
-                className="text-white hover:bg-white/20"
+                className="text-white hover:bg-white/20 dark:hover:bg-white/10"
               >
                 {isTracking ? (
                   <>
@@ -193,7 +210,7 @@ export default function RouteDisplay({ tripId, className = "" }) {
               onClick={refreshRoute}
               size="sm"
               variant="ghost"
-              className="text-white hover:bg-white/20"
+              className="text-white hover:bg-white/20 dark:hover:bg-white/10"
             >
               <RefreshCw className="h-4 w-4" />
             </Button>
@@ -232,30 +249,57 @@ export default function RouteDisplay({ tripId, className = "" }) {
         </div>
       </div>
 
-      {/* Route Info */}
-      <div className="p-4 bg-blue-50 border-b">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      {/* Route Info with Edit Pickup Button */}
+      <div className="p-4 bg-blue-50 dark:bg-gray-900/50 border-b dark:border-gray-700">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
           <div className="flex items-start gap-2">
-            <MapPin className="h-4 w-4 text-green-600 mt-1 flex-shrink-0" />
+            <MapPin className="h-4 w-4 text-green-600 dark:text-green-400 mt-1 flex-shrink-0" />
             <div className="flex-1 min-w-0">
-              <p className="text-xs text-gray-500">Pickup</p>
-              <p className="font-medium text-sm truncate">{route.pickup.address}</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">Pickup</p>
+              <p className="font-medium text-sm truncate dark:text-gray-200">{route.pickup.address}</p>
             </div>
           </div>
           
           <div className="flex items-start gap-2">
-            <MapPin className="h-4 w-4 text-red-600 mt-1 flex-shrink-0" />
+            <MapPin className="h-4 w-4 text-red-600 dark:text-red-400 mt-1 flex-shrink-0" />
             <div className="flex-1 min-w-0">
-              <p className="text-xs text-gray-500">Destination</p>
-              <p className="font-medium text-sm truncate">{route.destination.address}</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">Destination</p>
+              <p className="font-medium text-sm truncate dark:text-gray-200">{route.destination.address}</p>
             </div>
           </div>
         </div>
         
-        <div className="flex items-center gap-4 mt-3 text-sm text-gray-600">
-          <span>Distance: {route.distance_km} km</span>
-          <span>•</span>
-          <span>Est. Duration: {route.estimated_duration_minutes} min</span>
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
+            <span>Distance: {route.distance_km} km</span>
+            <span>•</span>
+            <span>Est. Duration: {route.estimated_duration_minutes} min</span>
+          </div>
+          
+          {/* Prominent Edit Pickup Button (FR-3.4) */}
+          {canEditPickup && (
+            <div className="relative">
+              <Button
+                onClick={handleEditPickupClick}
+                onMouseEnter={() => setShowEditPickupTooltip(true)}
+                onMouseLeave={() => setShowEditPickupTooltip(false)}
+                size="sm"
+                className="bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white shadow-md hover:shadow-lg transition-all duration-200 dark:from-emerald-600 dark:to-emerald-700"
+              >
+                <Edit3 className="h-4 w-4 mr-1.5" />
+                Edit Pickup Point
+                <MapPinned className="h-4 w-4 ml-1.5" />
+              </Button>
+              
+              {/* Tooltip */}
+              {showEditPickupTooltip && (
+                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-1.5 bg-gray-900 dark:bg-gray-700 text-white text-xs rounded-lg whitespace-nowrap shadow-lg z-10 animate-in fade-in slide-in-from-bottom-1 duration-200">
+                  Update your pickup location to coordinate with driver
+                  <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-1 border-4 border-transparent border-t-gray-900 dark:border-t-gray-700"></div>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
