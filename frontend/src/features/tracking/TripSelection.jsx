@@ -83,8 +83,8 @@ export default function TripSelection() {
       <div className="p-6">
         <div className="flex items-center justify-center h-64">
           <div className="text-center">
-            <RefreshCw className="h-8 w-8 animate-spin text-brand-blue mx-auto mb-2" />
-            <p className="text-gray-600">Loading trackable trips...</p>
+            <RefreshCw className="h-8 w-8 animate-spin text-brand-blue dark:text-blue-400 mx-auto mb-2" />
+            <p className="text-gray-600 dark:text-gray-300">Loading trackable trips...</p>
           </div>
         </div>
       </div>
@@ -96,8 +96,8 @@ export default function TripSelection() {
       <div className="p-6">
         <div className="flex items-center justify-center h-64">
           <div className="text-center">
-            <p className="text-red-500 mb-4">{error}</p>
-            <Button onClick={fetchTrackableTrips} variant="outline">
+            <p className="text-red-500 dark:text-red-400 mb-4">{error}</p>
+            <Button onClick={fetchTrackableTrips} variant="outline" className="dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600">
               <RefreshCw className="h-4 w-4 mr-2" />
               Retry
             </Button>
@@ -112,14 +112,14 @@ export default function TripSelection() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-            <Route className="h-6 w-6 text-brand-blue" />
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+            <Route className="h-6 w-6 text-brand-blue dark:text-blue-400" />
             Trip Tracking
           </h1>
-          <p className="text-gray-600">Select a trip to track its route and progress</p>
+          <p className="text-gray-600 dark:text-gray-400">Select a trip to track its route and progress</p>
         </div>
         
-        <Button onClick={fetchTrackableTrips} variant="outline">
+        <Button onClick={fetchTrackableTrips} variant="outline" className="dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600 dark:hover:bg-gray-700">
           <RefreshCw className="h-4 w-4 mr-2" />
           Refresh
         </Button>
@@ -127,22 +127,22 @@ export default function TripSelection() {
 
       {/* Search */}
       <div className="relative">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 dark:text-gray-500" />
         <Input
           placeholder="Search trips by ID, requester, pickup, or destination..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="pl-10"
+          className="pl-10 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-200 dark:placeholder-gray-500"
         />
       </div>
 
       {/* Trips List */}
       {filteredTrips.length === 0 ? (
-        <Card>
+        <Card className="dark:bg-gray-800 dark:border-gray-700">
           <CardContent className="p-8 text-center">
-            <Route className="h-12 w-12 text-gray-300 mx-auto mb-3" />
-            <h3 className="text-lg font-medium text-gray-700 mb-2">No Trackable Trips</h3>
-            <p className="text-gray-500 text-sm">
+            <Route className="h-12 w-12 text-gray-300 dark:text-gray-600 mx-auto mb-3" />
+            <h3 className="text-lg font-medium text-gray-700 dark:text-gray-200 mb-2">No Trackable Trips</h3>
+            <p className="text-gray-500 dark:text-gray-400 text-sm">
               {searchTerm 
                 ? "No trips match your search criteria." 
                 : "There are no approved or in-progress trips available for tracking."
@@ -153,13 +153,13 @@ export default function TripSelection() {
       ) : (
         <div className="grid gap-4">
           {filteredTrips.map((trip) => (
-            <Card key={trip.id} className="hover:shadow-lg transition-shadow cursor-pointer">
+            <Card key={trip.id} className="hover:shadow-lg transition-shadow cursor-pointer dark:bg-gray-800 dark:border-gray-700">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div className="flex-1 space-y-3">
                     {/* Trip Header */}
                     <div className="flex items-center gap-3">
-                      <h3 className="font-bold text-lg text-gray-900">{trip.name}</h3>
+                      <h3 className="font-bold text-lg text-gray-900 dark:text-gray-100">{trip.name}</h3>
                       <Badge className={`${getStatusColor(trip.state)} text-white`}>
                         {trip.state.replace('_', ' ').toUpperCase()}
                       </Badge>
@@ -169,42 +169,42 @@ export default function TripSelection() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <div className="flex items-center gap-2 text-sm">
-                          <User className="h-4 w-4 text-gray-500" />
-                          <span className="text-gray-600">Requester:</span>
-                          <span className="font-medium">{trip.requester_id[1]}</span>
+                          <User className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+                          <span className="text-gray-600 dark:text-gray-400">Requester:</span>
+                          <span className="font-medium dark:text-gray-200">{trip.requester_id[1]}</span>
                         </div>
                         
                         <div className="flex items-center gap-2 text-sm">
-                          <Clock className="h-4 w-4 text-gray-500" />
-                          <span className="text-gray-600">Schedule:</span>
-                          <span className="font-medium">
+                          <Clock className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+                          <span className="text-gray-600 dark:text-gray-400">Schedule:</span>
+                          <span className="font-medium dark:text-gray-200">
                             {format(new Date(trip.start_dt), 'MMM d, HH:mm')}
                           </span>
                         </div>
 
                         {trip.assigned_vehicle_id && (
                           <div className="flex items-center gap-2 text-sm">
-                            <Car className="h-4 w-4 text-gray-500" />
-                            <span className="text-gray-600">Vehicle:</span>
-                            <span className="font-medium">{trip.assigned_vehicle_id[1]}</span>
+                            <Car className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+                            <span className="text-gray-600 dark:text-gray-400">Vehicle:</span>
+                            <span className="font-medium dark:text-gray-200">{trip.assigned_vehicle_id[1]}</span>
                           </div>
                         )}
                       </div>
 
                       <div className="space-y-2">
                         <div className="flex items-start gap-2 text-sm">
-                          <MapPin className="h-4 w-4 text-green-600 mt-0.5 flex-shrink-0" />
+                          <MapPin className="h-4 w-4 text-green-600 dark:text-green-400 mt-0.5 flex-shrink-0" />
                           <div>
-                            <span className="text-gray-600 block">Pickup:</span>
-                            <span className="font-medium text-sm">{trip.pickup}</span>
+                            <span className="text-gray-600 dark:text-gray-400 block">Pickup:</span>
+                            <span className="font-medium text-sm dark:text-gray-200">{trip.pickup}</span>
                           </div>
                         </div>
                         
                         <div className="flex items-start gap-2 text-sm">
-                          <MapPin className="h-4 w-4 text-red-600 mt-0.5 flex-shrink-0" />
+                          <MapPin className="h-4 w-4 text-red-600 dark:text-red-400 mt-0.5 flex-shrink-0" />
                           <div>
-                            <span className="text-gray-600 block">Destination:</span>
-                            <span className="font-medium text-sm">{trip.destination}</span>
+                            <span className="text-gray-600 dark:text-gray-400 block">Destination:</span>
+                            <span className="font-medium text-sm dark:text-gray-200">{trip.destination}</span>
                           </div>
                         </div>
                       </div>
@@ -213,8 +213,8 @@ export default function TripSelection() {
                     {/* Purpose */}
                     {trip.purpose && (
                       <div className="text-sm">
-                        <span className="text-gray-600">Purpose:</span>
-                        <span className="ml-2 text-gray-800">{trip.purpose}</span>
+                        <span className="text-gray-600 dark:text-gray-400">Purpose:</span>
+                        <span className="ml-2 text-gray-800 dark:text-gray-200">{trip.purpose}</span>
                       </div>
                     )}
                   </div>
@@ -223,7 +223,7 @@ export default function TripSelection() {
                   <div className="ml-6">
                     <Button
                       onClick={() => handleTripSelect(trip.id)}
-                      className="bg-brand-blue hover:bg-blue-700"
+                      className="bg-brand-blue dark:bg-blue-700 hover:bg-blue-700 dark:hover:bg-blue-800"
                     >
                       Track Trip
                       <ArrowRight className="h-4 w-4 ml-2" />
