@@ -17,6 +17,9 @@
 from odoo import models, fields, api, _ # type: ignore
 from odoo.exceptions import UserError # type: ignore
 from datetime import timedelta
+import logging
+
+_logger = logging.getLogger(__name__)
 
 
 class MessobFmsTrip(models.Model):
