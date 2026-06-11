@@ -33,25 +33,22 @@ class MessobFmsFuelLog(models.Model):
     trip_id = fields.Many2one(
         comodel_name='messob.fms.trip',
         string='Trip',
-        required=True,
-        ondelete='cascade',
-        help='The active trip during which this fuel was added.',
+        ondelete='set null',
+        help='The active trip during which this fuel was added (optional for automatic logs).',
     )
 
     vehicle_id = fields.Many2one(
         comodel_name='fleet.vehicle',
         string='Vehicle',
-        related='trip_id.assigned_vehicle_id',
-        store=True,
-        readonly=True,
+        required=True,
+        index=True,
+        help='Vehicle that received the fuel.',
     )
 
     driver_id = fields.Many2one(
         comodel_name='res.partner',
         string='Driver',
-        related='trip_id.assigned_driver_id',
-        store=True,
-        readonly=True,
+        help='Driver who refueled the vehicle (for manual entries).',
     )
 
     # ── Fuel details ──
@@ -210,6 +207,271 @@ class MessobFmsFuelLog(models.Model):
                 'average_refuel_liters': round(total_fuel / len(fuel_logs), 2),
                 'average_refuel_cost': round(total_cost / len(fuel_logs), 2)
             }
+        }
+
+
+    @api.model_create_multi
+    def create(self, vals_list):
+        """
+        Override create to handle automatic fuel pump transactions.
+        
+        HW-2: Enhanced create method for fuel pump hardware integration.
+        - Sends notifications for automatic logs
+        - Triggers reconciliation checks
+        - Updates vehicle odometer automatically
+        - Logs audit trail for automatic transactions
+        """
+        records = super().create(vals_list)
+        
+        for rec in records:
+            # Handle automatic fuel logs from pump hardware
+            if rec.source == 'automatic':
+                # Send notification to dispatcher/admin
+                self._notify_automatic_fuel_log(rec)
+                
+                # Log in audit trail
+                self.env['messob.fms.audit.log'].sudo().log_business_action(
+                    action='AUTO_FUEL_LOG',
+                    model=self._name,
+                    record_id=rec.id,
+                    description=f"Automatic fuel log created from pump {rec.pump_id or 'Unknown'} "
+                               f"for vehicle {rec.vehicle_id.license_plate if rec.vehicle_id else 'Unknown'} - "
+                               f"{rec.liters}L, Cost: {rec.price}",
+                    severity='medium',
+                    additional_data={
+                        'vehicle': rec.vehicle_id.license_plate if rec.vehicle_id else None,
+                        'pump_id': rec.pump_id,
+                        'transaction_id': rec.pump_transaction_id,
+                        'volume': rec.liters,
+                        'cost': rec.price,
+                        'odometer': rec.odometer,
+                        'station': rec.station_name,
+                    }
+                )
+                
+                # Update vehicle odometer if higher
+                if rec.vehicle_id and rec.odometer > (rec.vehicle_id.odometer or 0):
+                    old_odometer = rec.vehicle_id.odometer
+                    rec.vehicle_id.write({'odometer': rec.odometer})
+                    _logger.info(
+                        f"Vehicle {rec.vehicle_id.license_plate} odometer updated "
+                        f"from {old_odometer} to {rec.odometer} via fuel pump"
+                    )
+        
+        return records
+
+    def _notify_automatic_fuel_log(self, fuel_log):
+        """
+        Send notification when automatic fuel log is created.
+        
+        HW-2: Notification system for automatic fuel pump transactions.
+        Notifies dispatcher and admin about new automatic fuel entries.
+        """
+        notify_dispatcher = self.env['ir.config_parameter'].sudo().get_param(
+            'messob_fleet.fuel_pump_notify_dispatcher', 'True'
+        ) == 'True'
+        
+        notify_admin = self.env['ir.config_parameter'].sudo().get_param(
+            'messob_fleet.fuel_pump_notify_admin', 'True'
+        ) == 'True'
+        
+        if not (notify_dispatcher or notify_admin):
+            return
+        
+        # Get recipients
+        recipients = self.env['res.partner']
+        
+        if notify_dispatcher:
+            dispatcher_group = self.env.ref('messob_fleet.group_fms_dispatcher', raise_if_not_found=False)
+            if dispatcher_group:
+                recipients |= dispatcher_group.users.mapped('partner_id')
+        
+        if notify_admin:
+            admin_group = self.env.ref('messob_fleet.group_fms_admin', raise_if_not_found=False)
+            if admin_group:
+                recipients |= admin_group.users.mapped('partner_id')
+        
+        if not recipients:
+            return
+        
+        # Prepare message
+        vehicle_name = fuel_log.vehicle_id.license_plate if fuel_log.vehicle_id else 'Unknown Vehicle'
+        pump_id = fuel_log.pump_id or 'Unknown Pump'
+        station = fuel_log.station_name or 'Unknown Station'
+        
+        message_body = f"""
+        <div style="padding: 15px; background: #EFF6FF; border-left: 4px solid #3B82F6; border-radius: 4px;">
+            <strong style="color: #1E40AF; font-size: 16px;">⛽ Automatic Fuel Log Created</strong>
+            <div style="margin-top: 12px; color: #1E3A8A;">
+                <table style="width: 100%; border-collapse: collapse;">
+                    <tr>
+                        <td style="padding: 4px 0;"><strong>Vehicle:</strong></td>
+                        <td style="padding: 4px 0;">{vehicle_name}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 4px 0;"><strong>Station:</strong></td>
+                        <td style="padding: 4px 0;">{station}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 4px 0;"><strong>Pump ID:</strong></td>
+                        <td style="padding: 4px 0;">{pump_id}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 4px 0;"><strong>Volume:</strong></td>
+                        <td style="padding: 4px 0;">{fuel_log.liters:.2f} Liters</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 4px 0;"><strong>Cost:</strong></td>
+                        <td style="padding: 4px 0;">{fuel_log.price:.2f} ETB</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 4px 0;"><strong>Price/Liter:</strong></td>
+                        <td style="padding: 4px 0;">{fuel_log.price_per_liter:.2f} ETB/L</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 4px 0;"><strong>Odometer:</strong></td>
+                        <td style="padding: 4px 0;">{fuel_log.odometer:,} km</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 4px 0;"><strong>Transaction ID:</strong></td>
+                        <td style="padding: 4px 0;">{fuel_log.pump_transaction_id or 'N/A'}</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 4px 0;"><strong>Date:</strong></td>
+                        <td style="padding: 4px 0;">{fuel_log.date.strftime('%Y-%m-%d %H:%M:%S')}</td>
+                    </tr>
+                </table>
+            </div>
+            <div style="margin-top: 12px; padding: 8px; background: #DBEAFE; border-radius: 4px;">
+                <small style="color: #1E40AF;">
+                    <strong>ℹ️ Note:</strong> This fuel log was automatically created by the fuel pump hardware system.
+                    No manual intervention required.
+                </small>
+            </div>
+        </div>
+        """
+        
+        # Send notification
+        try:
+            self.env['mail.mail'].sudo().create({
+                'subject': f'🔔 Automatic Fuel Log: {vehicle_name} - {fuel_log.liters:.1f}L',
+                'body_html': message_body,
+                'recipient_ids': [(6, 0, recipients.ids)],
+                'auto_delete': False,
+            }).send()
+            
+            _logger.info(f"Automatic fuel log notification sent to {len(recipients)} recipients")
+        except Exception as e:
+            _logger.error(f"Failed to send automatic fuel log notification: {e}")
+
+    @api.model
+    def reconcile_fuel_logs(self, vehicle_id=None, date_from=None, date_to=None):
+        """
+        HW-2: Reconcile automatic vs manual fuel logs.
+        
+        Compare automatic fuel logs (from pump hardware) with manual entries
+        to identify discrepancies, missing entries, or duplicate records.
+        
+        Args:
+            vehicle_id (int, optional): Specific vehicle to reconcile
+            date_from (date, optional): Start date for reconciliation
+            date_to (date, optional): End date for reconciliation
+            
+        Returns:
+            dict: Reconciliation report with discrepancies and statistics
+        """
+        domain = []
+        
+        if vehicle_id:
+            domain.append(('vehicle_id', '=', vehicle_id))
+        if date_from:
+            domain.append(('date', '>=', date_from))
+        if date_to:
+            domain.append(('date', '<=', date_to))
+        
+        all_logs = self.search(domain, order='date asc')
+        automatic_logs = all_logs.filtered(lambda l: l.source == 'automatic')
+        manual_logs = all_logs.filtered(lambda l: l.source == 'manual')
+        
+        discrepancies = []
+        matched = []
+        unmatched_automatic = []
+        unmatched_manual = []
+        
+        # Match automatic with manual logs (within 1 hour, same vehicle)
+        for auto_log in automatic_logs:
+            matching_manual = manual_logs.filtered(
+                lambda m: m.vehicle_id == auto_log.vehicle_id and
+                abs((m.date - auto_log.date).total_seconds()) < 3600
+            )
+            
+            if matching_manual:
+                # Check for discrepancies
+                for manual_log in matching_manual:
+                    volume_diff = abs(auto_log.liters - manual_log.liters)
+                    cost_diff = abs(auto_log.price - manual_log.price)
+                    
+                    if volume_diff > 1.0 or cost_diff > 50.0:
+                        discrepancies.append({
+                            'vehicle': auto_log.vehicle_id.license_plate,
+                            'date': auto_log.date.isoformat(),
+                            'automatic_log_id': auto_log.id,
+                            'manual_log_id': manual_log.id,
+                            'volume_difference': round(volume_diff, 2),
+                            'cost_difference': round(cost_diff, 2),
+                            'severity': 'high' if volume_diff > 5.0 or cost_diff > 200.0 else 'medium',
+                        })
+                    else:
+                        matched.append({
+                            'automatic_log_id': auto_log.id,
+                            'manual_log_id': manual_log.id,
+                            'vehicle': auto_log.vehicle_id.license_plate,
+                            'date': auto_log.date.isoformat(),
+                        })
+            else:
+                unmatched_automatic.append({
+                    'log_id': auto_log.id,
+                    'vehicle': auto_log.vehicle_id.license_plate,
+                    'date': auto_log.date.isoformat(),
+                    'volume': auto_log.liters,
+                    'cost': auto_log.price,
+                })
+        
+        # Find manual logs without automatic counterpart
+        for manual_log in manual_logs:
+            matching_auto = automatic_logs.filtered(
+                lambda a: a.vehicle_id == manual_log.vehicle_id and
+                abs((a.date - manual_log.date).total_seconds()) < 3600
+            )
+            
+            if not matching_auto:
+                unmatched_manual.append({
+                    'log_id': manual_log.id,
+                    'vehicle': manual_log.vehicle_id.license_plate,
+                    'date': manual_log.date.isoformat(),
+                    'volume': manual_log.liters,
+                    'cost': manual_log.price,
+                })
+        
+        return {
+            'success': True,
+            'period': {
+                'from': date_from.isoformat() if date_from else 'All time',
+                'to': date_to.isoformat() if date_to else 'Now',
+            },
+            'summary': {
+                'total_logs': len(all_logs),
+                'automatic_logs': len(automatic_logs),
+                'manual_logs': len(manual_logs),
+                'matched_pairs': len(matched),
+                'discrepancies': len(discrepancies),
+                'unmatched_automatic': len(unmatched_automatic),
+                'unmatched_manual': len(unmatched_manual),
+            },
+            'discrepancies': discrepancies,
+            'unmatched_automatic': unmatched_automatic,
+            'unmatched_manual': unmatched_manual,
+            'matched': matched,
         }
 
     @api.model

@@ -48,9 +48,10 @@ Covers:
         'security/record_rules.xml',
         'security/api_performance_rules.xml',
 
-        # 2. Master data (sequences + locations)
+        # 2. Master data (sequences + locations + fuel pump config)
         'data/sequences.xml',
         'data/locations.xml',
+        'data/fuel_pump_config.xml',
         'data/maintenance_alert_templates.xml',
         'data/maintenance_alert_cron.xml',
         'data/audit_log_cron.xml',

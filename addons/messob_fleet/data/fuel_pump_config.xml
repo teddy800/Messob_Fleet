@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    MESSOB Fleet Management System
+    Fuel Pump Hardware Integration Configuration (HW-2)
+    
+    This file configures the fuel pump hardware webhook for automatic fuel logging.
+    
+    Features:
+    - API key configuration for secure webhook authentication
+    - Default fuel pump settings
+    - System parameters for pump integration
+-->
+<odoo>
+    <data noupdate="1">
+        
+        <!-- ================================================================= -->
+        <!-- FUEL PUMP API KEY CONFIGURATION (HW-2)                          -->
+        <!-- ================================================================= -->
+        
+        <record id="config_fuel_pump_api_key" model="ir.config_parameter">
+            <field name="key">messob_fleet.fuel_pump_api_key</field>
+            <field name="value">MESSOB-FMS-FUEL-PUMP-2026-SECURE-KEY</field>
+        </record>
+        
+        <!-- ================================================================= -->
+        <!-- FUEL PUMP INTEGRATION SETTINGS                                  -->
+        <!-- ================================================================= -->
+        
+        <record id="config_fuel_pump_enabled" model="ir.config_parameter">
+            <field name="key">messob_fleet.fuel_pump_enabled</field>
+            <field name="value">True</field>
+        </record>
+        
+        <record id="config_fuel_pump_webhook_url" model="ir.config_parameter">
+            <field name="key">messob_fleet.fuel_pump_webhook_url</field>
+            <field name="value">/odoo/fms/fuel-pump/transaction</field>
+        </record>
+        
+        <record id="config_fuel_pump_auto_reconcile" model="ir.config_parameter">
+            <field name="key">messob_fleet.fuel_pump_auto_reconcile</field>
+            <field name="value">True</field>
+        </record>
+        
+        <record id="config_fuel_pump_duplicate_check" model="ir.config_parameter">
+            <field name="key">messob_fleet.fuel_pump_duplicate_check</field>
+            <field name="value">True</field>
+        </record>
+        
+        <record id="config_fuel_pump_max_volume" model="ir.config_parameter">
+            <field name="key">messob_fleet.fuel_pump_max_volume</field>
+            <field name="value">500</field>
+        </record>
+        
+        <record id="config_fuel_pump_timeout_seconds" model="ir.config_parameter">
+            <field name="key">messob_fleet.fuel_pump_timeout_seconds</field>
+            <field name="value">30</field>
+        </record>
+        
+        <!-- ================================================================= -->
+        <!-- FUEL PUMP VENDOR CONFIGURATIONS                                 -->
+        <!-- ================================================================= -->
+        
+        <record id="config_fuel_pump_vendor" model="ir.config_parameter">
+            <field name="key">messob_fleet.fuel_pump_vendor</field>
+            <field name="value">generic</field>
+        </record>
+        
+        <record id="config_fuel_pump_station_name" model="ir.config_parameter">
+            <field name="key">messob_fleet.fuel_pump_default_station</field>
+            <field name="value">MESSOB Fleet Fuel Station</field>
+        </record>
+        
+        <!-- ================================================================= -->
+        <!-- NOTIFICATION SETTINGS FOR AUTOMATIC FUEL LOGS                   -->
+        <!-- ================================================================= -->
+        
+        <record id="config_fuel_pump_notify_dispatcher" model="ir.config_parameter">
+            <field name="key">messob_fleet.fuel_pump_notify_dispatcher</field>
+            <field name="value">True</field>
+        </record>
+        
+        <record id="config_fuel_pump_notify_admin" model="ir.config_parameter">
+            <field name="key">messob_fleet.fuel_pump_notify_admin</field>
+            <field name="value">True</field>
+        </record>
+        
+        <record id="config_fuel_pump_alert_on_discrepancy" model="ir.config_parameter">
+            <field name="key">messob_fleet.fuel_pump_alert_on_discrepancy</field>
+            <field name="value">True</field>
+        </record>
+        
+        <!-- ================================================================= -->
+        <!-- DATA RETENTION FOR FUEL PUMP TRANSACTIONS                       -->
+        <!-- ================================================================= -->
+        
+        <record id="config_fuel_pump_transaction_retention_days" model="ir.config_parameter">
+            <field name="key">messob_fleet.fuel_pump_transaction_retention_days</field>
+            <field name="value">2555</field> <!-- 7 years -->
+        </record>
+        
+    </data>
+</odoo>
