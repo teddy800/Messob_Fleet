@@ -159,6 +159,21 @@ class MessobFmsTrip(models.Model):
         help='Select from known locations for autocomplete.',
     )
 
+    # FR-3.4: Dynamic Pickup Point Coordinates
+    pickup_latitude = fields.Float(
+        string='Pickup Latitude',
+        digits=(10, 7),
+        tracking=True,
+        help='GPS latitude for pickup point (can be updated dynamically).',
+    )
+
+    pickup_longitude = fields.Float(
+        string='Pickup Longitude',
+        digits=(10, 7),
+        tracking=True,
+        help='GPS longitude for pickup point (can be updated dynamically).',
+    )
+
     destination = fields.Char(
         string='Destination',
         required=True,
@@ -170,6 +185,18 @@ class MessobFmsTrip(models.Model):
         comodel_name='messob.fms.location',
         string='Destination (Select)',
         help='Select from known locations for autocomplete.',
+    )
+
+    destination_latitude = fields.Float(
+        string='Destination Latitude',
+        digits=(10, 7),
+        help='GPS latitude for destination point.',
+    )
+
+    destination_longitude = fields.Float(
+        string='Destination Longitude',
+        digits=(10, 7),
+        help='GPS longitude for destination point.',
     )
 
     # =========================================================================
@@ -316,11 +343,19 @@ class MessobFmsTrip(models.Model):
     def _onchange_pickup_location(self):
         if self.pickup_location_id:
             self.pickup = self.pickup_location_id.display_name_custom
+            # Auto-populate coordinates from selected location
+            if self.pickup_location_id.latitude and self.pickup_location_id.longitude:
+                self.pickup_latitude = self.pickup_location_id.latitude
+                self.pickup_longitude = self.pickup_location_id.longitude
 
     @api.onchange('destination_location_id')
     def _onchange_destination_location(self):
         if self.destination_location_id:
             self.destination = self.destination_location_id.display_name_custom
+            # Auto-populate coordinates from selected location
+            if self.destination_location_id.latitude and self.destination_location_id.longitude:
+                self.destination_latitude = self.destination_location_id.latitude
+                self.destination_longitude = self.destination_location_id.longitude
 
     # =========================================================================
     # ORM OVERRIDES
@@ -633,15 +668,23 @@ class MessobFmsTrip(models.Model):
         geocoding_service = self.env['messob.fms.geocoding.service']
         
         # Build current trip data
-        current_coords = geocoding_service.geocode_address(self.pickup) if self.pickup else None
+        # Use explicit coordinates if available, otherwise geocode address
+        if self.pickup_latitude and self.pickup_longitude:
+            current_lat = self.pickup_latitude
+            current_lng = self.pickup_longitude
+        else:
+            current_coords = geocoding_service.geocode_address(self.pickup) if self.pickup else None
+            current_lat = current_coords.get('latitude', 9.0320) if current_coords else 9.0320
+            current_lng = current_coords.get('longitude', 38.7469) if current_coords else 38.7469
+        
         current_trip_data = {
             'trip_id': self.id,
             'request_id': self.name,
             'requester': self.requester_id.name if self.requester_id else 'Unknown',
             'pickup_address': self.pickup or '',
             'pickup_coordinates': {
-                'lat': current_coords.get('latitude', 9.0320) if current_coords else 9.0320,
-                'lng': current_coords.get('longitude', 38.7469) if current_coords else 38.7469,
+                'lat': current_lat,
+                'lng': current_lng,
             },
             'start_time': self.start_dt.strftime('%Y-%m-%d %H:%M') if self.start_dt else '',
             'status': self.state,
@@ -650,7 +693,14 @@ class MessobFmsTrip(models.Model):
         # Build service users list
         service_users = []
         for trip in other_trips:
-            coords = geocoding_service.geocode_address(trip.pickup) if trip.pickup else None
+            # Use explicit coordinates if available, otherwise geocode
+            if trip.pickup_latitude and trip.pickup_longitude:
+                trip_lat = trip.pickup_latitude
+                trip_lng = trip.pickup_longitude
+            else:
+                coords = geocoding_service.geocode_address(trip.pickup) if trip.pickup else None
+                trip_lat = coords.get('latitude', 9.0320) if coords else 9.0320
+                trip_lng = coords.get('longitude', 38.7469) if coords else 38.7469
             
             user_data = {
                 'trip_id': trip.id,
@@ -659,8 +709,8 @@ class MessobFmsTrip(models.Model):
                 'department': trip.requester_id.function if trip.requester_id and hasattr(trip.requester_id, 'function') else None,
                 'pickup_address': trip.pickup or '',
                 'pickup_coordinates': {
-                    'lat': coords.get('latitude', 9.0320) if coords else 9.0320,
-                    'lng': coords.get('longitude', 38.7469) if coords else 38.7469,
+                    'lat': trip_lat,
+                    'lng': trip_lng,
                 },
                 'start_time': trip.start_dt.strftime('%Y-%m-%d %H:%M') if trip.start_dt else '',
                 'status': trip.state,
@@ -684,6 +734,137 @@ class MessobFmsTrip(models.Model):
             'service_users': service_users,
             'vehicle': vehicle_data,
             'total_passengers': len(service_users) + 1,
+        }
+
+    def update_pickup_coordinates(self, latitude, longitude):
+        """
+        FR-3.4: Dynamic Pickup Point Update
+        
+        Allows staff to update their exact pickup coordinates in real-time.
+        Broadcasts the change via WebSocket to the assigned driver for immediate sync.
+        
+        Args:
+            latitude (float): New pickup latitude
+            longitude (float): New pickup longitude
+            
+        Returns:
+            dict: Success status and updated coordinates
+            
+        Security:
+            - Only the requester can update their own pickup point
+            - Only works for approved or in-progress trips
+            - Driver receives real-time notification
+        """
+        self.ensure_one()
+        
+        # Security check: Only requester can update their pickup point
+        if self.requester_id.id != self.env.user.partner_id.id:
+            # Allow dispatcher/admin to update as well
+            if not self.env.user.has_group('messob_fleet.group_fms_dispatcher') and \
+               not self.env.user.has_group('messob_fleet.group_fms_admin'):
+                raise UserError(_('Only the trip requester can update pickup coordinates.'))
+        
+        # State check: Only approved or in-progress trips can be updated
+        if self.state not in ['approved', 'in_progress']:
+            raise UserError(_('Pickup coordinates can only be updated for approved or in-progress trips.'))
+        
+        # Validate coordinates
+        if not (-90 <= latitude <= 90):
+            raise UserError(_('Latitude must be between -90 and 90 degrees.'))
+        if not (-180 <= longitude <= 180):
+            raise UserError(_('Longitude must be between -180 and 180 degrees.'))
+        
+        # Store old coordinates for audit
+        old_lat = self.pickup_latitude
+        old_lng = self.pickup_longitude
+        
+        # Update coordinates
+        self.write({
+            'pickup_latitude': latitude,
+            'pickup_longitude': longitude,
+        })
+        
+        # Log the coordinate update in audit trail
+        self.env['messob.fms.audit.log'].sudo().log_business_action(
+            action='UPDATE_PICKUP',
+            model=self._name,
+            record_id=self.id,
+            description=f"Pickup coordinates updated for trip {self.name}: "
+                       f"({old_lat}, {old_lng}) → ({latitude}, {longitude})",
+            severity='medium',
+            additional_data={
+                'old_coordinates': {'lat': old_lat, 'lng': old_lng},
+                'new_coordinates': {'lat': latitude, 'lng': longitude},
+                'requester': self.requester_id.name if self.requester_id else 'Unknown',
+                'trip_state': self.state,
+            }
+        )
+        
+        # Broadcast via WebSocket to assigned driver (FR-3.4: Real-time sync)
+        if self.assigned_driver_id:
+            try:
+                # Channel specific to this driver
+                self.env['bus.bus']._sendone(
+                    f'trip_update_{self.assigned_driver_id.id}',
+                    'pickup_updated',
+                    {
+                        'trip_id': self.id,
+                        'trip_name': self.name,
+                        'requester_name': self.requester_id.name if self.requester_id else 'Unknown',
+                        'pickup_address': self.pickup,
+                        'lat': latitude,
+                        'lng': longitude,
+                        'timestamp': fields.Datetime.now().isoformat(),
+                        'message': f'{self.requester_id.name} updated their pickup location',
+                    }
+                )
+                _logger.info(
+                    f"Broadcasted pickup update to driver {self.assigned_driver_id.name} "
+                    f"for trip {self.name}"
+                )
+            except Exception as e:
+                _logger.error(f"Failed to broadcast pickup update via WebSocket: {e}")
+        
+        # Also broadcast to dispatcher dashboard for visibility
+        try:
+            self.env['bus.bus']._sendone(
+                'dispatcher_trip_updates',
+                'pickup_updated',
+                {
+                    'trip_id': self.id,
+                    'trip_name': self.name,
+                    'requester_name': self.requester_id.name if self.requester_id else 'Unknown',
+                    'driver_name': self.assigned_driver_id.name if self.assigned_driver_id else 'Unassigned',
+                    'lat': latitude,
+                    'lng': longitude,
+                    'timestamp': fields.Datetime.now().isoformat(),
+                }
+            )
+        except Exception as e:
+            _logger.error(f"Failed to broadcast to dispatcher dashboard: {e}")
+        
+        # Send notification message to driver
+        if self.assigned_driver_id:
+            self.message_post(
+                body=f"<strong>Pickup Location Updated</strong><br/>"
+                     f"Requester: {self.requester_id.name if self.requester_id else 'Unknown'}<br/>"
+                     f"New pickup coordinates: {latitude}, {longitude}<br/>"
+                     f"Address: {self.pickup}<br/>"
+                     f"Please check your map for the updated location.",
+                subject=f"Pickup Updated: {self.name}",
+                partner_ids=[self.assigned_driver_id.id],
+                message_type='notification',
+            )
+        
+        return {
+            'success': True,
+            'message': 'Pickup coordinates updated and driver notified',
+            'trip_id': self.id,
+            'coordinates': {
+                'latitude': latitude,
+                'longitude': longitude,
+            },
+            'driver_notified': bool(self.assigned_driver_id),
         }
 
     def _check_resource_availability(self):
