@@ -396,6 +396,71 @@ class RouteTrackingController(http.Controller):
                 'error': f'An error occurred while updating pickup point: {str(e)}'
             }
 
+    @http.route(
+        '/api/route/update-pickup-coordinates',
+        type='json',
+        auth='user',
+        methods=['POST'],
+        csrf=False
+    )
+    def update_pickup_coordinates(self, trip_id, latitude, longitude):
+        """
+        FR-3.4: Update pickup coordinates dynamically with real-time driver sync.
+        
+        This is the enhanced version that uses explicit GPS coordinates and
+        broadcasts updates via WebSocket for instant driver notification.
+        
+        Args:
+            trip_id (int): Trip request ID
+            latitude (float): New pickup latitude (-90 to 90)
+            longitude (float): New pickup longitude (-180 to 180)
+            
+        Returns:
+            dict: {
+                'success': bool,
+                'message': str,
+                'trip_id': int,
+                'coordinates': {'latitude': float, 'longitude': float},
+                'driver_notified': bool,
+                'timestamp': str (ISO format)
+            }
+            
+        Features:
+            - Real-time WebSocket broadcast to assigned driver
+            - Broadcast to dispatcher dashboard for monitoring
+            - Automatic audit trail logging
+            - Security: Only requester or dispatcher/admin can update
+            - Validation: Coordinates within valid GPS ranges
+            - Notification: In-app message to driver
+            
+        SRS Compliance:
+            - FR-3.4: Dynamic Pickup Point Update
+            - NFR-3.2: RBAC (Role-Based Access Control)
+            - FR-5.3: Audit Logging
+            - COM-1: HTTPS/TLS secure communication
+        """
+        try:
+            Trip = request.env['messob.fms.trip']
+            trip = Trip.browse(trip_id)
+            
+            if not trip.exists():
+                return {
+                    'success': False,
+                    'error': 'Trip not found'
+                }
+            
+            # Call the model method that handles all business logic
+            result = trip.update_pickup_coordinates(latitude, longitude)
+            
+            return result
+            
+        except Exception as e:
+            _logger.error(f"FR-3.4 API Error: Failed to update pickup coordinates for trip {trip_id}: {str(e)}")
+            return {
+                'success': False,
+                'error': str(e)
+            }
+
     # =========================================================================
     # HELPER METHODS (Simulate external services)
     # =========================================================================
