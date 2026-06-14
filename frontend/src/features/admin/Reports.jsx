@@ -1,13 +1,16 @@
 import { useEffect, useState } from "react";
 import { 
   FileText, Car, CheckCircle, Clock, XCircle, BadgeCheck, 
-  TrendingUp, BarChart3, PieChart, Download, Calendar,
-  Users, DollarSign, Activity, AlertTriangle
+  TrendingUp, BarChart3, PieChart, Download,
+  Users, Activity, FileSpreadsheet
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { searchRead, callOdooMethod } from "@/lib/odooApi";
+import { searchRead } from "@/lib/odooApi";
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
+import * as XLSX from 'xlsx';
 
 export default function Reports() {
   const [trips, setTrips] = useState([]);
@@ -153,6 +156,181 @@ export default function Reports() {
     a.click();
   };
 
+  const exportToExcel = () => {
+    // Prepare data for Excel export
+    const excelData = trips.map(t => ({
+      'Request ID': t.name,
+      'Requester': Array.isArray(t.requester_id) ? t.requester_id[1] : '—',
+      'Purpose': t.purpose || '—',
+      'Pickup': t.pickup || '—',
+      'Destination': t.destination || '—',
+      'Start Date': t.start_dt ? new Date(t.start_dt).toLocaleString() : '—',
+      'End Date': t.end_dt ? new Date(t.end_dt).toLocaleString() : '—',
+      'Status': t.state,
+      'Vehicle': Array.isArray(t.assigned_vehicle_id) ? t.assigned_vehicle_id[1] : '—',
+      'Driver': Array.isArray(t.assigned_driver_id) ? t.assigned_driver_id[1] : '—',
+    }));
+
+    // Create workbook with multiple sheets
+    const wb = XLSX.utils.book_new();
+    
+    // Sheet 1: Trip Details
+    const ws1 = XLSX.utils.json_to_sheet(excelData);
+    XLSX.utils.book_append_sheet(wb, ws1, 'Trip Details');
+
+    // Sheet 2: Summary Statistics
+    const summaryData = [
+      { Metric: 'Total Trips', Value: analytics?.stats.total || 0 },
+      { Metric: 'Pending', Value: analytics?.stats.pending || 0 },
+      { Metric: 'Approved', Value: analytics?.stats.approved || 0 },
+      { Metric: 'In Progress', Value: analytics?.stats.inProgress || 0 },
+      { Metric: 'Completed', Value: analytics?.stats.completed || 0 },
+      { Metric: 'Rejected', Value: analytics?.stats.rejected || 0 },
+      { Metric: 'Approval Rate', Value: `${analytics?.approvalRate || 0}%` },
+      { Metric: 'Completion Rate', Value: `${analytics?.completionRate || 0}%` },
+    ];
+    const ws2 = XLSX.utils.json_to_sheet(summaryData);
+    XLSX.utils.book_append_sheet(wb, ws2, 'Summary');
+
+    // Sheet 3: Vehicle Utilization
+    if (analytics?.vehicleUsage && analytics.vehicleUsage.length > 0) {
+      const vehicleData = analytics.vehicleUsage.map(([id, data]) => ({
+        'Vehicle': data.name,
+        'Trip Count': data.count,
+      }));
+      const ws3 = XLSX.utils.json_to_sheet(vehicleData);
+      XLSX.utils.book_append_sheet(wb, ws3, 'Vehicle Utilization');
+    }
+
+    // Sheet 4: Driver Performance
+    if (analytics?.driverPerformance && analytics.driverPerformance.length > 0) {
+      const driverData = analytics.driverPerformance.map(([id, data]) => ({
+        'Driver': data.name,
+        'Total Trips': data.trips,
+        'Completed': data.completed,
+        'Completion Rate': data.trips > 0 ? `${((data.completed / data.trips) * 100).toFixed(1)}%` : '0%',
+      }));
+      const ws4 = XLSX.utils.json_to_sheet(driverData);
+      XLSX.utils.book_append_sheet(wb, ws4, 'Driver Performance');
+    }
+
+    // Generate and download Excel file
+    XLSX.writeFile(wb, `MESSOB-Fleet-Report-${new Date().toISOString().split('T')[0]}.xlsx`);
+  };
+
+  const exportToPDF = () => {
+    const doc = new jsPDF();
+    
+    // Add title
+    doc.setFontSize(20);
+    doc.setTextColor(30, 64, 175); // Brand blue
+    doc.text('MESSOB Fleet Management', 14, 22);
+    
+    doc.setFontSize(16);
+    doc.setTextColor(0, 0, 0);
+    doc.text('Trip Request Report', 14, 32);
+    
+    doc.setFontSize(10);
+    doc.setTextColor(100, 100, 100);
+    doc.text(`Generated: ${new Date().toLocaleString()}`, 14, 38);
+    doc.text(`Period: Last ${dateRange} Days`, 14, 43);
+
+    // Add summary statistics
+    doc.setFontSize(14);
+    doc.setTextColor(0, 0, 0);
+    doc.text('Summary Statistics', 14, 53);
+    
+    const summaryData = [
+      ['Total Trips', analytics?.stats.total || 0],
+      ['Pending', analytics?.stats.pending || 0],
+      ['Approved', analytics?.stats.approved || 0],
+      ['In Progress', analytics?.stats.inProgress || 0],
+      ['Completed', analytics?.stats.completed || 0],
+      ['Rejected', analytics?.stats.rejected || 0],
+      ['Approval Rate', `${analytics?.approvalRate || 0}%`],
+      ['Completion Rate', `${analytics?.completionRate || 0}%`],
+    ];
+
+    doc.autoTable({
+      startY: 58,
+      head: [['Metric', 'Value']],
+      body: summaryData,
+      theme: 'grid',
+      headStyles: { fillColor: [30, 64, 175], textColor: 255, fontStyle: 'bold' },
+      styles: { fontSize: 9 },
+      margin: { left: 14 },
+    });
+
+    // Add trip details table
+    doc.addPage();
+    doc.setFontSize(14);
+    doc.text('Trip Details', 14, 20);
+
+    const tripTableData = trips.slice(0, 50).map(t => [
+      t.name,
+      Array.isArray(t.requester_id) ? t.requester_id[1] : '—',
+      `${t.pickup || '—'} → ${t.destination || '—'}`,
+      t.start_dt ? new Date(t.start_dt).toLocaleDateString() : '—',
+      t.state.toUpperCase(),
+      Array.isArray(t.assigned_vehicle_id) ? t.assigned_vehicle_id[1] : '—',
+    ]);
+
+    doc.autoTable({
+      startY: 25,
+      head: [['Request ID', 'Requester', 'Route', 'Date', 'Status', 'Vehicle']],
+      body: tripTableData,
+      theme: 'striped',
+      headStyles: { fillColor: [30, 64, 175], textColor: 255, fontStyle: 'bold' },
+      styles: { fontSize: 8, cellPadding: 2 },
+      columnStyles: {
+        0: { cellWidth: 25 },
+        1: { cellWidth: 35 },
+        2: { cellWidth: 50 },
+        3: { cellWidth: 25 },
+        4: { cellWidth: 20 },
+        5: { cellWidth: 30 },
+      },
+    });
+
+    // Add vehicle utilization if there's data
+    if (analytics?.vehicleUsage && analytics.vehicleUsage.length > 0) {
+      doc.addPage();
+      doc.setFontSize(14);
+      doc.text('Vehicle Utilization', 14, 20);
+
+      const vehicleTableData = analytics.vehicleUsage.map(([id, data]) => [
+        data.name,
+        data.count,
+      ]);
+
+      doc.autoTable({
+        startY: 25,
+        head: [['Vehicle', 'Trip Count']],
+        body: vehicleTableData,
+        theme: 'grid',
+        headStyles: { fillColor: [30, 64, 175], textColor: 255, fontStyle: 'bold' },
+        styles: { fontSize: 9 },
+      });
+    }
+
+    // Add footer to all pages
+    const pageCount = doc.internal.getNumberOfPages();
+    for (let i = 1; i <= pageCount; i++) {
+      doc.setPage(i);
+      doc.setFontSize(8);
+      doc.setTextColor(150, 150, 150);
+      doc.text(
+        `Page ${i} of ${pageCount} | MESSOB Fleet Management System | Confidential`,
+        doc.internal.pageSize.getWidth() / 2,
+        doc.internal.pageSize.getHeight() - 10,
+        { align: 'center' }
+      );
+    }
+
+    // Save PDF
+    doc.save(`MESSOB-Fleet-Report-${new Date().toISOString().split('T')[0]}.pdf`);
+  };
+
   const stateBadge = {
     draft:       "bg-gradient-to-r from-gray-400 to-gray-500 dark:from-gray-600 dark:to-gray-700 text-white shadow-md",
     pending:     "bg-gradient-to-r from-amber-400 to-yellow-500 dark:from-amber-600 dark:to-yellow-700 text-white shadow-md",
@@ -179,10 +357,20 @@ export default function Reports() {
             <option value="180">Last 6 Months</option>
             <option value="365">Last Year</option>
           </select>
-          <Button onClick={exportToCSV} variant="outline" size="sm">
-            <Download className="h-4 w-4 mr-2" />
-            Export CSV
-          </Button>
+          <div className="flex gap-2">
+            <Button onClick={exportToCSV} variant="outline" size="sm">
+              <Download className="h-4 w-4 mr-2" />
+              CSV
+            </Button>
+            <Button onClick={exportToExcel} variant="outline" size="sm" className="bg-green-50 hover:bg-green-100 text-green-700 border-green-200">
+              <FileSpreadsheet className="h-4 w-4 mr-2" />
+              Excel
+            </Button>
+            <Button onClick={exportToPDF} variant="outline" size="sm" className="bg-red-50 hover:bg-red-100 text-red-700 border-red-200">
+              <FileText className="h-4 w-4 mr-2" />
+              PDF
+            </Button>
+          </div>
         </div>
       </div>
 

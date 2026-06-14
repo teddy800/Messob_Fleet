@@ -1,8 +1,8 @@
 {
-  "name": "MESSOB Fleet Management",
+  "name": "MESSOB Fleet Management System",
   "short_name": "MESSOB Fleet",
-  "description": "Enterprise Fleet Management System for MESSOB",
-  "theme_color": "#7C3AED",
+  "description": "Enterprise-Grade Fleet Management Solution for Modern Organizations",
+  "theme_color": "#1E40AF",
   "background_color": "#ffffff",
   "display": "standalone",
   "orientation": "portrait",
@@ -23,5 +23,52 @@
     }
   ],
   "categories": ["business", "productivity", "utilities"],
-  "prefer_related_applications": false
+  "prefer_related_applications": false,
+  "shortcuts": [
+    {
+      "name": "New Trip Request",
+      "short_name": "New Trip",
+      "description": "Create a new vehicle trip request",
+      "url": "/dashboard/requests/new",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "My Trips",
+      "short_name": "My Trips",
+      "description": "View my trip requests",
+      "url": "/dashboard/requests/status",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Live Tracking",
+      "short_name": "Tracking",
+      "description": "Track vehicles in real-time",
+      "url": "/dashboard/tracking",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/screenshot-wide.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide"
+    },
+    {
+      "src": "/screenshot-narrow.png",
+      "sizes": "750x1334",
+      "type": "image/png",
+      "form_factor": "narrow"
+    }
+  ],
+  "share_target": {
+    "action": "/dashboard/requests/new",
+    "method": "GET",
+    "enctype": "application/x-www-form-urlencoded",
+    "params": {
+      "title": "purpose",
+      "text": "notes",
+      "url": "reference"
+    }
+  }
 }
