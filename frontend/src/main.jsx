@@ -5,6 +5,7 @@ import App from './App.jsx'
 import './index.css'
 import './lib/i18n' // Initialize i18n
 import { useUserStore } from './store/useUserStore'
+import { registerSW } from './registerServiceWorker'
 
 // Theme Provider Component (UI-3: Dark Mode Support)
 function ThemeProvider({ children }) {
@@ -63,3 +64,6 @@ ReactDOM.createRoot(document.getElementById('root')).render(
     </ThemeProvider>
   </React.StrictMode>,
 )
+
+// Register service worker for PWA offline support
+registerSW()

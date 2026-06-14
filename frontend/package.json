@@ -35,6 +35,8 @@
     "google-map-react": "^2.2.5",
     "i18next": "^26.3.0",
     "i18next-browser-languagedetector": "^8.2.1",
+    "jspdf": "^2.5.2",
+    "jspdf-autotable": "^3.8.4",
     "leaflet": "^1.9.4",
     "lucide-react": "^1.7.0",
     "next-themes": "^0.4.6",
@@ -52,6 +54,9 @@
     "sonner": "^2.0.7",
     "tailwind-merge": "^3.5.0",
     "tailwindcss": "^4.2.2",
+    "vite-plugin-pwa": "^0.21.1",
+    "workbox-window": "^7.3.0",
+    "xlsx": "^0.18.5",
     "zod": "^4.3.6",
     "zustand": "^5.0.12"
   },
