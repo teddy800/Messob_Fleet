@@ -7,7 +7,15 @@ export const FMS_ROLE_OPTIONS = [
   { name: "Administrator", label: "Administrator" },
 ];
 
-const ROLE_PRIORITY = FMS_ROLE_OPTIONS.map((r) => r.name);
+// Priority order for role display (highest to lowest)
+// Administrator inherits Staff + Dispatcher, so check it first
+const ROLE_PRIORITY = [
+  "Administrator",
+  "Dispatcher",
+  "Mechanic",
+  "Driver",
+  "Staff (User)",
+];
 
 export function pickPrimaryFmsRoleName(roleNames = []) {
   for (const name of ROLE_PRIORITY) {
