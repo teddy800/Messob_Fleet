@@ -84,15 +84,13 @@ export default function UserManagement() {
         200
       );
 
-      const fmsGroupsData =
-        fmsGroups.length > 0 && fmsGroups[0]?.users !== undefined
-          ? fmsGroups
-          : await searchRead(
-              "res.groups",
-              [["category_id.name", "=", "MESSOB Fleet Management"]],
-              ["id", "name", "users"],
-              20
-            );
+      // ALWAYS reload groups to get fresh user membership data
+      const fmsGroupsData = await searchRead(
+        "res.groups",
+        [["category_id.name", "=", "MESSOB Fleet Management"]],
+        ["id", "name", "users"],
+        20
+      );
 
       const userRoleMap = {};
       for (const group of fmsGroupsData) {
@@ -299,7 +297,11 @@ export default function UserManagement() {
       }
 
       setDialogOpen(false);
-      fetchUsers();
+      
+      // Small delay to ensure Odoo has processed group membership changes
+      setTimeout(() => {
+        fetchUsers();
+      }, 300);
     } catch (e) {
       setError(e.message);
     }
@@ -308,7 +310,11 @@ export default function UserManagement() {
   const handleDelete = async (id) => {
     try {
       await writeRecord("res.users", [id], { active: false });
-      fetchUsers();
+      
+      // Small delay to ensure Odoo has processed the changes
+      setTimeout(() => {
+        fetchUsers();
+      }, 300);
     } catch (e) {
       setError(e.message);
     }
