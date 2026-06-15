@@ -1,12 +1,15 @@
 import { useState, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Clock, CheckCircle, XCircle, ArrowLeft, MapPin, Calendar, Car, Users, Search, Filter } from "lucide-react";
+import { Clock, CheckCircle, XCircle, ArrowLeft, MapPin, Calendar, Car, Users, Search, Filter, Ban, Send } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { useTripRequests } from "@/lib/useTripRequests";
+import { callOdooMethod } from "@/lib/odooApi";
+import { toast } from "sonner";
 
 const statusConfig = {
   pending: {
@@ -58,8 +61,74 @@ export default function RequestList() {
     sortBy: 'date_desc'
   });
 
+  // Cancel request dialog state
+  const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
+  const [requestToCancel, setRequestToCancel] = useState(null);
+  const [cancelling, setCancelling] = useState(false);
+
+  // Submit request dialog state
+  const [submitDialogOpen, setSubmitDialogOpen] = useState(false);
+  const [requestToSubmit, setRequestToSubmit] = useState(null);
+  const [submitting, setSubmitting] = useState(false);
+
   const stateFilter = status === "approved" ? ["approved", "in_progress"] : [status];
-  const { trips, loading } = useTripRequests(stateFilter);
+  const { trips, loading, refetch } = useTripRequests(stateFilter);
+
+  // Handle cancel request click
+  const handleCancelClick = (request) => {
+    setRequestToCancel(request);
+    setCancelDialogOpen(true);
+  };
+
+  // Handle cancel confirmation
+  const handleCancelConfirm = async () => {
+    if (!requestToCancel) return;
+
+    setCancelling(true);
+    try {
+      await callOdooMethod('messob.fms.trip', 'action_cancel', [requestToCancel.id]);
+      toast.success(`Request ${requestToCancel.name} has been cancelled successfully`);
+      setCancelDialogOpen(false);
+      setRequestToCancel(null);
+      // Refetch trips to update the list
+      if (refetch) {
+        refetch();
+      }
+    } catch (error) {
+      console.error('Failed to cancel request:', error);
+      toast.error('Failed to cancel request. Please try again.');
+    } finally {
+      setCancelling(false);
+    }
+  };
+
+  // Handle submit request click
+  const handleSubmitClick = (request) => {
+    setRequestToSubmit(request);
+    setSubmitDialogOpen(true);
+  };
+
+  // Handle submit confirmation
+  const handleSubmitConfirm = async () => {
+    if (!requestToSubmit) return;
+
+    setSubmitting(true);
+    try {
+      await callOdooMethod('messob.fms.trip', 'action_submit', [requestToSubmit.id]);
+      toast.success(`Request ${requestToSubmit.name} has been submitted successfully`);
+      setSubmitDialogOpen(false);
+      setRequestToSubmit(null);
+      // Refetch trips to update the list
+      if (refetch) {
+        refetch();
+      }
+    } catch (error) {
+      console.error('Failed to submit request:', error);
+      toast.error('Failed to submit request. Please try again.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   // Apply filters and sorting
   const filteredTrips = useMemo(() => {
@@ -320,11 +389,99 @@ export default function RequestList() {
                   <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400 dark:text-gray-500">Purpose: </span>
                   <span className="text-sm font-bold text-brand-blue dark:text-blue-400">{req.purpose}</span>
                 </div>
+
+                {/* Action buttons based on state */}
+                {req.state === 'draft' && (
+                  <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
+                    <Button
+                      variant="default"
+                      size="sm"
+                      onClick={() => handleSubmitClick(req)}
+                      className="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white border-emerald-600 hover:border-emerald-700 focus-visible:ring-emerald-500 dark:bg-emerald-700 dark:hover:bg-emerald-800 dark:border-emerald-700"
+                    >
+                      <Send className="h-4 w-4 mr-2" />
+                      Submit Request
+                    </Button>
+                  </div>
+                )}
+
+                {/* Cancel button for pending requests only (FR-1.3) */}
+                {req.state === 'pending' && (
+                  <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => handleCancelClick(req)}
+                      className="w-full sm:w-auto bg-red-600 hover:bg-red-700 text-white border-red-600 hover:border-red-700 focus-visible:ring-red-500 dark:bg-red-700 dark:hover:bg-red-800 dark:border-red-700"
+                    >
+                      <Ban className="h-4 w-4 mr-2" />
+                      Cancel Request
+                    </Button>
+                  </div>
+                )}
               </CardContent>
             </Card>
           ))}
         </div>
       )}
+
+      {/* Submit Confirmation Dialog */}
+      <AlertDialog open={submitDialogOpen} onOpenChange={setSubmitDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-emerald-600 dark:text-emerald-400 flex items-center gap-2">
+              <Send className="h-5 w-5" />
+              Submit Trip Request
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to submit request <strong className="text-gray-900 dark:text-gray-100">{requestToSubmit?.name}</strong> for dispatcher review?
+              <br /><br />
+              Once submitted, the dispatcher will review and approve or reject your request.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={submitting}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleSubmitConfirm}
+              disabled={submitting}
+              className="bg-emerald-600 hover:bg-emerald-700 text-white border-emerald-600 focus-visible:ring-emerald-500 dark:bg-emerald-700 dark:hover:bg-emerald-800 dark:border-emerald-700"
+            >
+              {submitting ? 'Submitting...' : 'Yes, Submit Request'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Cancel Confirmation Dialog */}
+      <AlertDialog open={cancelDialogOpen} onOpenChange={setCancelDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-red-600 dark:text-red-400 flex items-center gap-2">
+              <Ban className="h-5 w-5" />
+              Cancel Trip Request
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to cancel request <strong className="text-gray-900 dark:text-gray-100">{requestToCancel?.name}</strong>?
+              <br /><br />
+              This will return the request to Draft status. You can submit it again later if needed.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={cancelling}>
+              No, Keep Request
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleCancelConfirm}
+              disabled={cancelling}
+              className="bg-red-600 hover:bg-red-700 text-white border-red-600 focus-visible:ring-red-500 dark:bg-red-700 dark:hover:bg-red-800 dark:border-red-700"
+            >
+              {cancelling ? 'Cancelling...' : 'Yes, Cancel Request'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
