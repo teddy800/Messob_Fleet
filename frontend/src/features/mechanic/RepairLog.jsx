@@ -95,8 +95,24 @@ export default function RepairLog() {
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <Field label="Date" error={errors.date?.message}>
-                  <Input type="date" className={cn("h-11 border-2 rounded-xl", errors.date && "border-red-400")}
-                    {...register("date", { required: "Date is required" })} />
+                  <Input 
+                    type="date" 
+                    max={new Date().toISOString().split('T')[0]}
+                    className={cn("h-11 border-2 rounded-xl", errors.date && "border-red-400")}
+                    {...register("date", { 
+                      required: "Date is required",
+                      validate: (value) => {
+                        // Compare dates only, not datetime
+                        const selectedDateStr = value; // Format: "YYYY-MM-DD"
+                        const todayStr = new Date().toISOString().split('T')[0]; // Format: "YYYY-MM-DD"
+                        
+                        if (selectedDateStr > todayStr) {
+                          return "Service date cannot be in the future";
+                        }
+                        return true;
+                      }
+                    })} 
+                  />
                 </Field>
                 <Field label="Vehicle">
                   <Select value={vehicleId} onValueChange={setVehicleId}>
