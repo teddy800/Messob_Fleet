@@ -31,6 +31,34 @@ const emptyForm = () => ({
   phone: "",
 });
 
+const PasswordField = ({ id, label, value, onChange, show, onToggle, placeholder }) => (
+  <div className="space-y-1.5">
+    <Label htmlFor={id} className="text-xs font-bold uppercase tracking-widest text-gray-500">
+      {label}
+    </Label>
+    <div className="relative">
+      <Input
+        id={id}
+        type={show ? "text" : "password"}
+        className="h-11 border-2 rounded-xl pr-10"
+        placeholder={placeholder}
+        value={value}
+        onChange={onChange}
+        autoComplete="new-password"
+      />
+      <button
+        type="button"
+        onMouseDown={(e) => e.preventDefault()}
+        onClick={onToggle}
+        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-brand-blue"
+        aria-label={show ? "Hide password" : "Show password"}
+      >
+        {show ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+      </button>
+    </div>
+  </div>
+);
+
 export default function UserManagement() {
   const [users, setUsers] = useState([]);
   const [fmsGroups, setFmsGroups] = useState([]);
@@ -319,34 +347,6 @@ export default function UserManagement() {
       setError(e.message);
     }
   };
-
-  const PasswordField = ({ id, label, value, onChange, show, onToggle, placeholder }) => (
-    <div className="space-y-1.5">
-      <Label htmlFor={id} className="text-xs font-bold uppercase tracking-widest text-gray-500">
-        {label}
-      </Label>
-      <div className="relative">
-        <Input
-          id={id}
-          type={show ? "text" : "password"}
-          className="h-11 border-2 rounded-xl pr-10"
-          placeholder={placeholder}
-          value={value}
-          onChange={onChange}
-          autoComplete={editing ? "new-password" : "new-password"}
-        />
-        <button
-          type="button"
-          onMouseDown={(e) => e.preventDefault()}
-          onClick={onToggle}
-          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-brand-blue"
-          aria-label={show ? "Hide password" : "Show password"}
-        >
-          {show ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-        </button>
-      </div>
-    </div>
-  );
 
   return (
     <div className="space-y-6">
