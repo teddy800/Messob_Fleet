@@ -36,6 +36,7 @@ export default function RepairLog() {
   const [error, setError]             = useState(null);
 
   const { register, handleSubmit, reset, formState: { errors } } = useForm({
+    mode: "onChange",
     defaultValues: { date: "", cost: "", odometer: "", service_provider: "", next_service_date: "", next_service_odometer: "", description: "" },
   });
 
@@ -138,17 +139,25 @@ export default function RepairLog() {
                   </Select>
                 </Field>
                 <Field label="Cost (ETB)" error={errors.cost?.message}>
-                  <Input type="number" placeholder="e.g. 1200"
+                  <Input 
+                    type="number" 
+                    min="0.01"
+                    step="0.01"
+                    placeholder="e.g. 1200"
                     className={cn("h-11 border-2 rounded-xl", errors.cost && "border-red-400")}
-                    {...register("cost", { required: "Cost is required", min: { value: 0, message: "Must be 0 or more" } })} />
+                    {...register("cost", { required: "Cost is required", min: { value: 0.01, message: "Must be positive number" } })} />
                 </Field>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <Field label="Odometer (km)" error={errors.odometer?.message}>
-                  <Input type="number" placeholder="e.g. 54320"
+                  <Input 
+                    type="number" 
+                    min="1"
+                    step="1"
+                    placeholder="e.g. 54320"
                     className={cn("h-11 border-2 rounded-xl", errors.odometer && "border-red-400")}
-                    {...register("odometer", { required: "Odometer is required", min: { value: 0, message: "Must be 0 or more" } })} />
+                    {...register("odometer", { required: "Odometer is required", min: { value: 1, message: "Must be positive number" } })} />
                 </Field>
                 <Field label="Service Provider" error={errors.service_provider?.message}>
                   <Input placeholder="e.g. MESSOB Workshop"
@@ -164,10 +173,12 @@ export default function RepairLog() {
                 <Field label="Next Service Odometer (km)">
                   <Input 
                     type="number" 
+                    min="1"
+                    step="1"
                     placeholder="e.g. 50000"
                     className="h-11 border-2 rounded-xl" 
                     {...register("next_service_odometer", { 
-                      min: { value: 0, message: "Must be 0 or more" } 
+                      min: { value: 1, message: "Must be positive number" } 
                     })} 
                   />
                 </Field>
