@@ -1,8 +1,8 @@
 // MESSOB Fleet Management - Service Worker
 // Implements offline functionality and background sync for PWA
 
-const CACHE_NAME = 'messob-fleet-v1.1.0';
-const RUNTIME_CACHE = 'messob-runtime-v1';
+const CACHE_NAME = 'messob-fleet-v1.1.1';
+const RUNTIME_CACHE = 'messob-runtime-v1.1';
 
 // Assets to cache on install
 const STATIC_ASSETS = [
@@ -61,32 +61,44 @@ self.addEventListener('fetch', (event) => {
     event.respondWith(
       fetch(request)
         .then((response) => {
-          // Cache successful API responses for offline access
-          if (response.ok) {
+          // Only cache GET requests (POST requests cannot be cached)
+          if (response.ok && request.method === 'GET') {
             const responseClone = response.clone();
             caches.open(RUNTIME_CACHE).then((cache) => {
               cache.put(request, responseClone);
+            }).catch((err) => {
+              console.warn('[SW] Failed to cache API response:', err);
             });
           }
           return response;
         })
         .catch(() => {
-          // Fallback to cached response when offline
-          return caches.match(request)
-            .then((cachedResponse) => {
-              if (cachedResponse) {
-                console.log('[SW] Serving cached API response:', request.url);
-                return cachedResponse;
-              }
-              // Return offline page for failed API requests
-              return new Response(JSON.stringify({ 
-                error: 'Offline', 
-                message: 'No network connection available' 
-              }), {
-                status: 503,
-                headers: { 'Content-Type': 'application/json' }
+          // Only try to serve cached response for GET requests
+          if (request.method === 'GET') {
+            return caches.match(request)
+              .then((cachedResponse) => {
+                if (cachedResponse) {
+                  console.log('[SW] Serving cached API response:', request.url);
+                  return cachedResponse;
+                }
+                // Return offline response for failed API requests
+                return new Response(JSON.stringify({ 
+                  error: 'Offline', 
+                  message: 'No network connection available' 
+                }), {
+                  status: 503,
+                  headers: { 'Content-Type': 'application/json' }
+                });
               });
-            });
+          }
+          // For POST/PUT/DELETE, return offline error
+          return new Response(JSON.stringify({ 
+            error: 'Offline', 
+            message: 'No network connection available' 
+          }), {
+            status: 503,
+            headers: { 'Content-Type': 'application/json' }
+          });
         })
     );
     return;
@@ -97,14 +109,16 @@ self.addEventListener('fetch', (event) => {
     caches.match(request)
       .then((cachedResponse) => {
         if (cachedResponse) {
-          // Serve from cache, update cache in background
-          fetch(request).then((response) => {
-            if (response.ok) {
-              caches.open(CACHE_NAME).then((cache) => {
-                cache.put(request, response);
-              });
-            }
-          }).catch(() => {}); // Ignore network errors
+          // Serve from cache, update cache in background (only for GET)
+          if (request.method === 'GET') {
+            fetch(request).then((response) => {
+              if (response.ok) {
+                caches.open(CACHE_NAME).then((cache) => {
+                  cache.put(request, response);
+                }).catch(() => {}); // Ignore cache errors
+              }
+            }).catch(() => {}); // Ignore network errors
+          }
           
           return cachedResponse;
         }
@@ -112,11 +126,13 @@ self.addEventListener('fetch', (event) => {
         // Not in cache, fetch from network
         return fetch(request)
           .then((response) => {
-            // Cache successful responses
-            if (response.ok) {
+            // Only cache GET requests for static assets
+            if (response.ok && request.method === 'GET') {
               const responseClone = response.clone();
               caches.open(CACHE_NAME).then((cache) => {
                 cache.put(request, responseClone);
+              }).catch((err) => {
+                console.warn('[SW] Failed to cache static asset:', err);
               });
             }
             return response;

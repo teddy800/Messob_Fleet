@@ -41,7 +41,10 @@ export default defineConfig({
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff,woff2}'],
         runtimeCaching: [
           {
-            urlPattern: /^http:\/\/localhost:8018\/.*$/i,
+            urlPattern: ({ request, url }) => {
+              // Only cache GET requests to localhost:8018
+              return request.method === 'GET' && url.origin === 'http://localhost:8018';
+            },
             handler: 'NetworkFirst',
             options: {
               cacheName: 'odoo-api-cache',

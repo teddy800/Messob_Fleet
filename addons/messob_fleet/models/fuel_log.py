@@ -189,13 +189,19 @@ class MessobFmsFuelLog(models.Model):
         efficiency_km_per_liter = total_distance / total_fuel
         cost_per_km = total_cost / total_distance if total_distance > 0 else 0
         
+        # Convert dates to string format properly
+        first_date = fuel_logs[0].date
+        last_date = fuel_logs[-1].date
+        period_start = start_date if start_date else first_date
+        period_end = end_date if end_date else last_date
+        
         return {
             'success': True,
             'vehicle_id': vehicle_id,
             'period': {
-                'start_date': start_date.isoformat() if start_date else fuel_logs[0].date.isoformat(),
-                'end_date': end_date.isoformat() if end_date else fuel_logs[-1].date.isoformat(),
-                'days': (fuel_logs[-1].date - fuel_logs[0].date).days
+                'start_date': period_start.isoformat() if hasattr(period_start, 'isoformat') else str(period_start),
+                'end_date': period_end.isoformat() if hasattr(period_end, 'isoformat') else str(period_end),
+                'days': (last_date - first_date).days
             },
             'statistics': {
                 'total_distance_km': total_distance,
@@ -414,7 +420,7 @@ class MessobFmsFuelLog(models.Model):
                     if volume_diff > 1.0 or cost_diff > 50.0:
                         discrepancies.append({
                             'vehicle': auto_log.vehicle_id.license_plate,
-                            'date': auto_log.date.isoformat(),
+                            'date': auto_log.date.isoformat() if hasattr(auto_log.date, 'isoformat') else str(auto_log.date),
                             'automatic_log_id': auto_log.id,
                             'manual_log_id': manual_log.id,
                             'volume_difference': round(volume_diff, 2),
@@ -426,13 +432,13 @@ class MessobFmsFuelLog(models.Model):
                             'automatic_log_id': auto_log.id,
                             'manual_log_id': manual_log.id,
                             'vehicle': auto_log.vehicle_id.license_plate,
-                            'date': auto_log.date.isoformat(),
+                            'date': auto_log.date.isoformat() if hasattr(auto_log.date, 'isoformat') else str(auto_log.date),
                         })
             else:
                 unmatched_automatic.append({
                     'log_id': auto_log.id,
                     'vehicle': auto_log.vehicle_id.license_plate,
-                    'date': auto_log.date.isoformat(),
+                    'date': auto_log.date.isoformat() if hasattr(auto_log.date, 'isoformat') else str(auto_log.date),
                     'volume': auto_log.liters,
                     'cost': auto_log.price,
                 })
@@ -448,16 +454,20 @@ class MessobFmsFuelLog(models.Model):
                 unmatched_manual.append({
                     'log_id': manual_log.id,
                     'vehicle': manual_log.vehicle_id.license_plate,
-                    'date': manual_log.date.isoformat(),
+                    'date': manual_log.date.isoformat() if hasattr(manual_log.date, 'isoformat') else str(manual_log.date),
                     'volume': manual_log.liters,
                     'cost': manual_log.price,
                 })
         
+        # Format period dates safely
+        period_from = date_from.isoformat() if date_from and hasattr(date_from, 'isoformat') else (str(date_from) if date_from else 'All time')
+        period_to = date_to.isoformat() if date_to and hasattr(date_to, 'isoformat') else (str(date_to) if date_to else 'Now')
+        
         return {
             'success': True,
             'period': {
-                'from': date_from.isoformat() if date_from else 'All time',
-                'to': date_to.isoformat() if date_to else 'Now',
+                'from': period_from,
+                'to': period_to,
             },
             'summary': {
                 'total_logs': len(all_logs),
@@ -594,8 +604,8 @@ class MessobFmsFuelLog(models.Model):
             'success': True,
             'vehicle_count': len(comparison),
             'period': {
-                'start_date': start_date.isoformat() if start_date else None,
-                'end_date': end_date.isoformat() if end_date else None
+                'start_date': start_date.isoformat() if start_date and hasattr(start_date, 'isoformat') else (str(start_date) if start_date else None),
+                'end_date': end_date.isoformat() if end_date and hasattr(end_date, 'isoformat') else (str(end_date) if end_date else None)
             },
             'vehicles': comparison
         }
