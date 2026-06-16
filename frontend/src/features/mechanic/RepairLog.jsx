@@ -36,7 +36,7 @@ export default function RepairLog() {
   const [error, setError]             = useState(null);
 
   const { register, handleSubmit, reset, formState: { errors } } = useForm({
-    defaultValues: { date: "", cost: "", odometer: "", service_provider: "", next_service_date: "", description: "" },
+    defaultValues: { date: "", cost: "", odometer: "", service_provider: "", next_service_date: "", next_service_odometer: "", description: "" },
   });
 
   useEffect(() => {
@@ -57,6 +57,7 @@ export default function RepairLog() {
         odometer:         parseInt(data.odometer),
         service_provider: data.service_provider,
         next_service_date: data.next_service_date || false,
+        next_service_odometer: data.next_service_odometer ? parseInt(data.next_service_odometer) : false,
         description:      data.description,
       });
       setSubmitted(true);
@@ -144,15 +145,26 @@ export default function RepairLog() {
                 <Field label="Next Service Due">
                   <Input type="date" className="h-11 border-2 rounded-xl" {...register("next_service_date")} />
                 </Field>
-                <Field label="Status">
-                  <Select value={status} onValueChange={setStatus}>
-                    <SelectTrigger className="h-11 border-2 rounded-xl w-full"><SelectValue placeholder="Select status..." /></SelectTrigger>
-                    <SelectContent>
-                      {STATUSES.map(([val, label]) => <SelectItem key={val} value={val}>{label}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
+                <Field label="Next Service Odometer (km)">
+                  <Input 
+                    type="number" 
+                    placeholder="e.g. 50000"
+                    className="h-11 border-2 rounded-xl" 
+                    {...register("next_service_odometer", { 
+                      min: { value: 0, message: "Must be 0 or more" } 
+                    })} 
+                  />
                 </Field>
               </div>
+
+              <Field label="Status">
+                <Select value={status} onValueChange={setStatus}>
+                  <SelectTrigger className="h-11 border-2 rounded-xl w-full"><SelectValue placeholder="Select status..." /></SelectTrigger>
+                  <SelectContent>
+                    {STATUSES.map(([val, label]) => <SelectItem key={val} value={val}>{label}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </Field>
 
               <Field label="Notes / Description">
                 <Input placeholder="Optional notes about the service..."
