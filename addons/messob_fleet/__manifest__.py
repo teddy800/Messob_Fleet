@@ -17,7 +17,7 @@
 # ---------------------------------------------------------------------------
 {
     'name': 'MESSOB Fleet Management',
-    'version': '1.1.0',
+    'version': '1.1.1',
     'summary': 'Digitalized vehicle request, dispatch, and fleet tracking for MESSOB.',
     'description': """
 MESSOB Fleet Management System (Phase 1)

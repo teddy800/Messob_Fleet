@@ -614,14 +614,17 @@ class MessobFmsMaintenanceAlert(models.Model):
         if days_until_due <= 30:
             priority = self._calculate_priority(days_until_due)
             
+            # Use next_service_type if available, otherwise fall back to current service_type
+            service_type = maintenance_log.next_service_type or maintenance_log.service_type
+            
             alert_data = {
-                'alert_title': f"{maintenance_log.service_type} - {maintenance_log.vehicle_id.name}",
+                'alert_title': f"{service_type} - {maintenance_log.vehicle_id.name}",
                 'alert_type': 'date_based',
                 'vehicle_id': maintenance_log.vehicle_id.id,
                 'maintenance_log_id': maintenance_log.id,
                 'scheduled_date': maintenance_log.next_service_date,
                 'scheduled_odometer': maintenance_log.next_service_odometer,
-                'service_type': maintenance_log.service_type,
+                'service_type': service_type,
                 'priority': priority,
                 'description': f"Scheduled maintenance based on previous service on {maintenance_log.date}",
             }

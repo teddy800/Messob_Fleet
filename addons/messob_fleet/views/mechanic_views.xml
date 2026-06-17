@@ -83,7 +83,19 @@
                         <field name="mechanic_id"           string="Mechanic"
                                                             options="{'no_create': True}"/>
                         <field name="odometer"              string="Odometer (km)"/>
+                        <field name="invoice_ref"           string="Invoice / Reference"/>
+                    </group>
+
+                    <!-- ── Section 4: Next Service row (3 fields) ── -->
+                    <group string="Next Service" col="3">
                         <field name="next_service_date"     string="Next Service Date"/>
+                        <field name="next_service_odometer" string="Next Service Odometer (km)"/>
+                        <field name="next_service_type"     string="Next Service Type"/>
+                    </group>
+
+                    <!-- ── Description ── -->
+                    <group string="Description / Notes">
+                        <field name="description"           string="" nolabel="1"/>
                     </group>
 
                     <!-- ── States + extra ── -->

@@ -30,6 +30,7 @@ const STATUSES = [
 export default function RepairLog() {
   const [submitted, setSubmitted] = useState(false);
   const [serviceType, setServiceType] = useState("");
+  const [nextServiceType, setNextServiceType] = useState("");
   const [vehicleId, setVehicleId]     = useState("");
   const [status, setStatus]           = useState("");
   const [vehicles, setVehicles]       = useState([]);
@@ -59,12 +60,13 @@ export default function RepairLog() {
         service_provider: data.service_provider,
         next_service_date: data.next_service_date || false,
         next_service_odometer: data.next_service_odometer ? parseInt(data.next_service_odometer) : false,
+        next_service_type: nextServiceType || false,
         description:      data.description,
       });
       setSubmitted(true);
       setTimeout(() => {
         setSubmitted(false); reset();
-        setServiceType(""); setVehicleId(""); setStatus("");
+        setServiceType(""); setNextServiceType(""); setVehicleId(""); setStatus("");
       }, 3000);
     } catch (e) { setError(e.message); }
   };
@@ -167,22 +169,50 @@ export default function RepairLog() {
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <Field label="Next Service Due">
-                  <Input type="date" className="h-11 border-2 rounded-xl" {...register("next_service_date")} />
+                <Field label="Next Service Due" error={errors.next_service_date?.message}>
+                  <Input 
+                    type="date" 
+                    min={new Date().toISOString().split('T')[0]}
+                    className={cn("h-11 border-2 rounded-xl", errors.next_service_date && "border-red-400")}
+                    {...register("next_service_date", {
+                      validate: (value) => {
+                        if (!value) return true; // Optional field
+                        const selectedDateStr = value;
+                        const todayStr = new Date().toISOString().split('T')[0];
+                        if (selectedDateStr < todayStr) {
+                          return "Next service date cannot be in the past";
+                        }
+                        return true;
+                      }
+                    })} 
+                  />
                 </Field>
-                <Field label="Next Service Odometer (km)">
+                <Field label="Next Service Odometer (km)" error={errors.next_service_odometer?.message}>
                   <Input 
                     type="number" 
                     min="1"
                     step="1"
                     placeholder="e.g. 50000"
-                    className="h-11 border-2 rounded-xl" 
+                    className={cn("h-11 border-2 rounded-xl", errors.next_service_odometer && "border-red-400")}
                     {...register("next_service_odometer", { 
                       min: { value: 1, message: "Must be positive number" } 
                     })} 
                   />
                 </Field>
               </div>
+
+              <Field label="Next Service Type">
+                <Select value={nextServiceType} onValueChange={setNextServiceType}>
+                  <SelectTrigger className="h-11 border-2 rounded-xl w-full">
+                    <SelectValue placeholder="Select next service type..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {SERVICE_TYPES.map(([val, label]) => (
+                      <SelectItem key={val} value={val}>{label}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </Field>
 
               <Field label="Status">
                 <Select value={status} onValueChange={setStatus}>
