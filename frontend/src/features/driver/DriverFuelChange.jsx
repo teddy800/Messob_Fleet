@@ -18,6 +18,7 @@ export default function DriverFuelChange() {
   const [searchParams] = useSearchParams();
 
   const { register, handleSubmit, reset, formState: { errors } } = useForm({
+    mode: "onChange",
     defaultValues: { station_name: "", liters: "", price: "", odometer: "", date: "" },
   });
 
@@ -89,25 +90,49 @@ export default function DriverFuelChange() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label className="text-xs font-bold uppercase tracking-widest text-gray-500">Liters</Label>
-                  <Input type="number" placeholder="e.g. 40"
+                  <Input 
+                    type="number" 
+                    min="0.01"
+                    step="0.01"
+                    placeholder="e.g. 40"
                     className={cn("h-12 border-2 rounded-xl", errors.liters && "border-red-400")}
-                    {...register("liters", { required: "Required", min: { value: 1, message: "Must be > 0" } })} />
+                    {...register("liters", { 
+                      required: "Liters is required", 
+                      min: { value: 0.01, message: "Must be positive number" } 
+                    })} 
+                  />
                   {errors.liters && <p className="text-xs text-red-500 font-semibold">{errors.liters.message}</p>}
                 </div>
                 <div className="space-y-2">
                   <Label className="text-xs font-bold uppercase tracking-widest text-gray-500">Price (ETB)</Label>
-                  <Input type="number" placeholder="e.g. 2800"
+                  <Input 
+                    type="number" 
+                    min="0.01"
+                    step="0.01"
+                    placeholder="e.g. 2800"
                     className={cn("h-12 border-2 rounded-xl", errors.price && "border-red-400")}
-                    {...register("price", { required: "Required", min: { value: 1, message: "Must be > 0" } })} />
+                    {...register("price", { 
+                      required: "Price is required", 
+                      min: { value: 0.01, message: "Must be positive number" } 
+                    })} 
+                  />
                   {errors.price && <p className="text-xs text-red-500 font-semibold">{errors.price.message}</p>}
                 </div>
               </div>
 
               <div className="space-y-2">
                 <Label className="text-xs font-bold uppercase tracking-widest text-gray-500">Odometer Reading (km)</Label>
-                <Input type="number" placeholder="e.g. 54320"
+                <Input 
+                  type="number" 
+                  min="1"
+                  step="1"
+                  placeholder="e.g. 54320"
                   className={cn("h-12 border-2 rounded-xl", errors.odometer && "border-red-400")}
-                  {...register("odometer", { required: "Required", min: { value: 0, message: "Must be 0 or more" } })} />
+                  {...register("odometer", { 
+                    required: "Odometer is required", 
+                    min: { value: 1, message: "Must be positive number" } 
+                  })} 
+                />
                 {errors.odometer && <p className="text-xs text-red-500 font-semibold">{errors.odometer.message}</p>}
               </div>
 
