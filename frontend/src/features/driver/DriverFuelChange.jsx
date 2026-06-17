@@ -138,8 +138,23 @@ export default function DriverFuelChange() {
 
               <div className="space-y-2">
                 <Label className="text-xs font-bold uppercase tracking-widest text-gray-500">Date</Label>
-                <Input type="date" className={cn("h-12 border-2 rounded-xl", errors.date && "border-red-400")}
-                  {...register("date", { required: "Date is required" })} />
+                <Input 
+                  type="date" 
+                  max={new Date().toISOString().split('T')[0]}
+                  className={cn("h-12 border-2 rounded-xl", errors.date && "border-red-400")}
+                  {...register("date", { 
+                    required: "Date is required",
+                    validate: (value) => {
+                      const selectedDateStr = value;
+                      const todayStr = new Date().toISOString().split('T')[0];
+                      
+                      if (selectedDateStr > todayStr) {
+                        return "Fuel date cannot be in the future";
+                      }
+                      return true;
+                    }
+                  })} 
+                />
                 {errors.date && <p className="text-xs text-red-500 font-semibold">{errors.date.message}</p>}
               </div>
 
