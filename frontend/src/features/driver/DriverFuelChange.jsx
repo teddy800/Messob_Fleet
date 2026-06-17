@@ -25,7 +25,7 @@ export default function DriverFuelChange() {
   useEffect(() => {
     // Load active trips for the driver to link fuel log to
     const tripKey = searchParams.get("tripId");
-    searchRead("messob.fms.trip", [["state", "in", ["approved", "in_progress"]]], ["id", "name", "destination"], 50)
+    searchRead("messob.fms.trip", [["state", "in", ["approved", "in_progress"]]], ["id", "name", "destination", "assigned_vehicle_id"], 50)
       .then((activeTrips) => {
         setTrips(activeTrips);
         if (tripKey && activeTrips.some((t) => String(t.id) === String(tripKey))) {
@@ -38,9 +38,18 @@ export default function DriverFuelChange() {
   const onSubmit = async (data) => {
     setError(null);
     if (!tripId) { setError("Please select a trip."); return; }
+    
+    // Find the selected trip to get vehicle_id
+    const selectedTrip = trips.find((t) => String(t.id) === String(tripId));
+    if (!selectedTrip || !selectedTrip.assigned_vehicle_id) {
+      setError("Selected trip does not have an assigned vehicle.");
+      return;
+    }
+    
     try {
       await createRecord("messob.fms.fuel.log", {
         trip_id:      parseInt(tripId),
+        vehicle_id:   selectedTrip.assigned_vehicle_id[0], // Extract vehicle ID from Many2one field
         station_name: data.station_name,
         liters:       parseFloat(data.liters),
         price:        parseFloat(data.price),
