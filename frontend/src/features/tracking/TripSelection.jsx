@@ -14,52 +14,32 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { searchRead, callMethod } from '@/lib/odooApi';
-import { useUserStore } from '@/store/useUserStore';
+import { searchRead } from '@/lib/odooApi';
 import { format } from 'date-fns';
 
 export default function TripSelection() {
   const navigate = useNavigate();
-  const { user } = useUserStore();
   const [trips, setTrips] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [currentUserId, setCurrentUserId] = useState(null);
 
   useEffect(() => {
-    fetchCurrentUserAndTrips();
+    fetchTrackableTrips();
   }, []);
 
-  const fetchCurrentUserAndTrips = async () => {
+  const fetchTrackableTrips = async () => {
     try {
       setLoading(true);
       setError(null);
 
-      // Get current user's ID from Odoo session
-      const userId = await callMethod('res.users', 'search_read', [
-        [['id', '=', window.odoo?.session_info?.uid || 2]],
-        ['id', 'partner_id']
-      ]);
-
-      const currentPartnerId = userId && userId.length > 0 ? userId[0].partner_id[0] : null;
-      setCurrentUserId(currentPartnerId);
-
-      // Build domain based on user role
-      let domain = [
-        ['state', 'in', ['approved', 'in_progress']],
-        ['assigned_vehicle_id', '!=', false]
-      ];
-
-      // If user is Driver role, filter to show ONLY trips assigned to this driver
-      if (user?.role === 'Driver' && currentPartnerId) {
-        domain.push(['assigned_driver_id', '=', currentPartnerId]);
-      }
-
-      // Fetch trips that can be tracked
+      // Fetch trips that can be tracked (approved or in_progress)
       const response = await searchRead(
         'messob.fms.trip',
-        domain,
+        [
+          ['state', 'in', ['approved', 'in_progress']],
+          ['assigned_vehicle_id', '!=', false]
+        ],
         [
           'id', 'name', 'requester_id', 'start_dt', 'end_dt',
           'pickup', 'destination', 'state', 'assigned_vehicle_id',
@@ -75,8 +55,6 @@ export default function TripSelection() {
       setLoading(false);
     }
   };
-
-  const fetchTrackableTrips = fetchCurrentUserAndTrips;
 
   const handleTripSelect = (tripId) => {
     navigate(`/dashboard/tracking/${tripId}`);
@@ -167,9 +145,7 @@ export default function TripSelection() {
             <p className="text-gray-500 dark:text-gray-400 text-sm">
               {searchTerm 
                 ? "No trips match your search criteria." 
-                : user?.role === 'Driver'
-                  ? "You have no assigned trips to track at the moment."
-                  : "There are no approved or in-progress trips available for tracking."
+                : "There are no approved or in-progress trips available for tracking."
               }
             </p>
           </CardContent>

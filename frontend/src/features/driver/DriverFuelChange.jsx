@@ -25,7 +25,7 @@ export default function DriverFuelChange() {
   useEffect(() => {
     // Load active trips for the driver to link fuel log to
     const tripKey = searchParams.get("tripId");
-    searchRead("messob.fms.trip", [["state", "in", ["approved", "in_progress"]]], ["id", "name", "destination"], 50)
+    searchRead("messob.fms.trip", [["state", "in", ["approved", "in_progress"]]], ["id", "name", "destination", "assigned_vehicle_id"], 50)
       .then((activeTrips) => {
         setTrips(activeTrips);
         if (tripKey && activeTrips.some((t) => String(t.id) === String(tripKey))) {
@@ -38,9 +38,18 @@ export default function DriverFuelChange() {
   const onSubmit = async (data) => {
     setError(null);
     if (!tripId) { setError("Please select a trip."); return; }
+    
+    // Find the selected trip to get vehicle_id
+    const selectedTrip = trips.find((t) => String(t.id) === String(tripId));
+    if (!selectedTrip || !selectedTrip.assigned_vehicle_id) {
+      setError("Selected trip does not have an assigned vehicle.");
+      return;
+    }
+    
     try {
       await createRecord("messob.fms.fuel.log", {
         trip_id:      parseInt(tripId),
+        vehicle_id:   selectedTrip.assigned_vehicle_id[0], // Extract vehicle ID from Many2one field
         station_name: data.station_name,
         liters:       parseFloat(data.liters),
         price:        parseFloat(data.price),
@@ -138,8 +147,23 @@ export default function DriverFuelChange() {
 
               <div className="space-y-2">
                 <Label className="text-xs font-bold uppercase tracking-widest text-gray-500">Date</Label>
-                <Input type="date" className={cn("h-12 border-2 rounded-xl", errors.date && "border-red-400")}
-                  {...register("date", { required: "Date is required" })} />
+                <Input 
+                  type="date" 
+                  max={new Date().toISOString().split('T')[0]}
+                  className={cn("h-12 border-2 rounded-xl", errors.date && "border-red-400")}
+                  {...register("date", { 
+                    required: "Date is required",
+                    validate: (value) => {
+                      const selectedDateStr = value;
+                      const todayStr = new Date().toISOString().split('T')[0];
+                      
+                      if (selectedDateStr > todayStr) {
+                        return "Fuel date cannot be in the future";
+                      }
+                      return true;
+                    }
+                  })} 
+                />
                 {errors.date && <p className="text-xs text-red-500 font-semibold">{errors.date.message}</p>}
               </div>
 
