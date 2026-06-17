@@ -540,6 +540,56 @@ class MessobFmsAuditLog(models.Model):
         except Exception as e:
             raise UserError(_('Cannot open resource: %s') % str(e))
 
+    # =========================================================================
+    # PERFORMANCE OPTIMIZATION (NFR-1: Performance Requirements)
+    # =========================================================================
+    
+    def _auto_init(self):
+        """
+        Create composite indexes for frequently queried field combinations.
+        This improves query performance for audit log filtering and reporting:
+        - timestamp + user_id: User activity history
+        - timestamp + action: Action timeline
+        - timestamp + severity: Critical event monitoring
+        - resource_model + resource_id: Resource audit trail
+        
+        NFR-1.1: API response time for read/list operations should be <500ms.
+        """
+        res = super()._auto_init()
+        
+        # Composite index for user activity queries
+        self.env.cr.execute("""
+            CREATE INDEX IF NOT EXISTS messob_fms_audit_log_user_timestamp_idx 
+            ON messob_fms_audit_log (user_id, timestamp DESC)
+        """)
+        
+        # Composite index for action-based queries
+        self.env.cr.execute("""
+            CREATE INDEX IF NOT EXISTS messob_fms_audit_log_action_timestamp_idx 
+            ON messob_fms_audit_log (action, timestamp DESC)
+        """)
+        
+        # Composite index for severity-based monitoring
+        self.env.cr.execute("""
+            CREATE INDEX IF NOT EXISTS messob_fms_audit_log_severity_timestamp_idx 
+            ON messob_fms_audit_log (severity, timestamp DESC)
+        """)
+        
+        # Composite index for resource audit trail
+        self.env.cr.execute("""
+            CREATE INDEX IF NOT EXISTS messob_fms_audit_log_resource_idx 
+            ON messob_fms_audit_log (resource_model, resource_id, timestamp DESC)
+        """)
+        
+        # Composite index for category-based reporting
+        self.env.cr.execute("""
+            CREATE INDEX IF NOT EXISTS messob_fms_audit_log_category_timestamp_idx 
+            ON messob_fms_audit_log (action_category, timestamp DESC)
+        """)
+        
+        _logger.info("Audit Log: Composite indexes created for performance optimization (NFR-1)")
+        return res
+
 
 # ── Model Extensions for Automatic Logging ──
 class BaseModelAuditMixin(models.AbstractModel):

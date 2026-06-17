@@ -623,6 +623,59 @@ class MessobFmsTrip(models.Model):
             'End date/time must be after start date/time!'
         ),
     ]
+    
+    # =========================================================================
+    # PERFORMANCE OPTIMIZATION (NFR-1: Performance Requirements)
+    # =========================================================================
+    
+    def _auto_init(self):
+        """
+        Create composite indexes for frequently queried field combinations.
+        This improves query performance for dispatcher operations and reporting:
+        - state + start_dt: Pending queue and calendar views
+        - requester_id + state: Personal dashboard filtering
+        - assigned_vehicle_id + start_dt + end_dt: Vehicle availability checks (BR-2)
+        - assigned_driver_id + start_dt + end_dt: Driver availability checks (BR-3)
+        
+        NFR-1.1: API response time for trip list operations should be <500ms.
+        NFR-1.2: Support efficient conflict detection for resource assignment.
+        """
+        res = super()._auto_init()
+        
+        # Composite index for pending queue and status filtering
+        self.env.cr.execute("""
+            CREATE INDEX IF NOT EXISTS messob_fms_trip_state_start_dt_idx 
+            ON messob_fms_trip (state, start_dt ASC)
+        """)
+        
+        # Composite index for personal dashboard queries (FR-1.2)
+        self.env.cr.execute("""
+            CREATE INDEX IF NOT EXISTS messob_fms_trip_requester_state_idx 
+            ON messob_fms_trip (requester_id, state, create_date DESC)
+        """)
+        
+        # Composite index for vehicle availability queries (BR-2: No double-booking)
+        self.env.cr.execute("""
+            CREATE INDEX IF NOT EXISTS messob_fms_trip_vehicle_timerange_idx 
+            ON messob_fms_trip (assigned_vehicle_id, start_dt, end_dt) 
+            WHERE assigned_vehicle_id IS NOT NULL AND state IN ('approved', 'in_progress')
+        """)
+        
+        # Composite index for driver availability queries (BR-3: No double-booking)
+        self.env.cr.execute("""
+            CREATE INDEX IF NOT EXISTS messob_fms_trip_driver_timerange_idx 
+            ON messob_fms_trip (assigned_driver_id, start_dt, end_dt) 
+            WHERE assigned_driver_id IS NOT NULL AND state IN ('approved', 'in_progress')
+        """)
+        
+        # Composite index for fleet calendar queries (FR-2.3)
+        self.env.cr.execute("""
+            CREATE INDEX IF NOT EXISTS messob_fms_trip_calendar_idx 
+            ON messob_fms_trip (start_dt, end_dt, state)
+        """)
+        
+        _logger.info("Trip Request: Composite indexes created for performance optimization (NFR-1)")
+        return res
 
     @api.model
     def cleanup_orphaned_drivers(self):
