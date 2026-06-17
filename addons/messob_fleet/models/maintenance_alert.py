@@ -756,6 +756,53 @@ class MessobFmsMaintenanceLog(models.Model):
         for record in self:
             record.alert_count = len(record.alert_ids)
 
+    # =========================================================================
+    # PERFORMANCE OPTIMIZATION (NFR-1: Performance Requirements)
+    # =========================================================================
+    
+    def _auto_init(self):
+        """
+        Create composite indexes for frequently queried field combinations.
+        This improves query performance for maintenance alert queries:
+        - vehicle_id + status: Active alerts per vehicle
+        - scheduled_date + status: Upcoming maintenance calendar
+        - priority + status: Critical alerts dashboard
+        - alert_type + scheduled_date: Alert type reporting
+        
+        NFR-1.1: API response time for maintenance alert queries <500ms.
+        FR-4.3: Efficient retrieval of upcoming/overdue maintenance alerts.
+        """
+        res = super()._auto_init()
+        
+        # Composite index for vehicle maintenance alerts (most common query)
+        self.env.cr.execute("""
+            CREATE INDEX IF NOT EXISTS messob_fms_maintenance_alert_vehicle_status_idx 
+            ON messob_fms_maintenance_alert (vehicle_id, status, scheduled_date ASC)
+        """)
+        
+        # Composite index for upcoming maintenance calendar
+        self.env.cr.execute("""
+            CREATE INDEX IF NOT EXISTS messob_fms_maintenance_alert_schedule_status_idx 
+            ON messob_fms_maintenance_alert (scheduled_date ASC, status) 
+            WHERE status IN ('pending', 'sent', 'acknowledged')
+        """)
+        
+        # Composite index for critical alerts dashboard
+        self.env.cr.execute("""
+            CREATE INDEX IF NOT EXISTS messob_fms_maintenance_alert_priority_status_idx 
+            ON messob_fms_maintenance_alert (priority, status, alert_date DESC) 
+            WHERE status IN ('pending', 'sent', 'acknowledged')
+        """)
+        
+        # Composite index for alert type reporting
+        self.env.cr.execute("""
+            CREATE INDEX IF NOT EXISTS messob_fms_maintenance_alert_type_date_idx 
+            ON messob_fms_maintenance_alert (alert_type, scheduled_date ASC)
+        """)
+        
+        _logger.info("Maintenance Alert: Composite indexes created for performance optimization (NFR-1)")
+        return res
+
     @api.model_create_multi
     def create(self, vals_list):
         """Override create to generate alerts for future maintenance."""

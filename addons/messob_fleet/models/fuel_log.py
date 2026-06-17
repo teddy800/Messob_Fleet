@@ -14,6 +14,9 @@
 
 from odoo import models, fields, api, _ # type: ignore
 from odoo.exceptions import UserError # type: ignore
+import logging
+
+_logger = logging.getLogger(__name__)
 
 
 class MessobFmsFuelLog(models.Model):
@@ -127,6 +130,51 @@ class MessobFmsFuelLog(models.Model):
                 rec.price / rec.liters if rec.liters > 0 else 0.0
             )
 
+    # =========================================================================
+    # PERFORMANCE OPTIMIZATION (NFR-1: Performance Requirements)
+    # =========================================================================
+    
+    def _auto_init(self):
+        """
+        Create composite indexes for frequently queried field combinations.
+        This improves query performance for fuel analytics and reporting:
+        - vehicle_id + date: Vehicle fuel history
+        - vehicle_id + odometer: Fuel efficiency calculations
+        - pump_transaction_id: Automatic fuel log lookup (HW-2)
+        
+        NFR-1.1: API response time for fuel analytics should be <500ms.
+        """
+        res = super()._auto_init()
+        
+        # Composite index for vehicle fuel history queries
+        self.env.cr.execute("""
+            CREATE INDEX IF NOT EXISTS messob_fms_fuel_log_vehicle_date_idx 
+            ON messob_fms_fuel_log (vehicle_id, date DESC)
+        """)
+        
+        # Composite index for fuel efficiency calculations (requires odometer ordering)
+        self.env.cr.execute("""
+            CREATE INDEX IF NOT EXISTS messob_fms_fuel_log_vehicle_odometer_idx 
+            ON messob_fms_fuel_log (vehicle_id, odometer ASC)
+        """)
+        
+        # Index for automatic fuel pump transaction lookup (HW-2)
+        self.env.cr.execute("""
+            CREATE INDEX IF NOT EXISTS messob_fms_fuel_log_pump_transaction_idx 
+            ON messob_fms_fuel_log (pump_transaction_id) 
+            WHERE pump_transaction_id IS NOT NULL
+        """)
+        
+        # Composite index for trip-related fuel logs
+        self.env.cr.execute("""
+            CREATE INDEX IF NOT EXISTS messob_fms_fuel_log_trip_date_idx 
+            ON messob_fms_fuel_log (trip_id, date DESC) 
+            WHERE trip_id IS NOT NULL
+        """)
+        
+        _logger.info("Fuel Log: Composite indexes created for performance optimization (NFR-1)")
+        return res
+    
     # ── Constraints ──
     @api.constrains('liters')
     def _check_liters(self):

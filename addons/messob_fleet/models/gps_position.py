@@ -213,6 +213,44 @@ class MessobFmsGpsPosition(models.Model):
             else:
                 position.distance_from_previous = 0.0
 
+    # =========================================================================
+    # PERFORMANCE OPTIMIZATION (NFR-1: Performance Requirements)
+    # =========================================================================
+    
+    def _auto_init(self):
+        """
+        Create composite indexes for frequently queried field combinations.
+        This improves query performance for common operations:
+        - get_latest_position: vehicle_id + timestamp
+        - get_position_history: vehicle_id + timestamp range
+        - get_trip_route: trip_id + timestamp
+        
+        NFR-1.2: System must handle 1,000+ concurrent GPS location updates
+        per minute without performance degradation.
+        """
+        res = super()._auto_init()
+        
+        # Composite index for vehicle position queries (most common)
+        self.env.cr.execute("""
+            CREATE INDEX IF NOT EXISTS messob_fms_gps_position_vehicle_timestamp_idx 
+            ON messob_fms_gps_position (vehicle_id, timestamp DESC)
+        """)
+        
+        # Composite index for trip route queries
+        self.env.cr.execute("""
+            CREATE INDEX IF NOT EXISTS messob_fms_gps_position_trip_timestamp_idx 
+            ON messob_fms_gps_position (trip_id, timestamp ASC)
+        """)
+        
+        # Composite index for device-based queries
+        self.env.cr.execute("""
+            CREATE INDEX IF NOT EXISTS messob_fms_gps_position_device_timestamp_idx 
+            ON messob_fms_gps_position (device_id, timestamp DESC)
+        """)
+        
+        _logger.info("GPS Position: Composite indexes created for performance optimization (NFR-1)")
+        return res
+    
     # ── Constraints ──
     @api.constrains('latitude', 'longitude')
     def _check_coordinates(self):
