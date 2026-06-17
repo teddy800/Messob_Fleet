@@ -67,6 +67,23 @@ class MessobFmsMaintenanceLog(models.Model):
         help='Odometer reading at which next service is due.',
     )
 
+    next_service_type = fields.Selection(
+        selection=[
+            ('full_change',     'Full Change (Oil & Filter)'),
+            ('brake',           'Brake Service'),
+            ('tire',            'Tire Replacement'),
+            ('engine',          'Engine Repair'),
+            ('transmission',    'Transmission Service'),
+            ('electrical',      'Electrical Repair'),
+            ('body',            'Body & Paint'),
+            ('inspection',      'General Inspection'),
+            ('other',           'Other'),
+        ],
+        string='Next Service Type',
+        tracking=True,
+        help='Type of service required for the next scheduled maintenance.',
+    )
+
     # ── Service details ──
     service_type = fields.Selection(
         selection=[
@@ -151,3 +168,16 @@ class MessobFmsMaintenanceLog(models.Model):
         for rec in self:
             if rec.cost < 0:
                 raise UserError(_('Cost cannot be negative.'))
+
+    @api.constrains('next_service_date', 'date')
+    def _check_next_service_date(self):
+        """Validate that next service date is not in the past."""
+        for rec in self:
+            if rec.next_service_date:
+                # Next service date must be today or in the future
+                if rec.next_service_date < fields.Date.today():
+                    raise UserError(_('Next service date cannot be in the past. Please select today or a future date.'))
+                
+                # Optionally: Next service date should be after the current service date
+                if rec.next_service_date < rec.date:
+                    raise UserError(_('Next service date must be on or after the current service date (%s).') % rec.date)
