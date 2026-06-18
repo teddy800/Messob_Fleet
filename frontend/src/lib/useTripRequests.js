@@ -145,3 +145,10 @@ export async function approveTrip(tripId, vehicleId, driverPartnerId) {
 export async function rejectTrip(tripId) {
   return callMethod("messob.fms.trip", "action_reject", [tripId]);
 }
+
+/**
+ * Close a completed trip (final state)
+ */
+export async function closeTrip(tripId) {
+  return callMethod("messob.fms.trip", "action_close", [tripId]);
+}

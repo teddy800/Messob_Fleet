@@ -51,9 +51,15 @@
                             class="btn-danger"
                             invisible="state != 'pending'"
                             confirm="Reject this trip request?"/>
+                    <button name="action_close"
+                            string="Close Trip"
+                            type="object"
+                            class="btn-secondary"
+                            invisible="state != 'completed'"
+                            confirm="Close this completed trip? This is the final state."/>
                     <field name="state"
                            widget="statusbar"
-                           statusbar_visible="pending,approved,rejected,in_progress,completed"/>
+                           statusbar_visible="pending,approved,rejected,in_progress,completed,closed"/>
                 </header>
                 <sheet>
                     <div class="oe_title">

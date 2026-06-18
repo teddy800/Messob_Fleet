@@ -105,6 +105,34 @@ class MessobFmsTripDispatcher(models.Model):
         self.write({'state': 'rejected'})
         return self._notify('Rejected', 'Trip request has been rejected.', 'warning')
 
+    def action_close(self):
+        """
+        Dispatcher action: Close a completed trip.
+        Transition: completed → closed
+
+        Requires:
+          - Caller has group_fms_dispatcher (BR-1)
+        
+        This is the final state in the trip lifecycle.
+        """
+        self._assert_dispatcher()
+
+        for rec in self:
+            if rec.state != 'completed':
+                raise UserError(_('Only "Completed" trips can be closed.'))
+            
+            # Log closure action
+            self.env['messob.fms.audit.log'].log_business_action(
+                action='CLOSE',
+                model=rec._name,
+                record_id=rec.id,
+                description=f"Closed trip {rec.name} - Final lifecycle state reached",
+                severity='low'
+            )
+
+        self.write({'state': 'closed'})
+        return self._notify('Closed', 'Trip has been closed successfully.', 'info')
+
     # =========================================================================
     # EMAIL NOTIFICATIONS (SW-3)
     # =========================================================================

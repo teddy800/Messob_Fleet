@@ -68,7 +68,7 @@
 
                     <field name="state"
                            widget="statusbar"
-                           statusbar_visible="draft,pending,approved,rejected,in_progress,completed"/>
+                           statusbar_visible="draft,pending,approved,rejected,in_progress,completed,closed"/>
                 </header>
 
                 <sheet>
@@ -109,6 +109,11 @@
                     <div class="alert alert-success text-center"
                          invisible="state != 'completed'">
                         <strong>🏁 Completed</strong> — Trip completed successfully.
+                    </div>
+
+                    <div class="alert alert-secondary text-center"
+                         invisible="state != 'closed'">
+                        <strong>🔒 Closed</strong> — Trip has been closed by dispatcher.
                     </div>
 
                     <!-- ── Trip Details ── -->
@@ -280,6 +285,7 @@
                 <filter name="rejected"    string="Rejected"    domain="[('state','=','rejected')]"/>
                 <filter name="in_progress" string="In Progress" domain="[('state','=','in_progress')]"/>
                 <filter name="completed"   string="Completed"   domain="[('state','=','completed')]"/>
+                <filter name="closed"      string="Closed"      domain="[('state','=','closed')]"/>
                 <group expand="0" string="Group By">
                     <filter name="group_state" string="Status"
                             context="{'group_by': 'state'}"/>
