@@ -12,7 +12,7 @@ import { Label } from "@/components/ui/label";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { useTripRequests, fetchVehicles, fetchDrivers, approveTrip, rejectTrip } from "@/lib/useTripRequests";
+import { useTripRequests, fetchVehicles, fetchDrivers, approveTrip, rejectTrip, closeTrip } from "@/lib/useTripRequests";
 import { searchRead } from "@/lib/odooApi";
 
 const statusBadge = {
@@ -21,6 +21,7 @@ const statusBadge = {
   Rejected: "bg-rose-50/40 dark:bg-rose-900/10 text-rose-600/80 dark:text-rose-400/60 border-2 border-rose-200/50 dark:border-rose-700/30",
   "In Progress": "bg-emerald-50/40 dark:bg-emerald-900/10 text-emerald-600/80 dark:text-emerald-400/60 border-2 border-emerald-200/50 dark:border-emerald-700/30",
   Completed: "bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-400 border-2 border-purple-200 dark:border-purple-700",
+  Closed: "bg-gray-50 dark:bg-gray-700/20 text-gray-600 dark:text-gray-400 border-2 border-gray-200 dark:border-gray-600",
 };
 
 const statusIcon = {
@@ -29,6 +30,7 @@ const statusIcon = {
   Rejected: <XCircle className="h-3.5 w-3.5" />,
   "In Progress": <Clock className="h-3.5 w-3.5" />,
   Completed: <CheckCircle className="h-3.5 w-3.5" />,
+  Closed: <CheckCircle className="h-3.5 w-3.5" />,
 };
 
 function DetailRow({ icon: Icon, label, value }) {
@@ -44,7 +46,7 @@ function DetailRow({ icon: Icon, label, value }) {
 }
 
 export default function ApprovalQueue() {
-  const { trips, loading, refetch } = useTripRequests(["pending", "approved", "rejected", "in_progress", "completed"]);
+  const { trips, loading, refetch } = useTripRequests(["pending", "approved", "rejected", "in_progress", "completed", "closed"]);
   const [vehicles, setVehicles] = useState([]);
   const [drivers, setDrivers]   = useState([]);
   const [selected, setSelected] = useState(null);
@@ -74,6 +76,20 @@ export default function ApprovalQueue() {
     setError(null);
     try {
       await rejectTrip(selected.id);
+      setDialogOpen(false);
+      refetch();
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleClose = async () => {
+    setSubmitting(true);
+    setError(null);
+    try {
+      await closeTrip(selected.id);
       setDialogOpen(false);
       refetch();
     } catch (err) {
@@ -128,8 +144,8 @@ export default function ApprovalQueue() {
   };
 
   const sorted = [...trips].sort((a, b) => {
-    const order = { pending: 0, approved: 1, in_progress: 2, completed: 3, rejected: 4 };
-    return (order[a.state] ?? 5) - (order[b.state] ?? 5);
+    const order = { pending: 0, approved: 1, in_progress: 2, completed: 3, rejected: 4, closed: 5 };
+    return (order[a.state] ?? 6) - (order[b.state] ?? 6);
   });
 
   const pendingCount = trips.filter((r) => r.state === "pending").length;
@@ -141,6 +157,7 @@ export default function ApprovalQueue() {
       rejected: "Rejected",
       in_progress: "In Progress",
       completed: "Completed",
+      closed: "Closed",
     };
     return labels[state] || state.charAt(0).toUpperCase() + state.slice(1);
   };
@@ -276,6 +293,34 @@ export default function ApprovalQueue() {
                     </div>
                   )}
 
+                  {selected.state === "completed" && (
+                    <div className="bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-700 rounded-xl p-4 text-sm space-y-1">
+                      <p className="font-bold text-purple-700 dark:text-purple-400">
+                        ✅ Trip Completed
+                      </p>
+                      <p className="text-xs text-purple-600 dark:text-purple-400">
+                        Vehicle: {Array.isArray(selected.assigned_vehicle_id) ? selected.assigned_vehicle_id[1] : "—"}
+                      </p>
+                      <p className="text-xs text-purple-600 dark:text-purple-400">
+                        Driver: {Array.isArray(selected.assigned_driver_id) ? selected.assigned_driver_id[1] : "—"}
+                      </p>
+                      <p className="text-xs text-purple-600 dark:text-purple-400 mt-2">
+                        Click "Close Trip" below to mark this trip as closed (final state).
+                      </p>
+                    </div>
+                  )}
+
+                  {selected.state === "closed" && (
+                    <div className="bg-gray-50 dark:bg-gray-700/20 border border-gray-200 dark:border-gray-600 rounded-xl p-4 text-sm">
+                      <p className="font-bold text-gray-600 dark:text-gray-400">
+                        🔒 Trip Closed - Final State
+                      </p>
+                      <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
+                        This trip has been closed and archived.
+                      </p>
+                    </div>
+                  )}
+
                   {error && <p className="text-sm text-red-500 dark:text-red-400 font-semibold">{error}</p>}
 
                   {selected.state === "pending" && (
@@ -296,6 +341,19 @@ export default function ApprovalQueue() {
                       >
                         <CheckCircle className="h-4 w-4 mr-2" /> 
                         {selected.start_dt && new Date(selected.start_dt) <= new Date() ? "Expired - Cannot Approve" : "Approve"}
+                      </Button>
+                    </DialogFooter>
+                  )}
+
+                  {selected.state === "completed" && (
+                    <DialogFooter className="gap-2 pt-2">
+                      <Button
+                        className="flex-1 bg-gray-600 dark:bg-gray-700 hover:bg-gray-700 dark:hover:bg-gray-800 text-white"
+                        onClick={handleClose}
+                        disabled={submitting}
+                      >
+                        <CheckCircle className="h-4 w-4 mr-2" />
+                        {submitting ? "Closing..." : "Close Trip"}
                       </Button>
                     </DialogFooter>
                   )}
