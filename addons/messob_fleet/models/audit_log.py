@@ -89,6 +89,7 @@ class MessobFmsAuditLog(models.Model):
             ('SUBMIT', 'Submit'),
             ('CANCEL', 'Cancel'),
             ('COMPLETE', 'Complete'),
+            ('INCIDENT', 'Incident Report'),
             
             # System Actions
             ('EXPORT', 'Export'),
@@ -233,6 +234,7 @@ class MessobFmsAuditLog(models.Model):
             'SUBMIT': 'business_process',
             'CANCEL': 'business_process',
             'COMPLETE': 'business_process',
+            'INCIDENT': 'business_process',
             'EXPORT': 'system_admin',
             'IMPORT': 'system_admin',
             'BACKUP': 'system_admin',
