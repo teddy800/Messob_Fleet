@@ -17,6 +17,7 @@ import DriverRequests from "./features/driver/DriverRequests";
 import DriverFuelChange from "./features/driver/DriverFuelChange";
 import DriverMobileApp from "./features/driver/DriverMobileApp";
 import DriverTripStatus from "./features/driver/DriverTripStatus";
+import DriverMaintenanceAlerts from "./features/driver/DriverMaintenanceAlerts";
 import AdminDashboard from "./features/admin/AdminDashboard";
 import UserManagement from "./features/admin/UserManagement";
 import VehicleManagement from "./features/admin/VehicleManagement";
@@ -58,6 +59,7 @@ export default function App() {
               <Route path="driver/requests" element={<DriverRequests />} />
               <Route path="driver/fuel" element={<DriverFuelChange />} />
               <Route path="driver/mobile" element={<DriverMobileApp />} />
+              <Route path="driver/maintenance-alerts" element={<DriverMaintenanceAlerts />} />
               <Route path="driver/trip-status/:tripId" element={<DriverTripStatus />} />
             </Route>
 

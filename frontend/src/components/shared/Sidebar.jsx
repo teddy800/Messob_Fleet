@@ -61,6 +61,12 @@ const menuItems = [
     icon: Fuel,
     roles: ["Driver"],
   },
+  {
+    name: "Maintenance Alerts",
+    path: "/dashboard/driver/maintenance-alerts",
+    icon: AlertTriangle,
+    roles: ["Driver"],
+  },
   // Dispatcher: current requests only
   {
     name: "Current Requests",
