@@ -469,82 +469,165 @@ export default function MaintenanceAlerts() {
         ))}
       </Tabs>
 
-      {/* Alert Details Dialog */}
+      {/* Alert Details Dialog - Enhanced Version */}
       <Dialog open={viewDialogOpen} onOpenChange={setViewDialogOpen}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <AlertTriangle className="h-5 w-5 text-brand-blue" />
-              Alert Details
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader className="border-b border-gray-200 dark:border-gray-700 pb-4">
+            <DialogTitle className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-brand-blue/10 rounded-lg">
+                  <AlertTriangle className="h-6 w-6 text-brand-blue" />
+                </div>
+                <span className="text-xl font-bold text-gray-900 dark:text-gray-100">Alert Details</span>
+              </div>
             </DialogTitle>
           </DialogHeader>
           
           {selectedAlert && (
-            <div className="space-y-4">
-              <div className="flex items-center gap-2">
-                <Badge className={`${priorityConfig[selectedAlert.priority]?.color} text-white`}>
-                  {priorityConfig[selectedAlert.priority]?.label}
+            <div className="space-y-6 pt-2">
+              {/* Status Badges - Prominent Display */}
+              <div className="flex items-center gap-3 flex-wrap">
+                <Badge className={`${priorityConfig[selectedAlert.priority]?.color} text-white px-3 py-1.5 text-sm font-semibold shadow-sm`}>
+                  {priorityConfig[selectedAlert.priority]?.label} Priority
                 </Badge>
-                <Badge className={`${statusConfig[selectedAlert.status]?.color} text-white`}>
+                <Badge className={`${statusConfig[selectedAlert.status]?.color} text-white px-3 py-1.5 text-sm font-semibold shadow-sm`}>
                   {statusConfig[selectedAlert.status]?.label}
                 </Badge>
                 {selectedAlert.is_overdue && (
-                  <Badge className="bg-rose-500/70 text-white">OVERDUE</Badge>
+                  <Badge className="bg-rose-600 text-white px-3 py-1.5 text-sm font-semibold shadow-sm animate-pulse">
+                    ⚠️ OVERDUE
+                  </Badge>
                 )}
               </div>
 
-              <div>
-                <h3 className="font-bold text-lg">{selectedAlert.alert_title}</h3>
-                <p className="text-gray-600">{selectedAlert.alert_message}</p>
+              {/* Alert Title and Message */}
+              <div className="space-y-3 bg-gray-50 dark:bg-gray-800/50 p-5 rounded-xl border border-gray-200 dark:border-gray-700">
+                <h3 className="font-bold text-xl text-gray-900 dark:text-gray-100 leading-tight">
+                  {selectedAlert.alert_title}
+                </h3>
+                <p className="text-gray-700 dark:text-gray-300 text-base leading-relaxed">
+                  {selectedAlert.alert_message}
+                </p>
               </div>
 
+              {/* Description Section */}
               {selectedAlert.description && (
-                <div>
-                  <h4 className="font-medium text-gray-900 mb-2">Description</h4>
-                  <p className="text-gray-600 text-sm">{selectedAlert.description}</p>
+                <div className="space-y-2">
+                  <h4 className="font-semibold text-gray-900 dark:text-gray-100 text-sm uppercase tracking-wide flex items-center gap-2">
+                    <MessageSquare className="h-4 w-4" />
+                    Description
+                  </h4>
+                  <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-100 dark:border-blue-800">
+                    <p className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed">
+                      {selectedAlert.description}
+                    </p>
+                  </div>
                 </div>
               )}
 
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div>
-                  <span className="font-medium text-gray-900">Vehicle:</span>
-                  <p className="text-gray-600">
-                    {Array.isArray(selectedAlert.vehicle_id) ? selectedAlert.vehicle_id[1] : 'Unknown'}
-                  </p>
+              {/* Key Information Grid - Enhanced with Icons */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Vehicle */}
+                <div className="bg-white dark:bg-gray-800 p-4 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md transition-shadow">
+                  <div className="flex items-start gap-3">
+                    <div className="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
+                      <Car className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Vehicle</span>
+                      <p className="text-base font-semibold text-gray-900 dark:text-gray-100 mt-1 truncate" title={Array.isArray(selectedAlert.vehicle_id) ? selectedAlert.vehicle_id[1] : 'Unknown'}>
+                        {Array.isArray(selectedAlert.vehicle_id) ? selectedAlert.vehicle_id[1] : 'Unknown'}
+                      </p>
+                    </div>
+                  </div>
                 </div>
-                <div>
-                  <span className="font-medium text-gray-900">Service Type:</span>
-                  <p className="text-gray-600">{selectedAlert.service_type}</p>
+
+                {/* Service Type */}
+                <div className="bg-white dark:bg-gray-800 p-4 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md transition-shadow">
+                  <div className="flex items-start gap-3">
+                    <div className="p-2 bg-purple-100 dark:bg-purple-900/30 rounded-lg">
+                      <Gauge className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+                    </div>
+                    <div className="flex-1">
+                      <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Service Type</span>
+                      <p className="text-base font-semibold text-gray-900 dark:text-gray-100 mt-1 capitalize">
+                        {selectedAlert.service_type}
+                      </p>
+                    </div>
+                  </div>
                 </div>
-                <div>
-                  <span className="font-medium text-gray-900">Scheduled Date:</span>
-                  <p className="text-gray-600">
-                    {selectedAlert.scheduled_date ? format(new Date(selectedAlert.scheduled_date), 'MMMM d, yyyy') : 'N/A'}
-                  </p>
+
+                {/* Scheduled Date */}
+                <div className="bg-white dark:bg-gray-800 p-4 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md transition-shadow">
+                  <div className="flex items-start gap-3">
+                    <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded-lg">
+                      <Calendar className="h-5 w-5 text-green-600 dark:text-green-400" />
+                    </div>
+                    <div className="flex-1">
+                      <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Scheduled Date</span>
+                      <p className="text-base font-semibold text-gray-900 dark:text-gray-100 mt-1">
+                        {selectedAlert.scheduled_date ? format(new Date(selectedAlert.scheduled_date), 'MMMM d, yyyy') : 'N/A'}
+                      </p>
+                    </div>
+                  </div>
                 </div>
-                <div>
-                  <span className="font-medium text-gray-900">Days Until Due:</span>
-                  <p className={`${
-                    selectedAlert.days_until_due < 0 ? 'text-red-600' : 
-                    selectedAlert.days_until_due <= 3 ? 'text-orange-600' : 'text-gray-600'
-                  }`}>
-                    {selectedAlert.days_until_due < 0 ? `${Math.abs(selectedAlert.days_until_due)} days overdue` : 
-                     selectedAlert.days_until_due === 0 ? 'Due today' : 
-                     `${selectedAlert.days_until_due} days`}
-                  </p>
+
+                {/* Days Until Due - Enhanced Visual */}
+                <div className={`p-4 rounded-xl border shadow-sm hover:shadow-md transition-shadow ${
+                  selectedAlert.days_until_due < 0 
+                    ? 'bg-rose-50 dark:bg-rose-900/20 border-rose-200 dark:border-rose-800' 
+                    : selectedAlert.days_until_due <= 3 
+                      ? 'bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800' 
+                      : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700'
+                }`}>
+                  <div className="flex items-start gap-3">
+                    <div className={`p-2 rounded-lg ${
+                      selectedAlert.days_until_due < 0 
+                        ? 'bg-rose-100 dark:bg-rose-900/40' 
+                        : selectedAlert.days_until_due <= 3 
+                          ? 'bg-orange-100 dark:bg-orange-900/40' 
+                          : 'bg-gray-100 dark:bg-gray-700'
+                    }`}>
+                      <Clock className={`h-5 w-5 ${
+                        selectedAlert.days_until_due < 0 
+                          ? 'text-rose-600 dark:text-rose-400' 
+                          : selectedAlert.days_until_due <= 3 
+                            ? 'text-orange-600 dark:text-orange-400' 
+                            : 'text-gray-600 dark:text-gray-400'
+                      }`} />
+                    </div>
+                    <div className="flex-1">
+                      <span className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Days Until Due</span>
+                      <p className={`text-lg font-bold mt-1 ${
+                        selectedAlert.days_until_due < 0 
+                          ? 'text-rose-700 dark:text-rose-400' 
+                          : selectedAlert.days_until_due <= 3 
+                            ? 'text-orange-700 dark:text-orange-400' 
+                            : 'text-gray-900 dark:text-gray-100'
+                      }`}>
+                        {selectedAlert.days_until_due < 0 
+                          ? `${Math.abs(selectedAlert.days_until_due)} days overdue` 
+                          : selectedAlert.days_until_due === 0 
+                            ? '⚠️ Due today' 
+                            : `${selectedAlert.days_until_due} days`}
+                      </p>
+                    </div>
+                  </div>
                 </div>
               </div>
 
-              <div className="flex items-center gap-2 pt-4">
+              {/* Action Buttons - Enhanced Layout */}
+              <div className="flex items-center gap-3 pt-4 border-t border-gray-200 dark:border-gray-700 flex-wrap">
                 <Button
                   onClick={() => {
                     handleAlertAction(selectedAlert.id, 'action_acknowledge');
                     setViewDialogOpen(false);
                   }}
                   disabled={selectedAlert.status !== 'pending'}
-                  className="bg-blue-600 hover:bg-blue-700"
+                  className="flex-1 sm:flex-none bg-blue-600 hover:bg-blue-700 text-white font-semibold shadow-md hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  size="lg"
                 >
-                  <CheckCircle className="h-4 w-4 mr-2" />
+                  <CheckCircle className="h-5 w-5 mr-2" />
                   Acknowledge
                 </Button>
                 
@@ -555,9 +638,10 @@ export default function MaintenanceAlerts() {
                       setViewDialogOpen(false);
                     }}
                     disabled={['completed', 'dismissed'].includes(selectedAlert.status)}
-                    variant="outline"
-                    className="text-green-600 hover:text-green-700"
+                    className="flex-1 sm:flex-none bg-green-600 hover:bg-green-700 text-white font-semibold shadow-md hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                    size="lg"
                   >
+                    <CheckCircle className="h-5 w-5 mr-2" />
                     Mark Complete
                   </Button>
                 )}
@@ -569,8 +653,10 @@ export default function MaintenanceAlerts() {
                   }}
                   disabled={['completed', 'dismissed'].includes(selectedAlert.status)}
                   variant="outline"
-                  className="text-gray-600 hover:text-gray-700"
+                  className="flex-1 sm:flex-none border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  size="lg"
                 >
+                  <X className="h-5 w-5 mr-2" />
                   Dismiss
                 </Button>
               </div>
