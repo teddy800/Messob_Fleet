@@ -1,14 +1,16 @@
 import { useEffect, useState } from 'react';
 import { 
   MapPin, Navigation, CheckCircle, Clock, Fuel, Camera, 
-  Phone, AlertCircle, Menu, X, Home, List, Activity 
+  Phone, AlertCircle, Menu, X, Home, List, Activity, Bell, Wrench 
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { callOdooMethod, searchRead } from '@/lib/odooApi';
 import { useUserStore } from '@/store/useUserStore';
 import { toast } from 'sonner';
 import IncidentReport from './IncidentReport';
+import VehicleMaintenanceAlerts from './VehicleMaintenanceAlerts';
 
 export default function DriverMobileApp() {
   const user = useUserStore((s) => s.user);
@@ -19,9 +21,11 @@ export default function DriverMobileApp() {
   const [currentView, setCurrentView] = useState('home');
   const [location, setLocation] = useState(null);
   const [showIncidentReport, setShowIncidentReport] = useState(false);
+  const [maintenanceAlertCount, setMaintenanceAlertCount] = useState(0);
 
   useEffect(() => {
     loadTrips();
+    loadMaintenanceAlertCount();
     requestLocationPermission();
     registerServiceWorker();
   }, []);
@@ -102,6 +106,72 @@ export default function DriverMobileApp() {
     }
   };
 
+  const loadMaintenanceAlertCount = async () => {
+    try {
+      // Get user's partner ID first
+      const [userRecord] = await searchRead(
+        'res.users',
+        [['id', '=', user.uid]],
+        ['partner_id'],
+        1
+      );
+
+      const partner = userRecord?.partner_id;
+      const driverPartnerId = Array.isArray(partner) ? partner[0] : null;
+
+      if (!driverPartnerId) {
+        setMaintenanceAlertCount(0);
+        return;
+      }
+
+      // Get driver's active and approved trips with assigned vehicles
+      const driverTrips = await searchRead(
+        'messob.fms.trip',
+        [
+          ['assigned_driver_id', '=', driverPartnerId],
+          ['state', 'in', ['approved', 'in_progress']],
+          ['assigned_vehicle_id', '!=', false]
+        ],
+        ['assigned_vehicle_id'],
+        100
+      );
+
+      if (!driverTrips || driverTrips.length === 0) {
+        setMaintenanceAlertCount(0);
+        return;
+      }
+
+      // Extract unique vehicle IDs
+      const vehicleIds = [...new Set(
+        driverTrips
+          .map(trip => Array.isArray(trip.assigned_vehicle_id) ? trip.assigned_vehicle_id[0] : trip.assigned_vehicle_id)
+          .filter(id => id)
+      )];
+
+      if (vehicleIds.length === 0) {
+        setMaintenanceAlertCount(0);
+        return;
+      }
+
+      // Count maintenance alerts for these vehicles
+      const alerts = await searchRead(
+        'messob.fms.maintenance.alert',
+        [
+          ['vehicle_id', 'in', vehicleIds],
+          ['status', 'in', ['pending', 'sent', 'acknowledged']],
+          ['dashboard_notification', '=', true]
+        ],
+        ['id'],
+        1000
+      );
+
+      setMaintenanceAlertCount(alerts ? alerts.length : 0);
+    } catch (error) {
+      console.error('Failed to load maintenance alert count:', error);
+      setMaintenanceAlertCount(0);
+    }
+  };
+
   const startTrip = async (tripId) => {
     try {
       await callOdooMethod('messob.fms.trip', 'action_start_trip', [tripId]);
@@ -153,9 +223,24 @@ export default function DriverMobileApp() {
             <p className="text-xs opacity-80 dark:opacity-70">{user?.name}</p>
           </div>
         </div>
-        <button onClick={() => setMenuOpen(!menuOpen)} className="p-2">
-          {menuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-        </button>
+        <div className="flex items-center gap-2">
+          <button 
+            onClick={() => { setCurrentView('maintenance'); setMenuOpen(false); }}
+            className="relative p-2 hover:bg-white/10 dark:hover:bg-gray-700 rounded-lg transition-colors"
+          >
+            <Bell className="h-6 w-6" />
+            {maintenanceAlertCount > 0 && (
+              <Badge 
+                className="absolute -top-1 -right-1 h-5 w-5 p-0 flex items-center justify-center text-[10px] bg-red-600 dark:bg-red-700 text-white border-2 border-brand-blue dark:border-gray-900"
+              >
+                {maintenanceAlertCount}
+              </Badge>
+            )}
+          </button>
+          <button onClick={() => setMenuOpen(!menuOpen)} className="p-2 hover:bg-white/10 dark:hover:bg-gray-700 rounded-lg transition-colors">
+            {menuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+          </button>
+        </div>
       </div>
 
       {menuOpen && (
@@ -173,6 +258,21 @@ export default function DriverMobileApp() {
           >
             <List className="h-5 w-5" />
             <span>All Trips</span>
+          </button>
+          <button 
+            onClick={() => { setCurrentView('maintenance'); setMenuOpen(false); }}
+            className="w-full flex items-center gap-3 p-4 hover:bg-gray-50 dark:hover:bg-gray-700 border-b dark:border-gray-700"
+          >
+            <Wrench className="h-5 w-5" />
+            <span className="flex-1 text-left">Vehicle Maintenance</span>
+            {maintenanceAlertCount > 0 && (
+              <Badge 
+                variant="destructive" 
+                className="bg-red-600 dark:bg-red-700 text-white text-xs"
+              >
+                {maintenanceAlertCount}
+              </Badge>
+            )}
           </button>
           <button 
             onClick={() => { setCurrentView('fuel'); setMenuOpen(false); }}
@@ -379,6 +479,11 @@ export default function DriverMobileApp() {
           <>
             {currentView === 'home' && <HomeView />}
             {currentView === 'trips' && <HomeView />}
+            {currentView === 'maintenance' && (
+              <div className="p-4">
+                <VehicleMaintenanceAlerts />
+              </div>
+            )}
             {currentView === 'fuel' && (
               <div className="p-4">
                 <Card className="dark:bg-gray-800 dark:border-gray-700">
@@ -396,7 +501,7 @@ export default function DriverMobileApp() {
 
       {/* Bottom Navigation */}
       <div className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t dark:border-gray-700 shadow-lg">
-        <div className="grid grid-cols-3 gap-1 p-2">
+        <div className="grid grid-cols-4 gap-1 p-2">
           <button
             onClick={() => setCurrentView('home')}
             className={`flex flex-col items-center gap-1 p-3 rounded-lg ${
@@ -414,6 +519,24 @@ export default function DriverMobileApp() {
           >
             <List className="h-5 w-5" />
             <span className="text-xs font-bold">Trips</span>
+          </button>
+          <button
+            onClick={() => setCurrentView('maintenance')}
+            className={`flex flex-col items-center gap-1 p-3 rounded-lg relative ${
+              currentView === 'maintenance' ? 'bg-brand-blue dark:bg-blue-700 text-white' : 'text-gray-600 dark:text-gray-300'
+            }`}
+          >
+            <div className="relative">
+              <Wrench className="h-5 w-5" />
+              {maintenanceAlertCount > 0 && (
+                <Badge 
+                  className="absolute -top-2 -right-2 h-4 w-4 p-0 flex items-center justify-center text-[8px] bg-red-600 dark:bg-red-700 text-white border border-white dark:border-gray-800"
+                >
+                  {maintenanceAlertCount}
+                </Badge>
+              )}
+            </div>
+            <span className="text-xs font-bold">Alerts</span>
           </button>
           <button
             onClick={() => setCurrentView('fuel')}
