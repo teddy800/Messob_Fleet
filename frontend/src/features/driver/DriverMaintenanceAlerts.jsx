@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { 
   Bell, AlertTriangle, CheckCircle, Calendar, Gauge, 
-  Wrench, X, RefreshCw, Clock, AlertCircle 
+  Wrench, X, RefreshCw, Clock, AlertCircle, FileWarning 
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { searchRead } from '@/lib/odooApi';
 import { useUserStore } from '@/store/useUserStore';
 import { toast } from 'sonner';
+import IncidentReport from './IncidentReport';
 
 export default function DriverMaintenanceAlerts() {
   const user = useUserStore((s) => s.user);
@@ -17,6 +18,8 @@ export default function DriverMaintenanceAlerts() {
   const [showModal, setShowModal] = useState(false);
   const [selectedAlert, setSelectedAlert] = useState(null);
   const [partnerId, setPartnerId] = useState(null);
+  const [showIncidentReport, setShowIncidentReport] = useState(false);
+  const [activeTrip, setActiveTrip] = useState(null);
 
   useEffect(() => {
     fetchPartnerId();
@@ -54,32 +57,53 @@ export default function DriverMaintenanceAlerts() {
     setLoading(true);
     try {
       if (!partnerId) {
+        console.log('❌ No partnerId found');
         setAlerts([]);
         setLoading(false);
         return;
       }
 
-      // Step 1: Get driver's active and approved trips with assigned vehicles
-      const driverTrips = await searchRead(
+      console.log('🔍 Fetching trips for partnerId:', partnerId);
+
+      // Step 1: Get driver's active and approved trips (for incident reporting)
+      // Fetch ALL trips using partnerId, even without vehicles, so driver can always report incidents
+      const allDriverTrips = await searchRead(
         'messob.fms.trip',
         [
           ['assigned_driver_id', '=', partnerId],
-          ['state', 'in', ['approved', 'in_progress']],
-          ['assigned_vehicle_id', '!=', false]
+          ['state', 'in', ['approved', 'in_progress']]
         ],
-        ['assigned_vehicle_id'],
+        ['assigned_vehicle_id', 'name', 'state', 'pickup', 'destination'],
         100
       );
 
-      if (!driverTrips || driverTrips.length === 0) {
+      console.log('📋 Found trips:', allDriverTrips?.length || 0, allDriverTrips);
+
+      // Store active trip for incident reporting (even if no vehicle assigned)
+      if (allDriverTrips && allDriverTrips.length > 0) {
+        const active = allDriverTrips.find(t => t.state === 'in_progress');
+        const selectedTrip = active || allDriverTrips[0];
+        setActiveTrip(selectedTrip);
+        console.log('✅ Active trip set:', selectedTrip);
+      } else {
+        setActiveTrip(null);
+        console.log('❌ No trips found - Report Incident button will be hidden');
+      }
+
+      // Step 2: Get trips WITH assigned vehicles for maintenance alerts
+      const tripsWithVehicles = (allDriverTrips || []).filter(
+        trip => trip.assigned_vehicle_id && trip.assigned_vehicle_id !== false
+      );
+
+      if (tripsWithVehicles.length === 0) {
         setAlerts([]);
         setLoading(false);
         return;
       }
 
-      // Step 2: Extract unique vehicle IDs
+      // Step 3: Extract unique vehicle IDs
       const vehicleIds = [...new Set(
-        driverTrips
+        tripsWithVehicles
           .map(trip => Array.isArray(trip.assigned_vehicle_id) ? trip.assigned_vehicle_id[0] : trip.assigned_vehicle_id)
           .filter(id => id)
       )];
@@ -90,7 +114,7 @@ export default function DriverMaintenanceAlerts() {
         return;
       }
 
-      // Step 3: Fetch maintenance alerts for these vehicles
+      // Step 4: Fetch maintenance alerts for these vehicles
       const maintenanceAlerts = await searchRead(
         'messob.fms.maintenance.alert',
         [
@@ -537,6 +561,17 @@ export default function DriverMaintenanceAlerts() {
                   {alerts.length} {alerts.length === 1 ? 'Alert' : 'Alerts'}
                 </Badge>
               )}
+              {activeTrip && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => setShowIncidentReport(true)}
+                  className="h-10 px-4 font-bold border-red-300 dark:border-red-700 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
+                >
+                  <FileWarning className="h-4 w-4 mr-2" />
+                  Report Incident
+                </Button>
+              )}
               <Button
                 size="sm"
                 variant="outline"
@@ -577,6 +612,14 @@ export default function DriverMaintenanceAlerts() {
       {/* Modal */}
       {showModal && selectedAlert && (
         <AlertModal alert={selectedAlert} />
+      )}
+
+      {/* Incident Report Modal */}
+      {showIncidentReport && activeTrip && (
+        <IncidentReport
+          tripId={activeTrip.id}
+          onClose={() => setShowIncidentReport(false)}
+        />
       )}
     </div>
   );
