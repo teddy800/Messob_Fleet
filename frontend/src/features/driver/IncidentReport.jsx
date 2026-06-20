@@ -5,7 +5,7 @@
 // ============================================================================
 
 import { useState } from 'react';
-import { AlertTriangle, Camera, MapPin, Send, X } from 'lucide-react';
+import { AlertTriangle, MapPin, Send, X } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -17,7 +17,6 @@ export default function IncidentReport({ tripId, onClose }) {
   const [incidentType, setIncidentType] = useState('');
   const [description, setDescription] = useState('');
   const [location, setLocation] = useState(null);
-  const [photo, setPhoto] = useState(null);
   const [submitting, setSubmitting] = useState(false);
 
   const incidentTypes = [
@@ -52,27 +51,6 @@ export default function IncidentReport({ tripId, onClose }) {
     }
   };
 
-  const capturePhoto = () => {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = 'image/*';
-    input.capture = 'environment';
-    
-    input.onchange = (e) => {
-      const file = e.target.files[0];
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = (event) => {
-          setPhoto(event.target.result);
-          toast.success('Photo captured');
-        };
-        reader.readAsDataURL(file);
-      }
-    };
-    
-    input.click();
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     
@@ -101,7 +79,6 @@ export default function IncidentReport({ tripId, onClose }) {
           incident_type: incidentType,
           description: description.trim(),
           location: locationStr,
-          photo: photo,
         }
       );
       
@@ -116,28 +93,28 @@ export default function IncidentReport({ tripId, onClose }) {
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-      <Card className="w-full max-w-lg max-h-[90vh] overflow-y-auto">
-        <CardHeader className="bg-red-50 border-b">
+    <div className="fixed inset-0 bg-black/50 dark:bg-black/70 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
+      <Card className="w-full max-w-lg max-h-[90vh] overflow-y-auto bg-white dark:bg-gray-800 shadow-2xl">
+        <CardHeader className="bg-red-50 dark:bg-red-900/20 border-b border-red-100 dark:border-red-800">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <AlertTriangle className="h-6 w-6 text-red-600" />
-              <CardTitle className="text-red-900">Report Incident</CardTitle>
+              <AlertTriangle className="h-6 w-6 text-red-600 dark:text-red-400" />
+              <CardTitle className="text-red-900 dark:text-red-100 font-black">Report Incident</CardTitle>
             </div>
             <button
               onClick={onClose}
-              className="p-2 hover:bg-red-100 rounded-full transition-colors"
+              className="p-2 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-full transition-colors"
             >
-              <X className="h-5 w-5 text-red-600" />
+              <X className="h-5 w-5 text-red-600 dark:text-red-400" />
             </button>
           </div>
         </CardHeader>
         
-        <CardContent className="p-6">
+        <CardContent className="p-6 bg-white dark:bg-gray-800">
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Incident Type Selection */}
             <div>
-              <Label className="text-sm font-bold text-gray-700 mb-3 block">
+              <Label className="text-sm font-black text-gray-900 dark:text-gray-100 mb-3 block uppercase tracking-wider">
                 Incident Type *
               </Label>
               <div className="grid grid-cols-2 gap-2">
@@ -146,10 +123,10 @@ export default function IncidentReport({ tripId, onClose }) {
                     key={type.value}
                     type="button"
                     onClick={() => setIncidentType(type.value)}
-                    className={`p-3 rounded-lg border-2 text-sm font-semibold transition-all ${
+                    className={`p-3 rounded-lg border-2 text-sm font-bold transition-all ${
                       incidentType === type.value
-                        ? 'border-red-500 ' + type.color
-                        : 'border-gray-200 hover:border-gray-300'
+                        ? 'border-red-500 dark:border-red-600 bg-red-50 dark:bg-red-900/30 text-red-900 dark:text-red-100'
+                        : 'border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200'
                     }`}
                   >
                     {type.label}
@@ -160,7 +137,7 @@ export default function IncidentReport({ tripId, onClose }) {
 
             {/* Description */}
             <div>
-              <Label htmlFor="description" className="text-sm font-bold text-gray-700 mb-2 block">
+              <Label htmlFor="description" className="text-sm font-black text-gray-900 dark:text-gray-100 mb-2 block uppercase tracking-wider">
                 Description * (min 10 characters)
               </Label>
               <textarea
@@ -168,30 +145,30 @@ export default function IncidentReport({ tripId, onClose }) {
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder="Provide detailed information about the incident..."
-                className="w-full min-h-[120px] p-3 border-2 border-gray-200 rounded-lg focus:border-red-500 focus:outline-none resize-none"
+                className="w-full min-h-[120px] p-3 border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder:text-gray-500 dark:placeholder:text-gray-400 rounded-lg focus:border-red-500 dark:focus:border-red-600 focus:outline-none resize-none font-medium"
                 required
               />
-              <p className="text-xs text-gray-500 mt-1">
+              <p className="text-xs text-gray-600 dark:text-gray-400 mt-1 font-semibold">
                 {description.length} / 10 characters minimum
               </p>
             </div>
 
             {/* Location Capture */}
             <div>
-              <Label className="text-sm font-bold text-gray-700 mb-2 block">
+              <Label className="text-sm font-black text-gray-900 dark:text-gray-100 mb-2 block uppercase tracking-wider">
                 Location (Optional)
               </Label>
               <Button
                 type="button"
                 onClick={getCurrentLocation}
                 variant="outline"
-                className="w-full"
+                className="w-full border-2 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-gray-100 font-bold"
               >
                 <MapPin className="h-4 w-4 mr-2" />
                 {location ? '✓ Location Captured' : 'Capture Current Location'}
               </Button>
               {location && (
-                <p className="text-xs text-green-600 mt-2">
+                <p className="text-xs text-green-700 dark:text-green-400 mt-2 font-bold bg-green-50 dark:bg-green-900/20 p-2 rounded">
                   📍 {location.latitude.toFixed(6)}, {location.longitude.toFixed(6)}
                   <br />
                   Accuracy: ±{location.accuracy.toFixed(0)}m
@@ -199,42 +176,10 @@ export default function IncidentReport({ tripId, onClose }) {
               )}
             </div>
 
-            {/* Photo Capture */}
-            <div>
-              <Label className="text-sm font-bold text-gray-700 mb-2 block">
-                Photo Evidence (Optional)
-              </Label>
-              <Button
-                type="button"
-                onClick={capturePhoto}
-                variant="outline"
-                className="w-full"
-              >
-                <Camera className="h-4 w-4 mr-2" />
-                {photo ? '✓ Photo Captured' : 'Take Photo'}
-              </Button>
-              {photo && (
-                <div className="mt-3 relative">
-                  <img
-                    src={photo}
-                    alt="Incident"
-                    className="w-full h-48 object-cover rounded-lg border-2 border-gray-200"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setPhoto(null)}
-                    className="absolute top-2 right-2 p-2 bg-red-500 text-white rounded-full hover:bg-red-600"
-                  >
-                    <X className="h-4 w-4" />
-                  </button>
-                </div>
-              )}
-            </div>
-
             {/* Warning Message */}
-            <div className="bg-amber-50 border-2 border-amber-200 rounded-lg p-4">
-              <p className="text-sm text-amber-800">
-                <strong>⚠️ Important:</strong> This report will be sent immediately to the dispatcher.
+            <div className="bg-amber-50 dark:bg-amber-900/20 border-2 border-amber-300 dark:border-amber-700 rounded-lg p-4">
+              <p className="text-sm text-amber-900 dark:text-amber-100 font-semibold">
+                <strong className="font-black">⚠️ Important:</strong> This report will be sent immediately to the dispatcher.
                 For medical emergencies, call emergency services first.
               </p>
             </div>
@@ -245,14 +190,14 @@ export default function IncidentReport({ tripId, onClose }) {
                 type="button"
                 onClick={onClose}
                 variant="outline"
-                className="flex-1"
+                className="flex-1 border-2 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-700 font-bold"
                 disabled={submitting}
               >
                 Cancel
               </Button>
               <Button
                 type="submit"
-                className="flex-1 bg-red-600 hover:bg-red-700"
+                className="flex-1 bg-red-600 hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-800 text-white font-black"
                 disabled={submitting}
               >
                 {submitting ? (

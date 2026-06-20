@@ -232,6 +232,7 @@ export default function AuditLog() {
                     <SelectItem value="APPROVE" className="text-gray-900">Approve</SelectItem>
                     <SelectItem value="REJECT" className="text-gray-900">Reject</SelectItem>
                     <SelectItem value="ASSIGN" className="text-gray-900">Assign</SelectItem>
+                    <SelectItem value="INCIDENT" className="text-gray-900">Incident Report</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

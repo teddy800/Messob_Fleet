@@ -493,7 +493,7 @@ class MessobFmsTrip(models.Model):
             }
         }
     
-    def action_report_incident(self, incident_type, description, location=None):
+    def action_report_incident(self, incident_type, description, location=None, photo=None):
         """
         Driver action: Report an incident during trip.
         Creates an audit log and notifies dispatcher.
@@ -502,45 +502,89 @@ class MessobFmsTrip(models.Model):
             incident_type: Type of incident (accident, breakdown, delay, etc.)
             description: Detailed description of the incident
             location: Optional GPS coordinates
+            photo: Optional base64 encoded photo evidence
         """
         self.ensure_one()
         
         # Security check: Only assigned driver can report
-        if self.assigned_driver_id.user_id.id != self.env.user.id:
+        # Check both user_id link and partner_id to handle different Odoo configurations
+        current_user_partner = self.env.user.partner_id
+        driver_has_user_link = self.assigned_driver_id.user_id and self.assigned_driver_id.user_id.id == self.env.user.id
+        driver_is_current_user_partner = self.assigned_driver_id.id == current_user_partner.id
+        
+        if not (driver_has_user_link or driver_is_current_user_partner):
             raise UserError(_('Only the assigned driver can report incidents.'))
         
         # Log incident in audit trail
-        incident_details = {
-            'trip': self.name,
-            'type': incident_type,
-            'description': description,
-            'location': location or 'Not provided',
-            'timestamp': fields.Datetime.now().isoformat(),
-        }
+        incident_details = (
+            f"Trip: {self.name} | "
+            f"Type: {incident_type} | "
+            f"Description: {description} | "
+            f"Location: {location or 'Not provided'} | "
+            f"Timestamp: {fields.Datetime.now().isoformat()}"
+        )
         
         self.env['messob.fms.audit.log'].log_business_action(
             action='INCIDENT',
             model=self._name,
             record_id=self.id,
-            description=f"Incident reported on trip {self.name}: {incident_type}",
-            severity='high',
-            additional_data=incident_details
+            description=f"Incident reported on trip {self.name}: {incident_type} - {incident_details}",
+            severity='high'
         )
+        
+        # Prepare message body with photo attachment if provided
+        message_body = (
+            f"<strong>INCIDENT REPORTED</strong><br/>"
+            f"Type: {incident_type}<br/>"
+            f"Description: {description}<br/>"
+            f"Location: {location or 'Not provided'}<br/>"
+            f"Driver: {self.assigned_driver_id.name}<br/>"
+            f"Time: {fields.Datetime.now()}<br/>"
+        )
+        
+        if photo:
+            message_body += f"<br/>📷 Photo evidence attached"
         
         # Send urgent notification to dispatcher
         dispatcher_group = self.env.ref('messob_fleet.group_fms_dispatcher')
         dispatcher_users = dispatcher_group.users
         
+        # Create message with optional photo attachment
+        message_values = {
+            'body': message_body,
+            'subject': f"URGENT: Incident on Trip {self.name}",
+            'partner_ids': dispatcher_users.mapped('partner_id').ids,
+            'message_type': 'notification',
+        }
+        
+        # If photo provided, add as attachment
+        attachments = []
+        if photo:
+            try:
+                # Extract base64 data (remove data:image/...;base64, prefix if present)
+                if ',' in photo:
+                    photo_data = photo.split(',')[1]
+                else:
+                    photo_data = photo
+                    
+                attachment = self.env['ir.attachment'].create({
+                    'name': f'Incident_Photo_{self.name}_{fields.Datetime.now().strftime("%Y%m%d_%H%M%S")}.jpg',
+                    'datas': photo_data,
+                    'res_model': self._name,
+                    'res_id': self.id,
+                    'type': 'binary',
+                })
+                attachments.append(attachment.id)
+            except Exception as e:
+                _logger.warning(f"Failed to attach photo to incident report: {e}")
+        
+        # Post message with attachments
         self.message_post(
-            body=f"<strong>INCIDENT REPORTED</strong><br/>"
-                 f"Type: {incident_type}<br/>"
-                 f"Description: {description}<br/>"
-                 f"Location: {location or 'Not provided'}<br/>"
-                 f"Driver: {self.assigned_driver_id.name}<br/>"
-                 f"Time: {fields.Datetime.now()}",
-            subject=f"URGENT: Incident on Trip {self.name}",
-            partner_ids=dispatcher_users.mapped('partner_id').ids,
-            message_type='notification',
+            body=message_body,
+            subject=message_values['subject'],
+            partner_ids=message_values['partner_ids'],
+            message_type=message_values['message_type'],
+            attachment_ids=attachments if attachments else False,
         )
         
         return {
