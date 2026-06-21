@@ -59,6 +59,7 @@ Covers:
         'data/geocode_cache_cron.xml',
         'data/performance_cron.xml',
         'data/priority_cron.xml',
+        'data/trip_auto_completion_cron.xml',
 
         # 3. Views: model views, then wizard, then menus last
         'views/trip_views.xml',

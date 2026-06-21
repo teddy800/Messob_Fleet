@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { 
-  MapPin, Navigation, CheckCircle, Clock, Fuel, Camera, 
+  MapPin, Navigation, CheckCircle, Clock, Fuel, 
   Phone, AlertCircle, Menu, X, Home, List, Activity, Bell, Wrench 
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
@@ -28,6 +28,13 @@ export default function DriverMobileApp() {
     loadMaintenanceAlertCount();
     requestLocationPermission();
     registerServiceWorker();
+
+    // Auto-refresh trips every 2 minutes to check for time expirations
+    const refreshInterval = setInterval(() => {
+      loadTrips();
+    }, 120000); // 2 minutes
+
+    return () => clearInterval(refreshInterval);
   }, []);
 
   const registerServiceWorker = async () => {
@@ -174,7 +181,15 @@ export default function DriverMobileApp() {
 
   const startTrip = async (tripId) => {
     try {
-      await callOdooMethod('messob.fms.trip', 'action_start_trip', [tripId]);
+      // First check if the trip start time has passed with grace period
+      const trip = upcomingTrips.find(t => t.id === tripId);
+      if (trip && isStartTimePassed(trip)) {
+        toast.error('Trip start time has expired. Please contact dispatcher for assistance.');
+        return;
+      }
+
+      const odooApi = (await import('@/lib/odooApi')).default;
+      await odooApi.callMethod('messob.fms.trip', 'action_start_trip', [tripId]);
       toast.success('Trip started');
       loadTrips();
     } catch (error) {
@@ -185,13 +200,57 @@ export default function DriverMobileApp() {
 
   const completeTrip = async (tripId) => {
     try {
-      await callOdooMethod('messob.fms.trip', 'action_complete_trip', [tripId]);
+      const odooApi = (await import('@/lib/odooApi')).default;
+      await odooApi.callMethod('messob.fms.trip', 'action_complete_trip', [tripId]);
       toast.success('Trip completed');
       loadTrips();
     } catch (error) {
       console.error('Failed to complete trip:', error);
       toast.error('Failed to complete trip');
     }
+  };
+
+  // Helper function to check if trip start time has passed with grace period
+  const isStartTimePassed = (trip) => {
+    if (!trip.start_dt) return false;
+    
+    const currentTime = new Date();
+    const startTime = new Date(trip.start_dt);
+    const graceMinutes = 30; // 30 minutes grace period
+    const graceTime = new Date(startTime.getTime() + (graceMinutes * 60 * 1000));
+    
+    return currentTime > graceTime;
+  };
+
+  // Helper function to check if trip is expired (past end time)
+  const isTripExpired = (trip) => {
+    if (!trip.end_dt) return false;
+    
+    const currentTime = new Date();
+    const endTime = new Date(trip.end_dt);
+    
+    return currentTime > endTime;
+  };
+
+  // Helper function to get trip time status
+  const getTripTimeStatus = (trip) => {
+    if (isTripExpired(trip)) {
+      return { status: 'expired', message: 'Trip time expired' };
+    }
+    
+    if (isStartTimePassed(trip)) {
+      return { status: 'late', message: 'Start time passed' };
+    }
+    
+    const currentTime = new Date();
+    const startTime = new Date(trip.start_dt);
+    const timeUntilStart = Math.floor((startTime - currentTime) / (1000 * 60)); // minutes
+    
+    if (timeUntilStart <= 15 && timeUntilStart > 0) {
+      return { status: 'soon', message: `Starts in ${timeUntilStart}min` };
+    }
+    
+    return { status: 'normal', message: null };
   };
 
   const reportIncident = () => {
@@ -293,108 +352,219 @@ export default function DriverMobileApp() {
     </div>
   );
 
-  const ActiveTripCard = ({ trip }) => (
-    <Card className="border-2 border-green-500 dark:border-green-600 shadow-lg dark:bg-gray-800">
-      <CardContent className="p-4 space-y-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Activity className="h-5 w-5 text-green-600 dark:text-green-400 animate-pulse" />
-            <span className="font-black text-green-600 dark:text-green-400 uppercase text-sm">Active Trip</span>
-          </div>
-          <span className="text-xs font-bold text-gray-500 dark:text-gray-400">{trip.name}</span>
-        </div>
-
-        <div className="space-y-3">
-          <div className="flex items-start gap-3">
-            <MapPin className="h-5 w-5 text-blue-600 dark:text-blue-400 mt-1 flex-shrink-0" />
-            <div className="flex-1">
-              <p className="text-xs text-gray-500 dark:text-gray-400 uppercase font-bold">Pickup</p>
-              <p className="font-semibold dark:text-gray-200">{trip.pickup}</p>
+  const ActiveTripCard = ({ trip }) => {
+    const isExpired = isTripExpired(trip);
+    
+    return (
+      <Card className={`border-2 shadow-lg dark:bg-gray-800 ${
+        isExpired 
+          ? 'border-orange-500 dark:border-orange-600 bg-orange-50 dark:bg-orange-900/10' 
+          : 'border-green-500 dark:border-green-600'
+      }`}>
+        <CardContent className="p-4 space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Activity className={`h-5 w-5 animate-pulse ${
+                isExpired ? 'text-orange-600 dark:text-orange-400' : 'text-green-600 dark:text-green-400'
+              }`} />
+              <span className={`font-black uppercase text-sm ${
+                isExpired ? 'text-orange-600 dark:text-orange-400' : 'text-green-600 dark:text-green-400'
+              }`}>
+                {isExpired ? 'Overdue Trip' : 'Active Trip'}
+              </span>
             </div>
+            <span className="text-xs font-bold text-gray-500 dark:text-gray-400">{trip.name}</span>
           </div>
 
-          <div className="flex items-start gap-3">
-            <Navigation className="h-5 w-5 text-purple-600 dark:text-purple-400 mt-1 flex-shrink-0" />
-            <div className="flex-1">
-              <p className="text-xs text-gray-500 dark:text-gray-400 uppercase font-bold">Destination</p>
-              <p className="font-semibold dark:text-gray-200">{trip.destination}</p>
+          {isExpired && (
+            <div className="flex items-center gap-2 p-3 bg-orange-100 dark:bg-orange-900/20 rounded-lg">
+              <Clock className="h-4 w-4 text-orange-600 dark:text-orange-400 flex-shrink-0" />
+              <span className="text-sm text-orange-700 dark:text-orange-300 font-medium">
+                Trip scheduled time has passed. Please complete the trip or contact dispatcher.
+              </span>
             </div>
-          </div>
+          )}
 
-          <div className="flex items-start gap-3">
-            <Clock className="h-5 w-5 text-orange-600 dark:text-orange-400 mt-1 flex-shrink-0" />
-            <div className="flex-1">
-              <p className="text-xs text-gray-500 dark:text-gray-400 uppercase font-bold">Passenger</p>
-              <p className="font-semibold dark:text-gray-200">{Array.isArray(trip.requester_id) ? trip.requester_id[1] : 'N/A'}</p>
+          <div className="space-y-3">
+            <div className="flex items-start gap-3">
+              <MapPin className="h-5 w-5 text-blue-600 dark:text-blue-400 mt-1 flex-shrink-0" />
+              <div className="flex-1">
+                <p className="text-xs text-gray-500 dark:text-gray-400 uppercase font-bold">Pickup</p>
+                <p className="font-semibold dark:text-gray-200">{trip.pickup}</p>
+              </div>
             </div>
-          </div>
-        </div>
 
-        <div className="grid grid-cols-2 gap-2 pt-2">
+            <div className="flex items-start gap-3">
+              <Navigation className="h-5 w-5 text-purple-600 dark:text-purple-400 mt-1 flex-shrink-0" />
+              <div className="flex-1">
+                <p className="text-xs text-gray-500 dark:text-gray-400 uppercase font-bold">Destination</p>
+                <p className="font-semibold dark:text-gray-200">{trip.destination}</p>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-3">
+              <Clock className="h-5 w-5 text-orange-600 dark:text-orange-400 mt-1 flex-shrink-0" />
+              <div className="flex-1">
+                <p className="text-xs text-gray-500 dark:text-gray-400 uppercase font-bold">Passenger</p>
+                <p className="font-semibold dark:text-gray-200">{Array.isArray(trip.requester_id) ? trip.requester_id[1] : 'N/A'}</p>
+              </div>
+            </div>
+
+            {trip.end_dt && (
+              <div className="flex items-start gap-3">
+                <Clock className="h-5 w-5 text-red-600 dark:text-red-400 mt-1 flex-shrink-0" />
+                <div className="flex-1">
+                  <p className="text-xs text-gray-500 dark:text-gray-400 uppercase font-bold">Scheduled End</p>
+                  <p className={`font-semibold ${
+                    isExpired ? 'text-red-600 dark:text-red-400' : 'dark:text-gray-200'
+                  }`}>
+                    {new Date(trip.end_dt).toLocaleString()}
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="grid grid-cols-2 gap-2 pt-2">
+            <Button 
+              onClick={() => openNavigation(trip.destination)}
+              className="w-full bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-800"
+            >
+              <Navigation className="h-4 w-4 mr-2" />
+              Navigate
+            </Button>
+            <Button 
+              onClick={() => completeTrip(trip.id)}
+              className={`w-full ${
+                isExpired 
+                  ? 'bg-orange-600 hover:bg-orange-700 dark:bg-orange-700 dark:hover:bg-orange-800 animate-pulse'
+                  : 'bg-green-600 hover:bg-green-700 dark:bg-green-700 dark:hover:bg-green-800'
+              }`}
+            >
+              <CheckCircle className="h-4 w-4 mr-2" />
+              {isExpired ? 'Complete Now' : 'Complete'}
+            </Button>
+          </div>
+
           <Button 
-            onClick={() => openNavigation(trip.destination)}
-            className="w-full bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-800"
+            onClick={reportIncident}
+            variant="outline"
+            className="w-full border-red-300 dark:border-red-700 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
           >
-            <Navigation className="h-4 w-4 mr-2" />
-            Navigate
+            <AlertCircle className="h-4 w-4 mr-2" />
+            Report Incident
           </Button>
-          <Button 
-            onClick={() => completeTrip(trip.id)}
-            className="w-full bg-green-600 hover:bg-green-700 dark:bg-green-700 dark:hover:bg-green-800"
-          >
-            <CheckCircle className="h-4 w-4 mr-2" />
-            Complete
-          </Button>
-        </div>
+        </CardContent>
+      </Card>
+    );
+  };
 
-        <Button 
-          onClick={reportIncident}
-          variant="outline"
-          className="w-full border-red-300 dark:border-red-700 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
-        >
-          <AlertCircle className="h-4 w-4 mr-2" />
-          Report Incident
-        </Button>
-      </CardContent>
-    </Card>
-  );
-
-  const UpcomingTripCard = ({ trip }) => (
-    <Card className="shadow-sm dark:bg-gray-800 dark:border-gray-700">
-      <CardContent className="p-4 space-y-3">
-        <div className="flex items-center justify-between">
-          <span className="text-xs font-bold text-gray-500 dark:text-gray-400">{trip.name}</span>
-          <span className="text-xs px-2 py-1 bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 rounded-full font-bold">
-            Upcoming
-          </span>
-        </div>
-
-        <div className="space-y-2 text-sm">
-          <div className="flex items-center gap-2">
-            <MapPin className="h-4 w-4 text-blue-600 dark:text-blue-400 flex-shrink-0" />
-            <span className="text-gray-700 dark:text-gray-300">{trip.pickup}</span>
+  const UpcomingTripCard = ({ trip }) => {
+    const timeStatus = getTripTimeStatus(trip);
+    const isExpired = timeStatus.status === 'expired';
+    const isLate = timeStatus.status === 'late';
+    const isSoon = timeStatus.status === 'soon';
+    
+    return (
+      <Card className={`shadow-sm dark:bg-gray-800 dark:border-gray-700 ${
+        isExpired ? 'border-red-300 dark:border-red-600 bg-red-50 dark:bg-red-900/10' : 
+        isLate ? 'border-orange-300 dark:border-orange-600 bg-orange-50 dark:bg-orange-900/10' :
+        isSoon ? 'border-green-300 dark:border-green-600 bg-green-50 dark:bg-green-900/10' : ''
+      }`}>
+        <CardContent className="p-4 space-y-3">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold text-gray-500 dark:text-gray-400">{trip.name}</span>
+            <div className="flex items-center gap-2">
+              {timeStatus.message && (
+                <span className={`text-xs px-2 py-1 rounded-full font-bold ${
+                  isExpired ? 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400' :
+                  isLate ? 'bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400' :
+                  isSoon ? 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400' :
+                  'bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400'
+                }`}>
+                  {timeStatus.message}
+                </span>
+              )}
+              {!isExpired && !isLate && (
+                <span className="text-xs px-2 py-1 bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 rounded-full font-bold">
+                  Upcoming
+                </span>
+              )}
+            </div>
           </div>
-          <div className="flex items-center gap-2">
-            <Navigation className="h-4 w-4 text-purple-600 dark:text-purple-400 flex-shrink-0" />
-            <span className="text-gray-700 dark:text-gray-300">{trip.destination}</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <Clock className="h-4 w-4 text-orange-600 dark:text-orange-400 flex-shrink-0" />
-            <span className="text-gray-700 dark:text-gray-300">
-              {new Date(trip.start_dt).toLocaleString()}
-            </span>
-          </div>
-        </div>
 
-        <Button 
-          onClick={() => startTrip(trip.id)}
-          className="w-full bg-brand-blue hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-800"
-        >
-          Start Trip
-        </Button>
-      </CardContent>
-    </Card>
-  );
+          <div className="space-y-2 text-sm">
+            <div className="flex items-center gap-2">
+              <MapPin className="h-4 w-4 text-blue-600 dark:text-blue-400 flex-shrink-0" />
+              <span className="text-gray-700 dark:text-gray-300">{trip.pickup}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Navigation className="h-4 w-4 text-purple-600 dark:text-purple-400 flex-shrink-0" />
+              <span className="text-gray-700 dark:text-gray-300">{trip.destination}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Clock className="h-4 w-4 text-orange-600 dark:text-orange-400 flex-shrink-0" />
+              <span className="text-gray-700 dark:text-gray-300">
+                {new Date(trip.start_dt).toLocaleString()}
+              </span>
+            </div>
+          </div>
+
+          {isExpired ? (
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 p-3 bg-red-100 dark:bg-red-900/20 rounded-lg">
+                <AlertCircle className="h-4 w-4 text-red-600 dark:text-red-400 flex-shrink-0" />
+                <span className="text-sm text-red-700 dark:text-red-300 font-medium">
+                  Trip time has expired. Contact dispatcher for assistance.
+                </span>
+              </div>
+              <Button 
+                onClick={callDispatcher}
+                variant="outline"
+                className="w-full border-red-300 dark:border-red-600 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
+              >
+                <Phone className="h-4 w-4 mr-2" />
+                Call Dispatcher
+              </Button>
+            </div>
+          ) : isLate ? (
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 p-3 bg-orange-100 dark:bg-orange-900/20 rounded-lg">
+                <Clock className="h-4 w-4 text-orange-600 dark:text-orange-400 flex-shrink-0" />
+                <span className="text-sm text-orange-700 dark:text-orange-300 font-medium">
+                  Start time has passed. Please contact dispatcher if you still need to start this trip.
+                </span>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <Button 
+                  onClick={callDispatcher}
+                  variant="outline"
+                  className="border-orange-300 dark:border-orange-600 text-orange-600 dark:text-orange-400"
+                >
+                  <Phone className="h-4 w-4 mr-2" />
+                  Call
+                </Button>
+                <Button 
+                  onClick={() => startTrip(trip.id)}
+                  className="bg-brand-blue hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-800"
+                  disabled
+                >
+                  Start Trip
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <Button 
+              onClick={() => startTrip(trip.id)}
+              className="w-full bg-brand-blue hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-800"
+            >
+              {isSoon ? 'Start Trip (Ready)' : 'Start Trip'}
+            </Button>
+          )}
+        </CardContent>
+      </Card>
+    );
+  };
 
   const HomeView = () => (
     <div className="space-y-4">
