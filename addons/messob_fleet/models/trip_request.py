@@ -492,6 +492,99 @@ class MessobFmsTrip(models.Model):
                 'sticky': False,
             }
         }
+
+    @api.model
+    def auto_complete_expired_trips(self):
+        """
+        Cron job method: Automatically complete trips that have passed their scheduled end time.
+        Runs every 15 minutes to check for trips that should be auto-completed.
+        
+        Business Rule: Trips in 'in_progress' state that are past their 'end_dt' are automatically
+        completed to maintain data integrity and proper fleet status tracking.
+        """
+        try:
+            # Find trips that are in progress and past their scheduled end time
+            current_time = fields.Datetime.now()
+            expired_trips = self.search([
+                ('state', '=', 'in_progress'),
+                ('end_dt', '!=', False),
+                ('end_dt', '<=', current_time)
+            ])
+            
+            completed_count = 0
+            for trip in expired_trips:
+                try:
+                    # Auto-complete the trip
+                    trip.write({
+                        'state': 'completed',
+                        'actual_end_dt': current_time,
+                    })
+                    
+                    # Add driver note about auto-completion if trip_driver model exists
+                    if hasattr(trip, 'driver_notes'):
+                        trip.write({'driver_notes': 'Auto-completed: Trip time expired'})
+                    
+                    # Log the auto-completion
+                    self.env['messob.fms.audit.log'].log_business_action(
+                        action='AUTO_COMPLETE_TRIP',
+                        model=trip._name,
+                        record_id=trip.id,
+                        description=f"Trip {trip.name} auto-completed - scheduled end: {trip.end_dt}, completed at: {current_time}",
+                        severity='medium'
+                    )
+                    
+                    # Send notification to requester and driver
+                    partner_ids = [trip.requester_id.id]
+                    if trip.assigned_driver_id:
+                        partner_ids.append(trip.assigned_driver_id.id)
+                    
+                    trip.message_post(
+                        body=f"Trip auto-completed due to time expiration. Scheduled end: {trip.end_dt}",
+                        subject=f"Trip Auto-Completed: {trip.name}",
+                        partner_ids=partner_ids,
+                    )
+                    
+                    completed_count += 1
+                    
+                except Exception as e:
+                    # Log error but continue processing other trips
+                    _logger.error(f"Failed to auto-complete trip {trip.name}: {str(e)}")
+                    continue
+            
+            if completed_count > 0:
+                _logger.info(f"Auto-completed {completed_count} expired trips")
+            
+            return True
+            
+        except Exception as e:
+            _logger.error(f"Error in auto_complete_expired_trips: {str(e)}")
+            return False
+
+    def is_trip_expired(self):
+        """
+        Check if trip start time has expired (for frontend validation).
+        Returns True if current time is past the scheduled end time.
+        """
+        self.ensure_one()
+        if not self.end_dt:
+            return False
+        
+        current_time = fields.Datetime.now()
+        return current_time > self.end_dt
+
+    def is_start_time_passed(self):
+        """
+        Check if trip start time has passed (for frontend validation).
+        Returns True if current time is significantly past the scheduled start time.
+        """
+        self.ensure_one()
+        if not self.start_dt:
+            return False
+        
+        current_time = fields.Datetime.now()
+        # Allow 30 minutes grace period after scheduled start time
+        grace_period = timedelta(minutes=30)
+        return current_time > (self.start_dt + grace_period)
     
     def action_report_incident(self, incident_type, description, location=None, photo=None):
         """
