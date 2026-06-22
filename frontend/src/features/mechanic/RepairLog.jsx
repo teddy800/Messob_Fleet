@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils";
 import { searchRead, createRecord } from "@/lib/odooApi";
 
 const SERVICE_TYPES = [
-  ["full_change", "Full Change (Oil & Filter)"],
+  ["full_change", "Oil change"],
   ["brake", "Brake Service"],
   ["tire", "Tire Replacement"],
   ["engine", "Engine Repair"],
