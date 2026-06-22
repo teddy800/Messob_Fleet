@@ -50,13 +50,13 @@ const menuItems = [
   },
   // Driver: trips + fuel
   {
-    name: "Requests",
+    name: "View Requests",
     path: "/dashboard/driver/requests",
     icon: ClipboardList,
     roles: ["Driver"],
   },
   {
-    name: "Fuel Change",
+    name: "Fuel Buy",
     path: "/dashboard/driver/fuel",
     icon: Fuel,
     roles: ["Driver"],
