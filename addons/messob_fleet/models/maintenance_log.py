@@ -69,7 +69,7 @@ class MessobFmsMaintenanceLog(models.Model):
 
     next_service_type = fields.Selection(
         selection=[
-            ('full_change',     'Full Change (Oil & Filter)'),
+            ('full_change',     'Oil change'),
             ('brake',           'Brake Service'),
             ('tire',            'Tire Replacement'),
             ('engine',          'Engine Repair'),
@@ -87,7 +87,7 @@ class MessobFmsMaintenanceLog(models.Model):
     # ── Service details ──
     service_type = fields.Selection(
         selection=[
-            ('full_change',     'Full Change (Oil & Filter)'),
+            ('full_change',     'Oil change'),
             ('brake',           'Brake Service'),
             ('tire',            'Tire Replacement'),
             ('engine',          'Engine Repair'),

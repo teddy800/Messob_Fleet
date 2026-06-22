@@ -129,7 +129,7 @@ class MessobFmsMaintenanceAlert(models.Model):
     # ── Alert Details ──
     service_type = fields.Selection(
         selection=[
-            ('full_change', 'Full Change (Oil & Filter)'),
+            ('full_change', 'Oil change'),
             ('brake', 'Brake Service'),
             ('tire', 'Tire Replacement'),
             ('engine', 'Engine Repair'),
