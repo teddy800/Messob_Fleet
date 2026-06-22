@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
-  Fuel, TrendingUp, TrendingDown, DollarSign, Activity, 
+  Fuel, TrendingUp, TrendingDown, Banknote, Activity, 
   AlertTriangle, BarChart3, PieChart, Calendar 
 } from 'lucide-react';
 import { callOdooMethod, searchRead } from '@/lib/odooApi';
@@ -223,12 +223,12 @@ export default function FuelAnalytics() {
                   <CardContent className="pt-6">
                     <div className="flex items-center gap-3">
                       <div className="p-3 rounded-lg bg-gray-100 dark:bg-gray-700">
-                        <DollarSign className="h-8 w-8 text-gray-700 dark:text-gray-300" />
+                        <Banknote className="h-8 w-8 text-gray-700 dark:text-gray-300" />
                       </div>
                       <div>
                         <p className="text-sm text-gray-600 dark:text-gray-400 uppercase font-black">Total Cost</p>
                         <p className="text-3xl font-black text-gray-900 dark:text-gray-100">
-                          ${efficiencyData.statistics.total_cost}
+                          ETB {efficiencyData.statistics.total_cost}
                         </p>
                       </div>
                     </div>
@@ -244,7 +244,7 @@ export default function FuelAnalytics() {
                       <div>
                         <p className="text-sm text-gray-600 dark:text-gray-400 uppercase font-black">Cost/km</p>
                         <p className="text-3xl font-black text-gray-900 dark:text-gray-100">
-                          ${efficiencyData.statistics.cost_per_km}
+                          ETB {efficiencyData.statistics.cost_per_km}
                         </p>
                       </div>
                     </div>
@@ -283,7 +283,7 @@ export default function FuelAnalytics() {
                     <div>
                       <p className="text-sm text-gray-700 dark:text-gray-200 uppercase font-black mb-1">Avg Cost/Refuel</p>
                       <p className="text-2xl font-black text-brand-blue dark:text-blue-400">
-                        ${efficiencyData.statistics.average_refuel_cost}
+                        ETB {efficiencyData.statistics.average_refuel_cost}
                       </p>
                     </div>
                     <div>
@@ -340,7 +340,7 @@ export default function FuelAnalytics() {
                         </div>
                         <div>
                           <p className="text-sm font-black text-gray-700 dark:text-gray-200">Total Cost</p>
-                          <p className="font-black text-xl text-gray-900 dark:text-gray-100">${month.total_cost}</p>
+                          <p className="font-black text-xl text-gray-900 dark:text-gray-100">ETB {month.total_cost}</p>
                         </div>
                       </div>
                       {/* Visual bar */}
@@ -399,7 +399,7 @@ export default function FuelAnalytics() {
                         </div>
                         <div>
                           <p className="text-sm font-black text-gray-700 dark:text-gray-200">Cost/km</p>
-                          <p className="font-black text-lg text-gray-900 dark:text-gray-100">${vehicle.cost_per_km}</p>
+                          <p className="font-black text-lg text-gray-900 dark:text-gray-100">ETB {vehicle.cost_per_km}</p>
                         </div>
                       </div>
                       {/* Efficiency bar */}
