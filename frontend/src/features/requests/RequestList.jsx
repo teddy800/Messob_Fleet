@@ -191,6 +191,17 @@ export default function RequestList() {
     return result;
   }, [trips, filters]);
 
+  // Helper function to check if draft request has expired
+  const isRequestExpired = (request) => {
+    if (request.state !== 'draft' || !request.start_dt) return false;
+    
+    const currentTime = new Date();
+    const startTime = new Date(request.start_dt);
+    
+    // Request is expired if current time is past the start time
+    return currentTime > startTime;
+  };
+
   const config = statusConfig[status] || statusConfig.pending;
   const Icon = config.icon;
 
@@ -342,9 +353,17 @@ export default function RequestList() {
               <CardContent className="p-6">
                 <div className="flex items-center justify-between mb-4">
                   <span className="font-black text-brand-blue dark:text-blue-400 text-sm">{req.name}</span>
-                  <Badge className={`text-[10px] font-black uppercase tracking-widest border ${config.badgeClass}`}>
-                    {config.label}
-                  </Badge>
+                  <div className="flex items-center gap-2">
+                    {req.state === 'draft' && isRequestExpired(req) && (
+                      <Badge className="text-[10px] font-black uppercase tracking-widest border bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 border-red-300 dark:border-red-700 animate-pulse">
+                        <XCircle className="h-3 w-3 mr-1" />
+                        Expired
+                      </Badge>
+                    )}
+                    <Badge className={`text-[10px] font-black uppercase tracking-widest border ${config.badgeClass}`}>
+                      {config.label}
+                    </Badge>
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
@@ -393,15 +412,40 @@ export default function RequestList() {
                 {/* Action buttons based on state */}
                 {req.state === 'draft' && (
                   <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
-                    <Button
-                      variant="default"
-                      size="sm"
-                      onClick={() => handleSubmitClick(req)}
-                      className="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white border-emerald-600 hover:border-emerald-700 focus-visible:ring-emerald-500 dark:bg-emerald-700 dark:hover:bg-emerald-800 dark:border-emerald-700"
-                    >
-                      <Send className="h-4 w-4 mr-2" />
-                      Submit Request
-                    </Button>
+                    {isRequestExpired(req) ? (
+                      <>
+                        {/* Expired draft request */}
+                        <div className="flex items-start gap-3 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg mb-3">
+                          <XCircle className="h-5 w-5 text-red-600 dark:text-red-400 mt-0.5 shrink-0" />
+                          <div className="flex-1">
+                            <p className="text-sm font-bold text-red-800 dark:text-red-300">Request Expired</p>
+                            <p className="text-xs text-red-700 dark:text-red-400 mt-1">
+                              The scheduled start time ({new Date(req.start_dt).toLocaleString()}) has already passed. 
+                              This request can no longer be submitted. Please create a new request with a future date.
+                            </p>
+                          </div>
+                        </div>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          disabled
+                          className="w-full sm:w-auto border-red-300 dark:border-red-700 text-red-400 dark:text-red-500 cursor-not-allowed opacity-50"
+                        >
+                          <XCircle className="h-4 w-4 mr-2" />
+                          Cannot Submit - Expired
+                        </Button>
+                      </>
+                    ) : (
+                      <Button
+                        variant="default"
+                        size="sm"
+                        onClick={() => handleSubmitClick(req)}
+                        className="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white border-emerald-600 hover:border-emerald-700 focus-visible:ring-emerald-500 dark:bg-emerald-700 dark:hover:bg-emerald-800 dark:border-emerald-700"
+                      >
+                        <Send className="h-4 w-4 mr-2" />
+                        Submit Request
+                      </Button>
+                    )}
                   </div>
                 )}
 
