@@ -64,7 +64,7 @@ export default function DriverFuelChange() {
   return (
     <div className="space-y-6 max-w-lg">
       <div>
-        <h1 className="text-2xl font-black text-brand-blue">Fuel Change Log</h1>
+        <h1 className="text-2xl font-black text-brand-blue">Fuel Buy Log</h1>
         <p className="text-sm text-gray-500 mt-1">Fill in the details every time you refuel the vehicle.</p>
       </div>
 
