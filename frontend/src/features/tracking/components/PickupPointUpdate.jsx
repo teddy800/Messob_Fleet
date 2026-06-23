@@ -154,83 +154,9 @@ export default function PickupPointUpdate({
     toast.success("📍 Pickup point adjusted via drag!");
   };
 
-  const getCurrentLocation = () => {
-    if ("geolocation" in navigator) {
-      // Show loading toast
-      const loadingToast = toast.loading("📍 Getting your location...");
-      
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const coords = {
-            lat: position.coords.latitude,
-            lng: position.coords.longitude
-          };
-          setTempCoordinates(coords);
-          setNewAddress(`Current Location (${coords.lat.toFixed(4)}, ${coords.lng.toFixed(4)})`);
-          
-          if (mapRef.current) {
-            mapRef.current.flyTo([coords.lat, coords.lng], 15);
-          }
-          
-          // Dismiss loading and show success
-          toast.dismiss(loadingToast);
-          toast.success("✅ Location detected successfully!");
-        },
-        (error) => {
-          // Dismiss loading toast
-          toast.dismiss(loadingToast);
-          
-          // Provide specific error messages based on error code
-          let errorMessage = "Unable to get your location. ";
-          let helpText = "";
-          
-          switch(error.code) {
-            case error.PERMISSION_DENIED:
-              errorMessage += "Location permission was denied.";
-              helpText = "💡 Please enable location access in your browser settings, then try again.";
-              break;
-            case error.POSITION_UNAVAILABLE:
-              errorMessage += "Location information is unavailable.";
-              helpText = "💡 Please check your device's location settings.";
-              break;
-            case error.TIMEOUT:
-              errorMessage += "Location request timed out.";
-              helpText = "💡 Please try again or click on the map to set your location.";
-              break;
-            default:
-              errorMessage += "An unknown error occurred.";
-              helpText = "💡 You can still click on the map to set your pickup location.";
-          }
-          
-          // Show error with helpful message
-          toast.error(errorMessage, {
-            description: helpText,
-            duration: 5000,
-          });
-          
-          // Fallback: Use default Addis Ababa coordinates if available
-          // or keep current coordinates
-          if (!tempCoordinates) {
-            const defaultCoords = { lat: 9.0320, lng: 38.7469 }; // Addis Ababa
-            setTempCoordinates(defaultCoords);
-            setNewAddress(`Location at ${defaultCoords.lat.toFixed(4)}, ${defaultCoords.lng.toFixed(4)}`);
-            
-            if (mapRef.current) {
-              mapRef.current.flyTo([defaultCoords.lat, defaultCoords.lng], 13);
-            }
-            
-            toast.info("📍 Using default location. Click on the map to adjust.", {
-              duration: 4000,
-            });
-          }
-        },
-        {
-          enableHighAccuracy: true,
-          timeout: 10000, // 10 second timeout
-          maximumAge: 0 // Don't use cached position
-        }
-      );
-    } else {
+  const getCurrentLocation = async () => {
+    // First, check if geolocation is supported
+    if (!("geolocation" in navigator)) {
       toast.error("Geolocation is not supported by your browser", {
         description: "💡 Please click on the map to manually set your pickup location.",
         duration: 5000,
@@ -242,7 +168,113 @@ export default function PickupPointUpdate({
         setTempCoordinates(defaultCoords);
         setNewAddress(`Location at ${defaultCoords.lat.toFixed(4)}, ${defaultCoords.lng.toFixed(4)}`);
       }
+      return;
     }
+
+    // Check permission status before requesting (if supported)
+    if (navigator.permissions && navigator.permissions.query) {
+      try {
+        const permissionStatus = await navigator.permissions.query({ name: 'geolocation' });
+        
+        // If permission is denied, don't even try - show helpful message immediately
+        if (permissionStatus.state === 'denied') {
+          toast.error("Location access is currently blocked", {
+            description: "💡 Please enable location permission in your browser settings, or click on the map to set your location manually.",
+            duration: 6000,
+          });
+          
+          // Use fallback
+          if (!tempCoordinates) {
+            const defaultCoords = { lat: 9.0320, lng: 38.7469 };
+            setTempCoordinates(defaultCoords);
+            setNewAddress(`Location at ${defaultCoords.lat.toFixed(4)}, ${defaultCoords.lng.toFixed(4)}`);
+            
+            if (mapRef.current) {
+              mapRef.current.flyTo([defaultCoords.lat, defaultCoords.lng], 13);
+            }
+          }
+          return;
+        }
+      } catch (err) {
+        // Permission API not supported, continue with normal flow
+        console.log('Permission API not available, proceeding with geolocation request');
+      }
+    }
+    
+    // Show loading toast
+    const loadingToast = toast.loading("📍 Getting your location...");
+    
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const coords = {
+          lat: position.coords.latitude,
+          lng: position.coords.longitude
+        };
+        setTempCoordinates(coords);
+        setNewAddress(`Current Location (${coords.lat.toFixed(4)}, ${coords.lng.toFixed(4)})`);
+        
+        if (mapRef.current) {
+          mapRef.current.flyTo([coords.lat, coords.lng], 15);
+        }
+        
+        // Dismiss loading and show success
+        toast.dismiss(loadingToast);
+        toast.success("✅ Location detected successfully!");
+      },
+      (error) => {
+        // Dismiss loading toast
+        toast.dismiss(loadingToast);
+        
+        // Provide specific error messages based on error code
+        let errorMessage = "Unable to get your location. ";
+        let helpText = "";
+        
+        switch(error.code) {
+          case error.PERMISSION_DENIED:
+            errorMessage += "Location permission was denied.";
+            helpText = "💡 Please enable location access in your browser settings, then try again.";
+            break;
+          case error.POSITION_UNAVAILABLE:
+            errorMessage += "Location information is unavailable.";
+            helpText = "💡 Please check your device's location settings.";
+            break;
+          case error.TIMEOUT:
+            errorMessage += "Location request timed out.";
+            helpText = "💡 Please try again or click on the map to set your location.";
+            break;
+          default:
+            errorMessage += "An unknown error occurred.";
+            helpText = "💡 You can still click on the map to set your pickup location.";
+        }
+        
+        // Show error with helpful message
+        toast.error(errorMessage, {
+          description: helpText,
+          duration: 5000,
+        });
+        
+        // Fallback: Use default Addis Ababa coordinates if available
+        // or keep current coordinates
+        if (!tempCoordinates) {
+          const defaultCoords = { lat: 9.0320, lng: 38.7469 }; // Addis Ababa
+          setTempCoordinates(defaultCoords);
+          setNewAddress(`Location at ${defaultCoords.lat.toFixed(4)}, ${defaultCoords.lng.toFixed(4)}`);
+          
+          if (mapRef.current) {
+            mapRef.current.flyTo([defaultCoords.lat, defaultCoords.lng], 13);
+          }
+          
+          toast.info("📍 Using default location. Click on the map to adjust.", {
+            duration: 4000,
+          });
+        }
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000, // 10 second timeout
+        maximumAge: 0 // Don't use cached position
+      }
+    );
   };
 
   const handleSave = async () => {
