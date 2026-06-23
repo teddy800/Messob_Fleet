@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import {
   Eye, CheckCircle, XCircle, Clock, MapPin, Calendar,
   Car, ChevronRight, User, FileText,
@@ -62,14 +62,14 @@ export default function ApprovalQueue() {
     fetchDrivers().then(setDrivers).catch(() => {});
   }, []);
 
-  const openDialog = (req) => {
+  const openDialog = useCallback((req) => {
     setSelected(req);
     setApproving(false);
     setVehicleId("");
     setDriverId("");
     setError(null);
     setDialogOpen(true);
-  };
+  }, []);
 
   const handleReject = async () => {
     setSubmitting(true);
@@ -143,12 +143,16 @@ export default function ApprovalQueue() {
     }
   };
 
-  const sorted = [...trips].sort((a, b) => {
-    const order = { pending: 0, approved: 1, in_progress: 2, completed: 3, rejected: 4, closed: 5 };
-    return (order[a.state] ?? 6) - (order[b.state] ?? 6);
-  });
+  const sorted = useMemo(() => {
+    return [...trips].sort((a, b) => {
+      const order = { pending: 0, approved: 1, in_progress: 2, completed: 3, rejected: 4, closed: 5 };
+      return (order[a.state] ?? 6) - (order[b.state] ?? 6);
+    });
+  }, [trips]);
 
-  const pendingCount = trips.filter((r) => r.state === "pending").length;
+  const pendingCount = useMemo(() => {
+    return trips.filter((r) => r.state === "pending").length;
+  }, [trips]);
 
   const stateLabel = (state) => {
     const labels = {
