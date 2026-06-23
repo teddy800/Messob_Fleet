@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, memo } from "react";
 import {
   Eye, CheckCircle, XCircle, Clock, MapPin, Calendar,
   Car, ChevronRight, User, FileText,
@@ -44,6 +44,62 @@ function DetailRow({ icon: Icon, label, value }) {
     </div>
   );
 }
+
+// Memoized TripCard component for optimal performance
+const TripCard = memo(({ req, onViewClick, stateLabel, statusBadge, statusIcon }) => {
+  const isExpired = req.start_dt && new Date(req.start_dt) <= new Date() && req.state === "pending";
+  
+  return (
+    <div
+      className={`bg-white dark:bg-gray-800 border rounded-xl px-5 py-4 flex items-center justify-between hover:shadow-md transition-shadow ${
+        isExpired ? "border-red-300 dark:border-red-700 bg-red-50/30 dark:bg-red-900/20" : "border-gray-100 dark:border-gray-700"
+      }`}
+    >
+      <div className="flex items-center gap-4 min-w-0">
+        <div className="hidden sm:flex flex-col items-center justify-center bg-brand-blue/5 dark:bg-blue-900/20 rounded-lg px-3 py-2 shrink-0">
+          <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400 dark:text-gray-500">
+            {new Date(req.create_date).toLocaleDateString("en-US", { month: "short" })}
+          </span>
+          <span className="text-xl font-black text-brand-blue dark:text-blue-400 leading-none">
+            {new Date(req.create_date).getDate()}
+          </span>
+        </div>
+        <div className="min-w-0">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="font-black text-sm text-brand-blue dark:text-blue-400">{req.name}</span>
+            <Badge className={`text-xs font-black uppercase tracking-widest border-2 shadow-md flex items-center gap-1.5 px-3 py-1.5 ${statusBadge[stateLabel(req.state)] || statusBadge.Pending}`}>
+              {statusIcon[stateLabel(req.state)] || statusIcon.Pending} {stateLabel(req.state)}
+            </Badge>
+            {isExpired && (
+              <Badge className="text-xs font-black uppercase tracking-widest border-2 shadow-md flex items-center gap-1.5 px-3 py-1.5 bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 border-red-300 dark:border-red-700">
+                <XCircle className="h-3 w-3" /> EXPIRED
+              </Badge>
+            )}
+          </div>
+          <p className="text-sm text-gray-600 dark:text-gray-300 font-medium mt-0.5 truncate">
+            <span className="font-bold text-gray-800 dark:text-gray-100">
+              {Array.isArray(req.requester_id) ? req.requester_id[1] : "—"}
+            </span>
+            {" · "}
+            {req.pickup} <ChevronRight className="inline h-3 w-3" /> {req.destination}
+          </p>
+          <p className={`text-xs mt-0.5 ${isExpired ? "text-red-600 dark:text-red-400 font-bold" : "text-gray-400 dark:text-gray-500"}`}>
+            {req.start_dt ? new Date(req.start_dt).toLocaleString() : "—"} · {req.purpose}
+            {isExpired && " (Schedule has passed)"}
+          </p>
+        </div>
+      </div>
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={onViewClick}
+        className="shrink-0 ml-4 rounded-lg cursor-pointer border-brand-blue/30 dark:border-blue-700 text-brand-blue dark:text-blue-400 hover:bg-brand-blue dark:hover:bg-blue-700 hover:text-white dark:hover:text-white transition-colors dark:bg-gray-800"
+      >
+        <Eye className="h-4 w-4 mr-1.5" /> View
+      </Button>
+    </div>
+  );
+});
 
 export default function ApprovalQueue() {
   const { trips, loading, refetch } = useTripRequests(["pending", "approved", "rejected", "in_progress", "completed", "closed"]);
@@ -180,61 +236,16 @@ export default function ApprovalQueue() {
         <p className="text-sm text-gray-400 dark:text-gray-500">Loading...</p>
       ) : (
         <div className="space-y-3">
-          {sorted.map((req) => {
-            // Check if trip schedule has passed
-            const isExpired = req.start_dt && new Date(req.start_dt) <= new Date() && req.state === "pending";
-            
-            return (
-            <div
+          {sorted.map((req) => (
+            <TripCard
               key={req.id}
-              className={`bg-white dark:bg-gray-800 border rounded-xl px-5 py-4 flex items-center justify-between hover:shadow-md transition-shadow ${
-                isExpired ? "border-red-300 dark:border-red-700 bg-red-50/30 dark:bg-red-900/20" : "border-gray-100 dark:border-gray-700"
-              }`}
-            >
-              <div className="flex items-center gap-4 min-w-0">
-                <div className="hidden sm:flex flex-col items-center justify-center bg-brand-blue/5 dark:bg-blue-900/20 rounded-lg px-3 py-2 shrink-0">
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400 dark:text-gray-500">
-                    {new Date(req.create_date).toLocaleDateString("en-US", { month: "short" })}
-                  </span>
-                  <span className="text-xl font-black text-brand-blue dark:text-blue-400 leading-none">
-                    {new Date(req.create_date).getDate()}
-                  </span>
-                </div>
-                <div className="min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="font-black text-sm text-brand-blue dark:text-blue-400">{req.name}</span>
-                    <Badge className={`text-xs font-black uppercase tracking-widest border-2 shadow-md flex items-center gap-1.5 px-3 py-1.5 ${statusBadge[stateLabel(req.state)] || statusBadge.Pending}`}>
-                      {statusIcon[stateLabel(req.state)] || statusIcon.Pending} {stateLabel(req.state)}
-                    </Badge>
-                    {isExpired && (
-                      <Badge className="text-xs font-black uppercase tracking-widest border-2 shadow-md flex items-center gap-1.5 px-3 py-1.5 bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 border-red-300 dark:border-red-700">
-                        <XCircle className="h-3 w-3" /> EXPIRED
-                      </Badge>
-                    )}
-                  </div>
-                  <p className="text-sm text-gray-600 dark:text-gray-300 font-medium mt-0.5 truncate">
-                    <span className="font-bold text-gray-800 dark:text-gray-100">
-                      {Array.isArray(req.requester_id) ? req.requester_id[1] : "—"}
-                    </span>
-                    {" · "}
-                    {req.pickup} <ChevronRight className="inline h-3 w-3" /> {req.destination}
-                  </p>
-                  <p className={`text-xs mt-0.5 ${isExpired ? "text-red-600 dark:text-red-400 font-bold" : "text-gray-400 dark:text-gray-500"}`}>
-                    {req.start_dt ? new Date(req.start_dt).toLocaleString() : "—"} · {req.purpose}
-                    {isExpired && " (Schedule has passed)"}
-                  </p>
-                </div>
-              </div>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => openDialog(req)}
-                className="shrink-0 ml-4 rounded-lg cursor-pointer border-brand-blue/30 dark:border-blue-700 text-brand-blue dark:text-blue-400 hover:bg-brand-blue dark:hover:bg-blue-700 hover:text-white dark:hover:text-white transition-colors dark:bg-gray-800"
-              >
-                <Eye className="h-4 w-4 mr-1.5" /> View
-              </Button>
-            </div>
-          )})}
+              req={req}
+              onViewClick={() => openDialog(req)}
+              stateLabel={stateLabel}
+              statusBadge={statusBadge}
+              statusIcon={statusIcon}
+            />
+          ))}
         </div>
       )}
 
