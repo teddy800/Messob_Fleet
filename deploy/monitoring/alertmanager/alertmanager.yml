@@ -1,0 +1,73 @@
+# AlertManager Configuration for MESSOB Fleet Management
+# Routes alerts to Email, SMS, and Slack channels
+
+global:
+  resolve_timeout: 5m
+  smtp_smarthost: 'smtp.gmail.com:587'
+  smtp_from: 'alerts@messob.et'
+  smtp_auth_username: 'alerts@messob.et'
+  smtp_auth_password: '${SMTP_PASSWORD}'
+  smtp_require_tls: true
+
+# Alert routing tree
+route:
+  group_by: ['alertname', 'cluster', 'service']
+  group_wait: 10s
+  group_interval: 10s
+  repeat_interval: 12h
+  receiver: 'default-receiver'
+  
+  routes:
+    # Critical alerts - immediate notification via multiple channels
+    - match:
+        severity: critical
+      receiver: 'critical-alerts'
+      continue: true
+    
+    # Warning alerts - email only
+    - match:
+        severity: warning
+      receiver: 'warning-alerts'
+    
+    # Info alerts - logged only
+    - match:
+        severity: info
+      receiver: 'info-alerts'
+
+# Receivers (notification channels)
+receivers:
+  - name: 'default-receiver'
+    email_configs:
+      - to: 'ops@messob.et'
+        send_resolved: true
+
+  - name: 'critical-alerts'
+    email_configs:
+      - to: 'admin@messob.et, dispatcher@messob.et'
+        send_resolved: true
+        headers:
+          Subject: '🚨 CRITICAL: {{ .GroupLabels.alertname }}'
+    # Webhook for SMS gateway
+    webhook_configs:
+      - url: 'http://odoo18:8069/messob/alerts/webhook'
+        send_resolved: true
+
+  - name: 'warning-alerts'
+    email_configs:
+      - to: 'ops@messob.et'
+        send_resolved: true
+        headers:
+          Subject: '⚠️ WARNING: {{ .GroupLabels.alertname }}'
+
+  - name: 'info-alerts'
+    email_configs:
+      - to: 'logs@messob.et'
+        send_resolved: false
+
+# Inhibition rules (suppress redundant alerts)
+inhibit_rules:
+  - source_match:
+      severity: 'critical'
+    target_match:
+      severity: 'warning'
+    equal: ['alertname', 'instance']
