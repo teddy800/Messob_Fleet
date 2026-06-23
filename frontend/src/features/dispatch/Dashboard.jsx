@@ -103,28 +103,45 @@ export default function Dashboard() {
         1000
       );
 
-      // Load vehicle positions
-      const vehicleIds = trips
+      // Load vehicle positions - Get GPS for ALL vehicles, not just those on active trips
+      let positionMap = {};
+      
+      // Get all vehicle IDs from the fleet
+      const allVehicleIds = vehicles.map(v => v.id);
+      
+      // Count assigned vehicles (vehicles assigned to active trips)
+      const activeVehicleIds = trips
         .filter(t => t.assigned_vehicle_id)
         .map(t => Array.isArray(t.assigned_vehicle_id) ? t.assigned_vehicle_id[0] : t.assigned_vehicle_id);
       
-      if (vehicleIds.length > 0) {
+      const assignedVehiclesCount = activeVehicleIds.length;
+      
+      console.log('🚗 Total vehicles:', allVehicleIds.length);
+      console.log('🚙 Assigned vehicles (on active trips):', assignedVehiclesCount);
+      
+      if (allVehicleIds.length > 0) {
         try {
           const positions = await searchRead(
             'messob.fms.gps.position',
-            [['vehicle_id', 'in', vehicleIds]],
+            [['vehicle_id', 'in', allVehicleIds]],
             ['vehicle_id', 'latitude', 'longitude', 'speed', 'heading', 'timestamp'],
-            vehicleIds.length
+            allVehicleIds.length
           );
           
-          const positionMap = {};
+          console.log('📍 Total GPS positions fetched:', positions.length);
+          
           positions.forEach(pos => {
             const vId = Array.isArray(pos.vehicle_id) ? pos.vehicle_id[0] : pos.vehicle_id;
+            // Only keep the latest position for each vehicle
             if (!positionMap[vId] || new Date(pos.timestamp) > new Date(positionMap[vId].timestamp)) {
               positionMap[vId] = pos;
             }
           });
+          
+          console.log('🚗 Vehicles with GPS positions:', Object.keys(positionMap).length);
+          
           setVehiclePositions(positionMap);
+          // Don't filter by time - just use all positions that exist
         } catch (posError) {
           console.warn('Could not load GPS positions:', posError);
           setVehiclePositions({});
@@ -158,7 +175,7 @@ export default function Dashboard() {
       setStats({
         activeTrips: trips.filter(t => t.state === 'in_progress').length,
         approved: trips.filter(t => t.state === 'approved').length,
-        vehiclesOnline: Object.keys(vehiclePositions).length,
+        vehiclesOnline: assignedVehiclesCount, // Use assigned vehicles count (on active trips)
         pendingApprovals: pendingTrips.length,
         completedToday: completedTrips.length,
         totalVehicles: vehicles.length,
@@ -459,7 +476,7 @@ export default function Dashboard() {
               <Car className="h-6 w-6 text-white" />
             </div>
             <div>
-              <p className="text-xs text-purple-800 dark:text-purple-200 uppercase font-bold tracking-wide">Vehicles Online</p>
+              <p className="text-xs text-purple-800 dark:text-purple-200 uppercase font-bold tracking-wide">Assigned Vehicles</p>
               <p className="text-3xl font-black text-purple-950 dark:text-purple-50">{stats.vehiclesOnline}</p>
             </div>
           </CardContent>
