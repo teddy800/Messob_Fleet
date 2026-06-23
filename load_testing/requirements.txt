@@ -1,0 +1,4 @@
+# Load Testing Dependencies for MESSOB Fleet Management
+# Install: pip install -r requirements.txt
+
+requests>=2.31.0
