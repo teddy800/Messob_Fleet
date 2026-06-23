@@ -1,0 +1,213 @@
+{
+  "dashboard": {
+    "id": null,
+    "uid": "fleet-overview",
+    "title": "MESSOB Fleet Management - System Overview",
+    "tags": ["fleet", "messob", "production"],
+    "timezone": "browser",
+    "schemaVersion": 27,
+    "version": 1,
+    "refresh": "30s",
+    "panels": [
+      {
+        "id": 1,
+        "title": "Service Status",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 4, "x": 0, "y": 0},
+        "targets": [{
+          "expr": "up{job=\"odoo18\"}",
+          "legendFormat": "Odoo18"
+        }],
+        "options": {
+          "colorMode": "background",
+          "graphMode": "none",
+          "textMode": "value_and_name"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": 0, "color": "red"},
+                {"value": 1, "color": "green"}
+              ]
+            },
+            "mappings": [
+              {"value": 1, "text": "UP"},
+              {"value": 0, "text": "DOWN"}
+            ]
+          }
+        }
+      },
+      {
+        "id": 2,
+        "title": "API Response Time (95th percentile) - SRS NFR-1.1 Target: <500ms",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 4},
+        "targets": [{
+          "expr": "histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m])) * 1000",
+          "legendFormat": "95th percentile (ms)"
+        }],
+        "yaxes": [{
+          "label": "Response Time (ms)",
+          "min": 0
+        }],
+        "thresholds": [
+          {"value": 500, "colorMode": "critical", "op": "gt", "fill": true, "line": true}
+        ]
+      },
+      {
+        "id": 3,
+        "title": "GPS Updates Rate - SRS NFR-1.2 Target: >1000/min",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 4},
+        "targets": [{
+          "expr": "rate(gps_position_updates_total[1m]) * 60",
+          "legendFormat": "GPS Updates/min"
+        }],
+        "yaxes": [{
+          "label": "Updates per Minute",
+          "min": 0
+        }],
+        "thresholds": [
+          {"value": 1000, "colorMode": "custom", "op": "lt", "fill": false, "line": true, "color": "orange"}
+        ]
+      },
+      {
+        "id": 4,
+        "title": "CPU Usage",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 8, "x": 0, "y": 12},
+        "targets": [{
+          "expr": "100 - (avg by(instance) (irate(node_cpu_seconds_total{mode=\"idle\"}[5m])) * 100)",
+          "legendFormat": "CPU %"
+        }],
+        "yaxes": [{
+          "label": "CPU %",
+          "min": 0,
+          "max": 100
+        }]
+      },
+      {
+        "id": 5,
+        "title": "Memory Usage",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 8, "x": 8, "y": 12},
+        "targets": [{
+          "expr": "(node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) / node_memory_MemTotal_bytes * 100",
+          "legendFormat": "Memory %"
+        }],
+        "yaxes": [{
+          "label": "Memory %",
+          "min": 0,
+          "max": 100
+        }]
+      },
+      {
+        "id": 6,
+        "title": "Disk Usage",
+        "type": "graph",
+        "gridPos": {"h": 8, "w": 8, "x": 16, "y": 12},
+        "targets": [{
+          "expr": "(node_filesystem_size_bytes{mountpoint=\"/\"} - node_filesystem_avail_bytes{mountpoint=\"/\"}) / node_filesystem_size_bytes{mountpoint=\"/\"} * 100",
+          "legendFormat": "Disk %"
+        }],
+        "yaxes": [{
+          "label": "Disk %",
+          "min": 0,
+          "max": 100
+        }]
+      },
+      {
+        "id": 7,
+        "title": "Pending Trip Requests",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 6, "x": 0, "y": 20},
+        "targets": [{
+          "expr": "trip_requests_pending_count",
+          "legendFormat": "Pending"
+        }],
+        "options": {
+          "colorMode": "background",
+          "graphMode": "area"
+        }
+      },
+      {
+        "id": 8,
+        "title": "Active Trips",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 6, "x": 6, "y": 20},
+        "targets": [{
+          "expr": "trip_requests_active_count",
+          "legendFormat": "Active"
+        }],
+        "options": {
+          "colorMode": "background",
+          "graphMode": "area"
+        }
+      },
+      {
+        "id": 9,
+        "title": "Fleet Utilization %",
+        "type": "gauge",
+        "gridPos": {"h": 4, "w": 6, "x": 12, "y": 20},
+        "targets": [{
+          "expr": "(vehicles_active_count / vehicles_total_count) * 100",
+          "legendFormat": "Utilization"
+        }],
+        "options": {
+          "showThresholdLabels": false,
+          "showThresholdMarkers": true
+        },
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "min": 0,
+            "max": 100,
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": 0, "color": "red"},
+                {"value": 30, "color": "orange"},
+                {"value": 50, "color": "green"}
+              ]
+            }
+          }
+        }
+      },
+      {
+        "id": 10,
+        "title": "Overdue Maintenance Alerts",
+        "type": "stat",
+        "gridPos": {"h": 4, "w": 6, "x": 18, "y": 20},
+        "targets": [{
+          "expr": "maintenance_alerts_overdue_count",
+          "legendFormat": "Overdue"
+        }],
+        "options": {
+          "colorMode": "background",
+          "graphMode": "none"
+        },
+        "fieldConfig": {
+          "defaults": {
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {"value": 0, "color": "green"},
+                {"value": 5, "color": "yellow"},
+                {"value": 10, "color": "red"}
+              ]
+            }
+          }
+        }
+      }
+    ],
+    "time": {
+      "from": "now-6h",
+      "to": "now"
+    },
+    "timepicker": {
+      "refresh_intervals": ["10s", "30s", "1m", "5m"]
+    }
+  }
+}
