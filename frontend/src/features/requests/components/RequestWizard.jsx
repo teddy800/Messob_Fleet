@@ -403,7 +403,7 @@ export default function RequestWizard() {
                 : step === 2
                   ? "Schedule (Date & Time)"
                   : step === 3
-                    ? "Destination"
+                    ? "Locations"
                     : step === 4
                       ? "Review Your Request"
                       : "Confirm & Submit"}
