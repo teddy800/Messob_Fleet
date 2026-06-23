@@ -46,10 +46,23 @@ export default function Dashboard() {
 
   const loadDashboardData = async () => {
     try {
-      // Load active trips
+      // Get today's date range (start and end of today)
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const todayStart = today.toISOString();
+      
+      const tomorrow = new Date(today);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      const todayEnd = tomorrow.toISOString();
+      
+      // Load active trips scheduled for TODAY only
       const trips = await searchRead(
         'messob.fms.trip',
-        [['state', 'in', ['approved', 'in_progress']]],
+        [
+          ['state', 'in', ['approved', 'in_progress']],
+          ['start_dt', '>=', todayStart],
+          ['start_dt', '<', todayEnd]
+        ],
         [
           'name', 'state', 'pickup', 'destination', 'start_dt', 'end_dt',
           'requester_id', 'assigned_vehicle_id', 'assigned_driver_id', 'purpose'
@@ -57,6 +70,9 @@ export default function Dashboard() {
         50
       );
       setActiveTrips(trips);
+
+      console.log('📅 Today range:', todayStart, 'to', todayEnd);
+      console.log('📋 Trips scheduled for today:', trips.length);
 
       // Load pending approvals count
       const pendingTrips = await searchRead(
@@ -66,14 +82,13 @@ export default function Dashboard() {
         100
       );
 
-      // Load completed today count
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
+      // Load completed today count (using same today range)
       const completedTrips = await searchRead(
         'messob.fms.trip',
         [
           ['state', '=', 'completed'],
-          ['write_date', '>=', today.toISOString()]
+          ['write_date', '>=', todayStart],
+          ['write_date', '<', todayEnd]
         ],
         ['id'],
         100
@@ -109,15 +124,18 @@ export default function Dashboard() {
       // Get all vehicle IDs from the fleet
       const allVehicleIds = vehicles.map(v => v.id);
       
-      // Count assigned vehicles (vehicles assigned to active trips)
+      // Count assigned vehicles (unique vehicles assigned to active trips)
       const activeVehicleIds = trips
         .filter(t => t.assigned_vehicle_id)
         .map(t => Array.isArray(t.assigned_vehicle_id) ? t.assigned_vehicle_id[0] : t.assigned_vehicle_id);
       
-      const assignedVehiclesCount = activeVehicleIds.length;
+      // Use Set to get unique vehicle IDs (remove duplicates)
+      const uniqueAssignedVehicles = new Set(activeVehicleIds);
+      const assignedVehiclesCount = uniqueAssignedVehicles.size;
       
       console.log('🚗 Total vehicles:', allVehicleIds.length);
-      console.log('🚙 Assigned vehicles (on active trips):', assignedVehiclesCount);
+      console.log('🚙 Active trips:', trips.length);
+      console.log('🚙 Assigned vehicles (unique):', assignedVehiclesCount);
       
       if (allVehicleIds.length > 0) {
         try {
