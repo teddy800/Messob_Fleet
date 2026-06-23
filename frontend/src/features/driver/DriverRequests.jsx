@@ -87,13 +87,25 @@ export default function DriverRequests() {
 
   const navigate = useNavigate();
 
+  // Helper function to check if trip is too early to start (before scheduled time minus grace period)
+  const isTripTooEarly = (trip) => {
+    if (!trip.start_dt) return false;
+    
+    const currentTime = new Date();
+    const startTime = new Date(trip.start_dt);
+    const graceMinutes = 30; // Allow starting 30 minutes before scheduled time
+    const earliestStartTime = new Date(startTime.getTime() - (graceMinutes * 60 * 1000));
+    
+    return currentTime < earliestStartTime;
+  };
+
   // Helper function to check if trip start time has passed with grace period
   const isStartTimePassed = (trip) => {
     if (!trip.start_dt) return false;
     
     const currentTime = new Date();
     const startTime = new Date(trip.start_dt);
-    const graceMinutes = 30; // 30 minutes grace period
+    const graceMinutes = 30; // 30 minutes grace period after scheduled time
     const graceTime = new Date(startTime.getTime() + (graceMinutes * 60 * 1000));
     
     return currentTime > graceTime;
@@ -119,6 +131,18 @@ export default function DriverRequests() {
       return { status: 'late', message: 'Start time passed', color: 'orange' };
     }
     
+    if (isTripTooEarly(trip)) {
+      const currentTime = new Date();
+      const startTime = new Date(trip.start_dt);
+      const timeUntilEarliest = Math.floor((startTime - currentTime) / (1000 * 60)) - 30; // minutes until can start
+      
+      if (timeUntilEarliest > 60) {
+        const hours = Math.floor(timeUntilEarliest / 60);
+        return { status: 'too_early', message: `Starts in ${hours}h ${timeUntilEarliest % 60}m`, color: 'blue' };
+      }
+      return { status: 'too_early', message: `Can start in ${timeUntilEarliest}m`, color: 'blue' };
+    }
+    
     const currentTime = new Date();
     const startTime = new Date(trip.start_dt);
     const timeUntilStart = Math.floor((startTime - currentTime) / (1000 * 60)); // minutes
@@ -134,12 +158,28 @@ export default function DriverRequests() {
     // Find the trip to validate
     const trip = trips.find(t => t.id === id);
     
-    // Validate trip time before starting
+    // Check if trip is too early to start (prevents starting Day 24 trip on Day 23)
+    if (trip && isTripTooEarly(trip)) {
+      const startTime = new Date(trip.start_dt);
+      const formattedTime = startTime.toLocaleString('en-US', { 
+        weekday: 'short', 
+        year: 'numeric', 
+        month: 'short', 
+        day: 'numeric', 
+        hour: '2-digit', 
+        minute: '2-digit' 
+      });
+      toast.error(`This trip cannot be started yet. Scheduled start time is ${formattedTime}. You can start 30 minutes before the scheduled time.`);
+      return;
+    }
+    
+    // Check if trip start time has expired (too late)
     if (trip && isStartTimePassed(trip)) {
       toast.error('Trip start time has expired. Please contact dispatcher for assistance.');
       return;
     }
 
+    // Check if trip is expired
     if (trip && isTripExpired(trip)) {
       toast.error('Trip time has expired. Please contact dispatcher for assistance.');
       return;
