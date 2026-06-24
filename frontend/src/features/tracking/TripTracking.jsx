@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { ArrowLeft, MapPin, Users, Edit3, Route, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -12,9 +12,14 @@ import { toast } from 'sonner';
 export default function TripTracking() {
   const { tripId } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
-  const [tripData, setTripData] = useState(null);
-  const [loading, setLoading] = useState(true);
+  
+  // ⚡ OPTIMIZED: Get trip data from navigation state instantly (no loading)
+  const passedTripData = location.state?.tripData;
+  
+  const [tripData, setTripData] = useState(passedTripData || null);
+  const [loading, setLoading] = useState(!passedTripData); // Skip loading if data passed
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState('route');
 
@@ -26,10 +31,11 @@ export default function TripTracking() {
     }
   }, [searchParams]);
 
-  // Fetch basic trip data
+  // Fetch basic trip data ONLY if not passed via state
   useEffect(() => {
     const fetchTripData = async () => {
-      if (!tripId) return;
+      // ⚡ OPTIMIZED: Skip API call if data already provided
+      if (passedTripData || !tripId) return;
 
       try {
         setLoading(true);
@@ -62,7 +68,7 @@ export default function TripTracking() {
     };
 
     fetchTripData();
-  }, [tripId]);
+  }, [tripId, passedTripData]); // ⚡ Added passedTripData dependency
 
   const handlePickupUpdate = (newAddress, newCoordinates) => {
     if (tripData) {
