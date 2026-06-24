@@ -8,13 +8,15 @@
  * - Live speed, heading, and status display
  * - Auto-center map on vehicle
  * - View progress button
+ * - FR-3.3: Multi-user pickup visualization (service users sharing same vehicle)
  * 
- * SRS Requirements: FR-3.1, FR-3.2
+ * SRS Requirements: FR-3.1, FR-3.2, FR-3.3
  */
 
 import React, { useState, useEffect, useRef } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap } from 'react-leaflet';
 import { useGPSTracking } from '@/lib/websocket';
+import { callMethod } from '@/lib/odooApi';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -27,7 +29,8 @@ import {
   Wifi,
   WifiOff,
   RefreshCw,
-  Maximize2
+  Maximize2,
+  Users
 } from 'lucide-react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -64,7 +67,7 @@ const createVehicleIcon = (heading = 0, speed = 0) => {
 };
 
 /**
- * Pickup location marker icon
+ * Pickup location marker icon (primary user - current trip)
  */
 const pickupIcon = L.divIcon({
   className: 'pickup-marker',
@@ -78,6 +81,24 @@ const pickupIcon = L.divIcon({
   iconSize: [40, 40],
   iconAnchor: [20, 40],
   popupAnchor: [0, -40],
+});
+
+/**
+ * FR-3.3: Service user pickup marker icon (other passengers sharing vehicle)
+ * Different color to distinguish from primary pickup point
+ */
+const serviceUserPickupIcon = L.divIcon({
+  className: 'service-user-pickup-marker',
+  html: `
+    <div style="background: #3B82F6; border-radius: 50%; padding: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.3);">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+      </svg>
+    </div>
+  `,
+  iconSize: [35, 35],
+  iconAnchor: [17.5, 35],
+  popupAnchor: [0, -35],
 });
 
 /**
@@ -162,6 +183,10 @@ export default function LiveTracking({
   const [autoCenter, setAutoCenter] = useState(true);
   const [mapZoom, setMapZoom] = useState(15);
   const mapRef = useRef(null);
+  
+  // FR-3.3: Multi-user pickup visualization state
+  const [serviceUsers, setServiceUsers] = useState([]);
+  const [showServiceUsers, setShowServiceUsers] = useState(true);
 
   // Update map center when position changes
   useEffect(() => {
@@ -176,6 +201,36 @@ export default function LiveTracking({
       setMapCenter([route.pickup.lat, route.pickup.lng]);
     }
   }, [route]);
+
+  // FR-3.3: Fetch collaborative service users on same vehicle
+  useEffect(() => {
+    /**
+     * FR-3.3: Fetch all service users sharing the same vehicle
+     */
+    const fetchServiceUsers = async () => {
+      if (!tripId) return;
+      
+      try {
+        // Call the backend method to get collaborative users
+        const response = await callMethod(
+          'messob.fms.trip',
+          'get_collaborative_users',
+          [tripId]
+        );
+        
+        if (response && response.success && response.service_users) {
+          setServiceUsers(response.service_users);
+        }
+      } catch (err) {
+        console.error('Failed to fetch service users:', err);
+        // Don't show error to user - this is an enhancement feature
+      }
+    };
+    
+    if (tripId) {
+      fetchServiceUsers();
+    }
+  }, [tripId]);
 
   /**
    * Handle "View Progress" button click
@@ -215,6 +270,13 @@ export default function LiveTracking({
             <span className="flex items-center gap-2">
               <Navigation className="h-5 w-5 text-blue-500" />
               Live Vehicle Tracking
+              {/* FR-3.3: Show passenger count badge */}
+              {serviceUsers.length > 0 && (
+                <Badge variant="secondary" className="ml-2 flex items-center gap-1">
+                  <Users className="h-3 w-3" />
+                  {serviceUsers.length + 1} Passengers
+                </Badge>
+              )}
             </span>
             <div className="flex items-center gap-3">
               {error && (
@@ -318,7 +380,7 @@ export default function LiveTracking({
                 />
               )}
               
-              {/* Pickup marker */}
+              {/* Pickup marker (primary user - current trip) */}
               {route && route.pickup && (
                 <Marker 
                   position={[route.pickup.lat, route.pickup.lng]}
@@ -328,7 +390,7 @@ export default function LiveTracking({
                     <div className="p-2">
                       <div className="flex items-center gap-2 mb-2">
                         <MapPin className="h-4 w-4 text-green-600" />
-                        <strong className="text-sm">Pickup Location</strong>
+                        <strong className="text-sm">Your Pickup Location</strong>
                       </div>
                       <p className="text-xs text-gray-600">{route.pickup.address || 'Pickup Point'}</p>
                       {route.pickup.time && (
@@ -340,6 +402,55 @@ export default function LiveTracking({
                   </Popup>
                 </Marker>
               )}
+              
+              {/* FR-3.3: Service user pickup markers (other passengers sharing vehicle) */}
+              {showServiceUsers && serviceUsers.map((user, index) => (
+                user.pickup_coordinates && user.pickup_coordinates.lat && user.pickup_coordinates.lng && (
+                  <Marker
+                    key={`service-user-${user.trip_id}-${index}`}
+                    position={[user.pickup_coordinates.lat, user.pickup_coordinates.lng]}
+                    icon={serviceUserPickupIcon}
+                  >
+                    <Popup>
+                      <div className="p-2 min-w-[200px]">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Users className="h-4 w-4 text-blue-600" />
+                          <strong className="text-sm">Co-Passenger Pickup</strong>
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-xs">
+                            <strong>Name:</strong> {user.requester || 'Unknown'}
+                          </p>
+                          {user.department && (
+                            <p className="text-xs">
+                              <strong>Dept:</strong> {user.department}
+                            </p>
+                          )}
+                          <p className="text-xs">
+                            <strong>Request ID:</strong> {user.request_id}
+                          </p>
+                          <p className="text-xs text-gray-600">
+                            {user.pickup_address || 'Pickup Point'}
+                          </p>
+                          {user.start_time && (
+                            <p className="text-xs text-gray-500 mt-1">
+                              Time: {user.start_time}
+                            </p>
+                          )}
+                          {user.status && (
+                            <Badge 
+                              variant={user.status === 'in_progress' ? 'default' : 'secondary'}
+                              className="mt-2 text-xs"
+                            >
+                              {user.status.replace('_', ' ').toUpperCase()}
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+                    </Popup>
+                  </Marker>
+                )
+              ))}
               
               {/* Destination marker */}
               {route && route.destination && (
@@ -406,6 +517,19 @@ export default function LiveTracking({
                 >
                   <Maximize2 className="h-4 w-4 mr-2" />
                   Fit Route
+                </Button>
+              )}
+              
+              {/* FR-3.3: Toggle service users visibility */}
+              {serviceUsers.length > 0 && (
+                <Button
+                  onClick={() => setShowServiceUsers(!showServiceUsers)}
+                  variant={showServiceUsers ? 'default' : 'outline'}
+                  className="shadow-lg bg-white"
+                  size="sm"
+                >
+                  <Users className="h-4 w-4 mr-2" />
+                  {showServiceUsers ? 'Hide' : 'Show'} Co-Passengers
                 </Button>
               )}
             </div>
