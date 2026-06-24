@@ -89,9 +89,9 @@ After logging in, you'll see the Staff Dashboard with:
 ### 3.1 Starting a New Request
 
 1. Click **"New Request"** in the sidebar
-2. The 4-step wizard will guide you through
+2. The 5-step wizard will guide you through
 
-### 3.2 Step 1: Trip Details
+### 3.2 Step 1: Basics (Trip Details & Vehicle)
 
 **Purpose/Justification** (Required)
 - Enter detailed reason for the trip
@@ -114,7 +114,7 @@ Vehicle: Sedan (suitable for 2 staff members, city travel)
 
 Click **"Next"** to continue.
 
-### 3.3 Step 2: Schedule
+### 3.3 Step 2: Dates (Schedule)
 
 **Start Date & Time**
 - Select when you need the vehicle
@@ -136,7 +136,7 @@ Click **"Next"** to continue.
 
 Click **"Next"** to continue.
 
-### 3.4 Step 3: Locations
+### 3.4 Step 3: Route (Locations)
 
 **Pickup Location**
 - Where the vehicle should pick you up
@@ -156,7 +156,7 @@ Click **"Next"** to continue.
 
 Click **"Next"** to continue.
 
-### 3.5 Step 4: Review & Submit
+### 3.5 Step 4: Review (Verify All Details)
 
 **Review All Details:**
 - ✓ Purpose is clear and complete
@@ -164,10 +164,40 @@ Click **"Next"** to continue.
 - ✓ Locations are accurate
 - ✓ Vehicle category matches your needs
 
+**Review Summary Display:**
+The system shows a comprehensive summary with three sections:
+- **Trip Basics:** Purpose and vehicle category
+- **Travel Schedule:** Departure and arrival date/time
+- **Route:** Starting point and destination
+
+**Edit Options:**
+- Click **"Edit"** button next to any section to modify
+- System takes you back to that specific step
+- Make changes and return to review
+
 **Actions:**
-- **Back:** Return to previous step to edit
-- **Save as Draft:** Save without submitting
-- **Submit for Approval:** Send to dispatcher
+- **Back:** Return to previous step manually
+- **Edit:** Jump to specific step to modify (shown on each section)
+- **Next:** Proceed to final confirmation
+
+Click **"Next"** to continue to final confirmation.
+
+### 3.6 Step 5: Confirm & Submit (Final Confirmation)
+
+**Final Confirmation Checkpoint:**
+- ✓ Review the complete summary one last time
+- ✓ All information has been verified in Step 4
+- ✓ Ready to submit for dispatcher approval
+
+**Confirmation Checkbox (Required):**
+- □ **"I confirm that all information provided is correct"**
+- This checkbox must be checked before submission
+- Ensures you've carefully reviewed all details
+- Prevents accidental or incomplete submissions
+
+**Final Actions:**
+- **Back:** Return to review step to make changes
+- **Submit for Approval:** Send request to dispatcher (only enabled after checking confirmation box)
 
 **After Submission:**
 - Request status changes to "Pending"
@@ -188,7 +218,9 @@ Click **"My Requests"** to see:
 
 ### 4.2 Understanding Request Status
 
-**Status Colors:**
+**Status Colors and 7-State Workflow:**
+The system uses a 7-state lifecycle for trip requests:
+
 - 🟡 **Draft (Yellow):** Saved but not submitted
 - 🟠 **Pending (Orange):** Awaiting dispatcher review
 - 🟢 **Approved (Green):** Vehicle and driver assigned
@@ -196,6 +228,13 @@ Click **"My Requests"** to see:
 - ⚫ **Completed (Gray):** Trip finished
 - 🔴 **Rejected (Red):** Request declined
 - ⚪ **Closed (White):** Archived
+
+**Workflow Sequence:**
+```
+Draft → Pending → Approved → In Progress → Completed → Closed
+         ↓
+      Rejected
+```
 
 ### 4.3 Viewing Request Details
 
@@ -451,7 +490,7 @@ A: Contact the driver directly (number shown in trip details) or call dispatcher
 A: Contact dispatcher - they can modify approved bookings.
 
 **Q8: How do I report an issue during my trip?**  
-A: Contact dispatcher immediately: +251 11 XXX XXXX
+A: Contact dispatcher immediately: +251 11 123 4567 or +251 91 234 5678
 
 **Q9: Can I use the system on my phone?**  
 A: Yes, the system is mobile-responsive and works on all devices.
@@ -472,7 +511,8 @@ A: You'll receive notification with reason. You can create a new request.
 
 **Technical Support:**
 - **Email:** support@messob.et
-- **Phone:** +251 11 XXX XXXX
+- **Phone:** +251 11 123 4567
+- **Mobile:** +251 91 234 5678
 - **Hours:** Monday-Friday, 9:00-17:00 EAT
 
 **Dispatcher Direct Line:**
@@ -520,15 +560,10 @@ We welcome your feedback to improve the system:
 ## Appendix C: Contact Information
 
 **MESSOB Technology Solutions**  
-📍 Address: [Your Organization Address]  
+📍 Address: MESSOB Center, Addis Ababa, Ethiopia  
 📧 Email: support@messob.et  
-📞 Phone: +251 11 XXX XXXX  
+📞 Phone: +251 11 123 4567  
+📱 Mobile: +251 91 234 5678  
 🌐 Web: https://fleet.messob.et
 
 ---
-
-**Document Version:** 1.1.0  
-**Last Revised:** December 2024  
-**Next Review:** March 2025
-
-© 2024-2026 MESSOB Technology Solutions. All rights reserved.

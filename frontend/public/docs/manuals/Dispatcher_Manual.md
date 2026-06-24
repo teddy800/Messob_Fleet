@@ -581,23 +581,17 @@ When multiple requests arrive simultaneously:
 
 **Technical Support:**
 - Email: support@messob.et
-- Phone: +251 11 XXX XXXX
+- Phone: +251 11 123 4567
 - Hours: Monday-Friday, 8:00-18:00 EAT
 
 **Fleet Manager:**
 - Email: fleetmanager@messob.et
-- Phone: +251 11 XXX YYYY
+- Phone: +251 11 456 7890
 - For: Policy questions, escalations
 
 **Emergency Hotline:**
-- Phone: +251 91 XXX ZZZZ
+- Phone: +251 91 234 5678
 - Available: 24/7
 - For: Accidents, breakdowns, security issues
 
 ---
-
-**Document Version:** 1.1.0  
-**Last Reviewed:** June 2026  
-**Next Review:** December 2026  
-
-© 2026 MESSOB Center. All rights reserved.

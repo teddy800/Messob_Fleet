@@ -644,17 +644,17 @@ In addition to daily checks:
 ### Important Contacts
 
 **Emergency Dispatcher:**
-- Phone: +251 91 XXX ZZZZ
+- Phone: +251 91 234 5678
 - Available: 24/7
 - For: Accidents, breakdowns, emergencies
 
 **Fleet Operations:**
-- Phone: +251 11 XXX XXXX
+- Phone: +251 11 123 4567
 - Hours: Monday-Friday, 8:00-18:00
 - For: Questions, issues, schedules
 
 **Technical Support (App Issues):**
-- Phone: +251 11 XXX YYYY
+- Phone: +251 11 456 7890
 - Email: support@messob.et
 
 ### Vehicle Categories You May Drive
@@ -681,11 +681,3 @@ To ensure driver safety:
 System automatically tracks and enforces these limits.
 
 ---
-
-**Document Version:** 1.1.0  
-**Last Reviewed:** June 2026  
-**Next Review:** December 2026  
-
-**Drive Safe. Arrive Safe.**
-
-© 2026 MESSOB Center. All rights reserved.
