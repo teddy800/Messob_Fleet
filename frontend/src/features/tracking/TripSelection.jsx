@@ -78,8 +78,11 @@ export default function TripSelection() {
 
   const fetchTrackableTrips = fetchCurrentUserAndTrips;
 
-  const handleTripSelect = (tripId) => {
-    navigate(`/dashboard/tracking/${tripId}`);
+  // ⚡ OPTIMIZED: Instant navigation with tripData passed via state
+  const handleTripSelect = (trip) => {
+    navigate(`/dashboard/tracking/${trip.id}`, {
+      state: { tripData: trip } // Pass trip data to avoid extra API call
+    });
   };
 
   const getStatusColor = (state) => {
@@ -241,10 +244,10 @@ export default function TripSelection() {
                     )}
                   </div>
 
-                  {/* Track Button */}
+                  {/* Track Button - OPTIMIZED: Pass full trip data */}
                   <div className="ml-6">
                     <Button
-                      onClick={() => handleTripSelect(trip.id)}
+                      onClick={() => handleTripSelect(trip)}
                       className="bg-brand-blue dark:bg-blue-700 hover:bg-blue-700 dark:hover:bg-blue-800"
                     >
                       Track Trip
