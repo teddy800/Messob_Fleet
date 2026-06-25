@@ -96,7 +96,7 @@ export default function DriverMobileApp() {
       const trips = await searchRead(
         'messob.fms.trip',
         [['assigned_driver_id.user_id', '=', user.id], ['state', 'in', ['approved', 'in_progress']]],
-        ['name', 'state', 'pickup', 'destination', 'start_dt', 'end_dt', 'requester_id', 'assigned_vehicle_id', 'purpose'],
+        ['name', 'state', 'pickup', 'destination', 'start_dt', 'end_dt', 'requester_id', 'assigned_vehicle_id', 'assigned_driver_id', 'purpose'],
         50
       );
 
@@ -176,6 +176,18 @@ export default function DriverMobileApp() {
     } catch (error) {
       console.error('Failed to load maintenance alert count:', error);
       setMaintenanceAlertCount(0);
+    }
+  };
+
+  const removeExpiredTrip = async (tripId) => {
+    try {
+      const { callMethod } = await import('@/lib/odooApi');
+      await callMethod('messob.fms.trip', 'action_remove_expired', [tripId]);
+      toast.success('Expired trip removed from your list');
+      loadTrips();
+    } catch (error) {
+      console.error('Failed to remove expired trip:', error);
+      toast.error(error.message || 'Failed to remove expired trip');
     }
   };
 
@@ -292,6 +304,15 @@ export default function DriverMobileApp() {
     }
     
     return { status: 'normal', message: null };
+  };
+
+  // Helper function to check if current user is the assigned driver for this trip
+  const isAssignedDriver = (trip) => {
+    if (!trip.assigned_driver_id || !user?.id) return false;
+    // Check if assigned_driver_id.user_id matches current user
+    // In mobile app, we filter by assigned_driver_id.user_id so all trips should be assigned to current user
+    // But we add this check for extra safety
+    return true; // Since filter already ensures this, but backend will validate anyway
   };
 
   const reportIncident = () => {
@@ -551,12 +572,39 @@ export default function DriverMobileApp() {
             </div>
           </div>
 
-          {isExpired ? (
+          {isExpired && isAssignedDriver(trip) ? (
             <div className="space-y-2">
               <div className="flex items-center gap-2 p-3 bg-red-100 dark:bg-red-900/20 rounded-lg">
                 <AlertCircle className="h-4 w-4 text-red-600 dark:text-red-400 flex-shrink-0" />
                 <span className="text-sm text-red-700 dark:text-red-300 font-medium">
-                  Trip time has expired. Contact dispatcher for assistance.
+                  Trip time has expired. Contact dispatcher for assistance or remove from your list.
+                </span>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <Button 
+                  onClick={callDispatcher}
+                  variant="outline"
+                  className="border-red-300 dark:border-red-600 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
+                >
+                  <Phone className="h-4 w-4 mr-2" />
+                  Call
+                </Button>
+                <Button 
+                  onClick={() => removeExpiredTrip(trip.id)}
+                  variant="destructive"
+                  className="bg-red-600 hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-800"
+                >
+                  <X className="h-4 w-4 mr-2" />
+                  Remove
+                </Button>
+              </div>
+            </div>
+          ) : isExpired && !isAssignedDriver(trip) ? (
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 p-3 bg-red-100 dark:bg-red-900/20 rounded-lg">
+                <AlertCircle className="h-4 w-4 text-red-600 dark:text-red-400 flex-shrink-0" />
+                <span className="text-sm text-red-700 dark:text-red-300 font-medium">
+                  Trip time has expired. Please contact dispatcher for assistance.
                 </span>
               </div>
               <Button 

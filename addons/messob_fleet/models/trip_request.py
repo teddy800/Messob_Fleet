@@ -395,6 +395,94 @@ class MessobFmsTrip(models.Model):
     # DRIVER MOBILE APP ACTIONS (NFR-2.1: Safety - Simple driver interface)
     # =========================================================================
     
+    def action_remove_expired(self):
+        """
+        Driver action: Remove expired trip from driver's view.
+        
+        This action moves an expired approved trip back to rejected state
+        so it no longer appears in the driver's upcoming trips list.
+        Only trips that are:
+        1. In 'approved' state
+        2. Past the end_dt (trip time expired)
+        3. Assigned to the current user (driver)
+        
+        Can be performed by the assigned driver.
+        """
+        self.ensure_one()
+        
+        # Security: Only assigned driver can remove their expired trips
+        current_user_partner = self.env.user.partner_id
+        if self.assigned_driver_id != current_user_partner:
+            raise UserError(_('Only the assigned driver can remove this trip.'))
+        
+        # Only allow removal if trip is approved (not yet started)
+        if self.state != 'approved':
+            raise UserError(_('Only approved trips can be removed. This trip is %s.') % self.state)
+        
+        # Check if trip is truly expired (past end time)
+        if not self.end_dt:
+            raise UserError(_('Cannot remove trip without end time.'))
+        
+        from datetime import datetime
+        current_time = fields.Datetime.now()
+        
+        if current_time <= self.end_dt:
+            raise UserError(_('Trip time has not expired yet. Scheduled end: %s') % 
+                          self.end_dt.strftime('%Y-%m-%d %H:%M:%S'))
+        
+        # Move to rejected state
+        # Note: rejection reason will be recorded in chatter and audit log below
+        self.write({
+            'state': 'rejected',
+        })
+        
+        # Log in audit trail
+        self.env['messob.fms.audit.log'].log_business_action(
+            action='REJECT',
+            model=self._name,
+            record_id=self.id,
+            description=f"Expired trip {self.name} removed by driver {self.env.user.name}. Trip time expired on {self.end_dt.strftime('%Y-%m-%d %H:%M:%S')}.",
+            severity='medium'
+        )
+        
+        # Post message in chatter
+        self.message_post(
+            body=f"<p><strong>Trip Removed by Driver</strong></p>"
+                 f"<p>Trip time expired (scheduled end: {self.end_dt.strftime('%Y-%m-%d %H:%M:%S')}).</p>"
+                 f"<p>Trip was not started and has been automatically rejected.</p>"
+                 f"<p>Removed by: {self.env.user.name}</p>",
+            subject='Expired Trip Removed',
+            message_type='notification'
+        )
+        
+        # Send notification to dispatcher
+        try:
+            # Get dispatcher group
+            dispatcher_group = self.env.ref('messob_fleet.group_fms_dispatcher')
+            dispatcher_users = dispatcher_group.users
+            
+            for dispatcher in dispatcher_users:
+                self.activity_schedule(
+                    'mail.mail_activity_data_warning',
+                    user_id=dispatcher.id,
+                    summary=f'Expired Trip Removed: {self.name}',
+                    note=f'Driver {self.env.user.name} removed expired trip {self.name} '
+                         f'(scheduled end: {self.end_dt.strftime("%Y-%m-%d %H:%M")}).'
+                )
+        except Exception as e:
+            _logger.warning(f"Failed to notify dispatcher about expired trip removal: {e}")
+        
+        return {
+            'type': 'ir.actions.client',
+            'tag': 'display_notification',
+            'params': {
+                'title': _('Trip Removed'),
+                'message': _('Expired trip has been removed from your list and marked as rejected.'),
+                'type': 'warning',
+                'sticky': False,
+            }
+        }
+    
     def action_start_trip(self):
         """
         Driver action: Start the trip (change state to in_progress).
