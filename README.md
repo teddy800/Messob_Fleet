@@ -52,9 +52,9 @@
 <td width="50%">
 
 ### 🎫 Intelligent Trip Management
-- **4-Step Smart Wizard** with auto-save
+- **5-Step Smart Wizard** with auto-save and confirmation
 - **Multi-filter Dashboard** with real-time search
-- **8-State Workflow** (draft → completed)
+- **7-State Workflow** (draft → pending → approved → in_progress → completed → closed)
 - **Conflict Detection** before submission
 - **Automated Notifications** via Email/SMS
 
@@ -885,7 +885,7 @@ Found a bug? Have a feature request?
 ## 🛣️ Roadmap
 
 ### ✅ Phase 1: Foundation (COMPLETED)
-- ✅ Trip request management with 8-state workflow
+- ✅ Trip request management with 7-state workflow (draft → pending → approved → in_progress → completed → closed, with rejected branch)
 - ✅ Smart dispatch with AI priority scoring
 - ✅ Real-time GPS tracking with WebSocket
 - ✅ Maintenance management with predictive alerts

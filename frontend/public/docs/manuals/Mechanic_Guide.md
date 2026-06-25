@@ -824,22 +824,16 @@ Navigate to **Maintenance > Reports > Work Order Summary**
 
 **Technical Support:**
 - Email: support@messob.et
-- Phone: +251 11 XXX XXXX
+- Phone: +251 11 123 4567
+- Mobile: +251 91 234 5678
 
 **Parts Supplier:**
 - Email: parts@supplier.et
-- Phone: +251 11 XXX YYYY
+- Phone: +251 11 456 7890
 
 **Fleet Manager:**
 - Email: fleetmanager@messob.et
-- Phone: +251 11 XXX ZZZZ
+- Phone: +251 11 789 0123
+- Location: MESSOB Center, Addis Ababa
 
 ---
-
-**Document Version:** 1.1.0  
-**Last Reviewed:** June 2026  
-**Next Review:** December 2026  
-
-**Keep the Fleet Running Safely.**
-
-© 2026 MESSOB Center. All rights reserved.

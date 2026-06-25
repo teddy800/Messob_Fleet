@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { MapPin, Clock, Calendar, User, Play, Check, CheckCircle, AlertCircle, Phone } from "lucide-react";
+import { MapPin, Clock, Calendar, User, Play, Check, CheckCircle, AlertCircle, Phone, X } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -57,7 +57,7 @@ export default function DriverRequests() {
       const data = await searchRead(
         "messob.fms.trip",
         domain,
-        ["id", "name", "state", "pickup", "destination", "start_dt", "end_dt", "requester_id", "assigned_vehicle_id", "purpose"],
+        ["id", "name", "state", "pickup", "destination", "start_dt", "end_dt", "requester_id", "assigned_vehicle_id", "assigned_driver_id", "purpose"],
         100
       );
       setTrips(data);
@@ -154,6 +154,14 @@ export default function DriverRequests() {
     return { status: 'normal', message: null, color: null };
   };
 
+  // Helper function to check if current user is the assigned driver for this trip
+  const isAssignedDriver = (trip) => {
+    if (!trip.assigned_driver_id || !partnerId) return false;
+    // assigned_driver_id comes as [id, "Name"] from Odoo
+    const driverId = Array.isArray(trip.assigned_driver_id) ? trip.assigned_driver_id[0] : trip.assigned_driver_id;
+    return driverId === partnerId;
+  };
+
   const handleStart = async (id) => {
     // Find the trip to validate
     const trip = trips.find(t => t.id === id);
@@ -216,6 +224,20 @@ export default function DriverRequests() {
 
   const callDispatcher = () => {
     window.location.href = 'tel:+251911234567';
+  };
+
+  const removeExpiredTrip = async (tripId) => {
+    setLoading(true);
+    try {
+      const { callMethod } = await import('@/lib/odooApi');
+      await callMethod('messob.fms.trip', 'action_remove_expired', [tripId]);
+      toast.success('Expired trip removed from your list');
+      fetchTrips();
+    } catch (error) {
+      console.error('Failed to remove expired trip:', error);
+      toast.error(error.message || 'Failed to remove expired trip');
+      setLoading(false);
+    }
   };
 
   return (
@@ -361,7 +383,24 @@ export default function DriverRequests() {
                   <div className="pt-2 border-t border-gray-100 space-y-2">
                     {trip.state === "approved" && (
                       <>
-                        {isExpired ? (
+                        {isExpired && isAssignedDriver(trip) ? (
+                          <div className="grid grid-cols-2 gap-3">
+                            <Button
+                              onClick={callDispatcher}
+                              variant="outline"
+                              className="w-full border-red-300 text-red-700 hover:bg-red-50 font-black h-12 rounded-xl gap-2"
+                            >
+                              <Phone className="h-4 w-4" /> Call
+                            </Button>
+                            <Button
+                              onClick={() => removeExpiredTrip(trip.id)}
+                              variant="destructive"
+                              className="w-full bg-red-600 hover:bg-red-700 text-white font-black h-12 rounded-xl gap-2"
+                            >
+                              <X className="h-4 w-4" /> Remove
+                            </Button>
+                          </div>
+                        ) : isExpired && !isAssignedDriver(trip) ? (
                           <Button
                             onClick={callDispatcher}
                             variant="outline"

@@ -1071,8 +1071,10 @@ Full API documentation: `/docs/API_DOCS.md`
 
 **Technical Support:**
 - Email: admin@messob.et
-- Phone: +251 11 XXX XXXX (24/7 for critical)
+- Phone: +251 11 123 4567 (24/7 for critical)
+- Mobile: +251 91 234 5678
 - Slack: #fleet-support
+- Location: MESSOB Technology Solutions, Addis Ababa, Ethiopia
 
 **Documentation:**
 - API Docs: `/docs/API_DOCS.md`
@@ -1084,9 +1086,3 @@ Full API documentation: `/docs/API_DOCS.md`
 - Issues: https://github.com/teddy800/Messob_Fleet/issues
 
 ---
-
-**Document Version:** 1.1.0  
-**Last Updated:** December 2024  
-**Next Review:** March 2025
-
-© 2024-2026 MESSOB Technology Solutions. All rights reserved.
