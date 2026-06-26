@@ -92,6 +92,32 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
     },
   },
+  // Build optimization for bundle size reduction
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          // Vendor chunks for better caching
+          'vendor-react': ['react', 'react-dom', 'react-router-dom'],
+          'vendor-ui': ['@radix-ui/react-collapsible', '@radix-ui/react-tabs', '@radix-ui/react-tooltip'],
+          'vendor-maps': ['leaflet', 'react-leaflet', 'google-map-react'],
+          'vendor-table': ['@tanstack/react-table'],
+          'vendor-calendar': ['react-big-calendar', 'date-fns'],
+          'vendor-forms': ['react-hook-form', '@hookform/resolvers', 'zod'],
+          'vendor-utils': ['axios', 'zustand', 'sonner', 'clsx', 'tailwind-merge']
+        }
+      }
+    },
+    chunkSizeWarningLimit: 1000,
+    // Minification for production
+    minify: 'terser',
+    terserOptions: {
+      compress: {
+        drop_console: true, // Remove console.log in production
+        drop_debugger: true
+      }
+    }
+  },
   server: {
     port: 3000,
     hmr: {
