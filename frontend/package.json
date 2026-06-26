@@ -2,7 +2,7 @@
   "name": "fleet_management",
   "version": "0.0.0",
   "private": true,
-  "description": "<<<<<<< HEAD\r (your local README content)\r =======\r (remote README content)\r >>>>>>> origin/main# projects-",
+  "description": "MESSOB Fleet Management System - Modern React frontend for enterprise fleet management",
   "homepage": "https://github.com/Sumeyahassen/projects-#readme",
   "bugs": {
     "url": "https://github.com/Sumeyahassen/projects-/issues"

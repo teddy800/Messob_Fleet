@@ -18,6 +18,9 @@ import jwt
 import datetime
 import logging
 import secrets
+from functools import wraps
+from collections import defaultdict
+import time
 
 _logger = logging.getLogger(__name__)
 
@@ -27,6 +30,58 @@ JWT_ALGORITHM = 'HS256'
 JWT_ACCESS_TOKEN_EXPIRES = datetime.timedelta(hours=8)  # 8 hours
 JWT_REFRESH_TOKEN_EXPIRES = datetime.timedelta(days=30)  # 30 days
 
+# Rate Limiting Configuration (NFR-3.2: Security - Brute Force Protection)
+RATE_LIMIT_ATTEMPTS = 5  # Max login attempts
+RATE_LIMIT_WINDOW = 300  # Time window in seconds (5 minutes)
+RATE_LIMIT_BLOCK_DURATION = 900  # Block duration in seconds (15 minutes)
+
+# In-memory rate limiting store (Use Redis in production)
+_rate_limit_store = defaultdict(lambda: {'attempts': [], 'blocked_until': None})
+
+
+def rate_limit_check(identifier):
+    """
+    Check if request should be rate limited (NFR-3.2: Brute Force Protection).
+    
+    Args:
+        identifier: IP address or username to track
+        
+    Returns:
+        tuple: (is_allowed, retry_after_seconds)
+    """
+    current_time = time.time()
+    limit_data = _rate_limit_store[identifier]
+    
+    # Check if currently blocked
+    if limit_data['blocked_until'] and current_time < limit_data['blocked_until']:
+        retry_after = int(limit_data['blocked_until'] - current_time)
+        return False, retry_after
+    
+    # Remove blocked status if expired
+    if limit_data['blocked_until'] and current_time >= limit_data['blocked_until']:
+        limit_data['blocked_until'] = None
+        limit_data['attempts'] = []
+    
+    # Remove old attempts outside the time window
+    limit_data['attempts'] = [
+        attempt_time for attempt_time in limit_data['attempts']
+        if current_time - attempt_time < RATE_LIMIT_WINDOW
+    ]
+    
+    # Check if exceeded rate limit
+    if len(limit_data['attempts']) >= RATE_LIMIT_ATTEMPTS:
+        # Block for RATE_LIMIT_BLOCK_DURATION
+        limit_data['blocked_until'] = current_time + RATE_LIMIT_BLOCK_DURATION
+        _logger.warning(f"Rate limit exceeded for {identifier}. Blocked for {RATE_LIMIT_BLOCK_DURATION}s")
+        return False, RATE_LIMIT_BLOCK_DURATION
+    
+    return True, 0
+
+
+def record_rate_limit_attempt(identifier):
+    """Record a rate limit attempt."""
+    _rate_limit_store[identifier]['attempts'].append(time.time())
+
 
 class JWTAuthenticationController(http.Controller):
     """
@@ -34,10 +89,11 @@ class JWTAuthenticationController(http.Controller):
     Complements Odoo session-based auth for mobile/external clients.
     """
 
-    @http.route('/api/auth/jwt/login', type='json', auth='none', methods=['POST'], csrf=False)
+    @http.route('/api/v1/auth/jwt/login', type='json', auth='none', methods=['POST'], csrf=False)
     def jwt_login(self, **kwargs):
         """
         Authenticate user and return JWT tokens.
+        Rate limited to prevent brute force attacks (NFR-3.2).
         
         Request body:
         {
@@ -61,8 +117,27 @@ class JWTAuthenticationController(http.Controller):
         }
         """
         try:
+            # Get client IP for rate limiting
+            client_ip = request.httprequest.environ.get('REMOTE_ADDR', 'unknown')
+            login = kwargs.get('login', '')
+            
+            # Rate limit identifier (use IP + login for better tracking)
+            rate_limit_id = f"{client_ip}:{login}" if login else client_ip
+            
+            # Check rate limit (NFR-3.2: Brute Force Protection)
+            is_allowed, retry_after = rate_limit_check(rate_limit_id)
+            if not is_allowed:
+                _logger.warning(f"Rate limit exceeded for login attempt from {client_ip} (user: {login})")
+                return {
+                    'success': False,
+                    'error': 'Too many login attempts. Please try again later.',
+                    'retry_after': retry_after
+                }
+            
+            # Record this attempt
+            record_rate_limit_attempt(rate_limit_id)
+            
             db = kwargs.get('db', 'fleet_management')
-            login = kwargs.get('login')
             password = kwargs.get('password')
             
             if not login or not password:
@@ -145,7 +220,7 @@ class JWTAuthenticationController(http.Controller):
                 'error': str(e)
             }
 
-    @http.route('/api/auth/jwt/refresh', type='json', auth='none', methods=['POST'], csrf=False)
+    @http.route('/api/v1/auth/jwt/refresh', type='json', auth='none', methods=['POST'], csrf=False)
     def jwt_refresh(self, **kwargs):
         """
         Refresh access token using refresh token.
@@ -231,7 +306,7 @@ class JWTAuthenticationController(http.Controller):
                 'error': str(e)
             }
 
-    @http.route('/api/auth/jwt/verify', type='json', auth='none', methods=['POST'], csrf=False)
+    @http.route('/api/v1/auth/jwt/verify', type='json', auth='none', methods=['POST'], csrf=False)
     def jwt_verify(self, **kwargs):
         """
         Verify JWT token validity.
@@ -294,7 +369,7 @@ class JWTAuthenticationController(http.Controller):
                 'error': str(e)
             }
 
-    @http.route('/api/auth/jwt/logout', type='json', auth='user', methods=['POST'], csrf=False)
+    @http.route('/api/v1/auth/jwt/logout', type='json', auth='user', methods=['POST'], csrf=False)
     def jwt_logout(self, **kwargs):
         """
         Logout user (invalidate tokens on client side).
