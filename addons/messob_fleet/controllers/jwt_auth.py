@@ -18,14 +18,20 @@ import jwt
 import datetime
 import logging
 import secrets
+import os
 from functools import wraps
 from collections import defaultdict
 import time
 
 _logger = logging.getLogger(__name__)
 
-# JWT Configuration
-JWT_SECRET_KEY = secrets.token_urlsafe(32)  # Generate secure random key
+# JWT Configuration (NFR-3.1: Secure Secret Key Management)
+# CRITICAL: Set JWT_SECRET_KEY environment variable in production
+# The secret key MUST persist across restarts to keep tokens valid
+JWT_SECRET_KEY = os.environ.get('JWT_SECRET_KEY') or secrets.token_urlsafe(32)
+if not os.environ.get('JWT_SECRET_KEY'):
+    _logger.warning("JWT_SECRET_KEY not set in environment. Using generated key. Set JWT_SECRET_KEY env var for production!")
+
 JWT_ALGORITHM = 'HS256'
 JWT_ACCESS_TOKEN_EXPIRES = datetime.timedelta(hours=8)  # 8 hours
 JWT_REFRESH_TOKEN_EXPIRES = datetime.timedelta(days=30)  # 30 days
@@ -37,6 +43,59 @@ RATE_LIMIT_BLOCK_DURATION = 900  # Block duration in seconds (15 minutes)
 
 # In-memory rate limiting store (Use Redis in production)
 _rate_limit_store = defaultdict(lambda: {'attempts': [], 'blocked_until': None})
+
+# Token Blacklist Store (NFR-3.1: Server-side token invalidation)
+# In-memory store for blacklisted tokens (Use Redis in production for scalability)
+_token_blacklist = set()
+
+
+def is_token_blacklisted(token):
+    """
+    Check if a token has been blacklisted (logged out).
+    
+    Args:
+        token (str): JWT token to check
+        
+    Returns:
+        bool: True if token is blacklisted
+    """
+    return token in _token_blacklist
+
+
+def blacklist_token(token):
+    """
+    Add token to blacklist (logout).
+    
+    Args:
+        token (str): JWT token to blacklist
+    """
+    _token_blacklist.add(token)
+    _logger.info(f"Token blacklisted. Total blacklisted tokens: {len(_token_blacklist)}")
+
+
+def cleanup_expired_blacklist():
+    """
+    Clean up expired tokens from blacklist to prevent memory bloat.
+    Should be called periodically or use Redis with TTL in production.
+    """
+    current_time = time.time()
+    tokens_to_remove = set()
+    
+    for token in _token_blacklist:
+        try:
+            payload = jwt.decode(token, JWT_SECRET_KEY, algorithms=[JWT_ALGORITHM])
+            exp = payload.get('exp')
+            
+            if exp and exp < current_time:
+                tokens_to_remove.add(token)
+        except:
+            # Invalid or expired token, safe to remove
+            tokens_to_remove.add(token)
+    
+    _token_blacklist.difference_update(tokens_to_remove)
+    
+    if tokens_to_remove:
+        _logger.info(f"Cleaned up {len(tokens_to_remove)} expired tokens from blacklist")
 
 
 def rate_limit_check(identifier):
@@ -372,8 +431,12 @@ class JWTAuthenticationController(http.Controller):
     @http.route('/api/v1/auth/jwt/logout', type='json', auth='user', methods=['POST'], csrf=False)
     def jwt_logout(self, **kwargs):
         """
-        Logout user (invalidate tokens on client side).
-        Server-side token blacklisting can be added if needed.
+        Logout user and invalidate token server-side (NFR-3.1).
+        
+        Request body:
+        {
+            "access_token": "eyJ..." (optional)
+        }
         
         Response:
         {
@@ -382,6 +445,19 @@ class JWTAuthenticationController(http.Controller):
         }
         """
         try:
+            # Get token from request body or Authorization header
+            access_token = kwargs.get('access_token')
+            
+            if not access_token:
+                auth_header = request.httprequest.headers.get('Authorization')
+                if auth_header and auth_header.startswith('Bearer '):
+                    access_token = auth_header.split(' ')[1]
+            
+            # Blacklist the token if provided
+            if access_token:
+                blacklist_token(access_token)
+                _logger.info(f"User {request.env.uid} logged out. Token blacklisted.")
+            
             # Log logout
             try:
                 audit_log = request.env['messob.fms.audit.log'].sudo()
@@ -430,7 +506,8 @@ class JWTAuthenticationController(http.Controller):
 
 def jwt_authenticate(func):
     """
-    Decorator to protect routes with JWT authentication.
+    Decorator to protect routes with JWT authentication (NFR-3.1).
+    Validates token and checks blacklist.
     
     Usage:
         @http.route('/api/protected', type='json', auth='none', methods=['POST'])
@@ -450,6 +527,13 @@ def jwt_authenticate(func):
             }
         
         token = auth_header.split(' ')[1]
+        
+        # Check if token is blacklisted (logged out)
+        if is_token_blacklisted(token):
+            return {
+                'success': False,
+                'error': 'Token has been revoked. Please login again.'
+            }
         
         try:
             # Decode and validate token
