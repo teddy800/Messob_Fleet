@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    MESSOB Fleet Management System — GPS Data Retention Cron
+    
+    Scheduled action to archive old GPS positions (NFR-6: Data Management).
+    
+    Retention Policy:
+      - Keeps GPS positions for 90 days
+      - Archives/deletes older positions to prevent database bloat
+      - Preserves positions linked to active trips
+    
+    Schedule: Daily at 2:00 AM
+-->
+<odoo>
+    <data noupdate="1">
+
+        <!-- GPS Position Archival Cron Job -->
+        <record id="ir_cron_gps_position_archival" model="ir.cron">
+            <field name="name">GPS Positions: Archive Old Data</field>
+            <field name="model_id" ref="model_messob_fms_gps_position"/>
+            <field name="state">code</field>
+            <field name="code">model._cron_archive_old_gps_positions()</field>
+            <field name="interval_number">1</field>
+            <field name="interval_type">days</field>
+            <field name="numbercall">-1</field>
+            <field name="active" eval="True"/>
+            <field name="doall" eval="False"/>
+            <field name="priority">20</field>
+        </record>
+
+    </data>
+</odoo>

@@ -56,6 +56,7 @@ Covers:
         'data/maintenance_alert_cron.xml',
         'data/audit_log_cron.xml',
         'data/gps_cron.xml',
+        'data/gps_retention_cron.xml',
         'data/geocode_cache_cron.xml',
         'data/performance_cron.xml',
         'data/priority_cron.xml',
