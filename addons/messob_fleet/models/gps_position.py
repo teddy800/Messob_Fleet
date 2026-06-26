@@ -470,3 +470,162 @@ class MessobFmsGpsPosition(models.Model):
                 'end_time': end_time.isoformat(),
             }
         }
+
+    # =========================================================================
+    # DATA RETENTION & ARCHIVAL (NFR-6: Data Management)
+    # =========================================================================
+
+    @api.model
+    def _cron_archive_old_gps_positions(self):
+        """
+        Archive GPS positions older than 90 days (NFR-6: Data Retention).
+        
+        This automated job prevents database bloat by removing old GPS data
+        that is no longer needed for operational purposes.
+        
+        Retention policy:
+        - Keep last 90 days for active tracking and analysis
+        - Archive or delete older data
+        - Preserve positions linked to active trips
+        
+        Runs daily via scheduled action.
+        """
+        from datetime import timedelta
+        
+        try:
+            # Calculate cutoff date (90 days ago)
+            cutoff_date = fields.Datetime.now() - timedelta(days=90)
+            
+            # Find old positions (not linked to trips or very old trips)
+            # Keep positions that are part of active/recent trips
+            old_positions = self.search([
+                ('timestamp', '<', cutoff_date),
+                '|',
+                ('trip_id', '=', False),
+                ('trip_id.state', 'in', ['completed', 'closed', 'cancelled'])
+            ])
+            
+            total_count = len(old_positions)
+            
+            if total_count == 0:
+                _logger.info("GPS Position Archival: No old positions to archive")
+                return {
+                    'success': True,
+                    'archived': 0,
+                    'message': 'No positions to archive'
+                }
+            
+            # Archive in batches to avoid memory issues
+            batch_size = 1000
+            archived_count = 0
+            
+            for i in range(0, total_count, batch_size):
+                batch = old_positions[i:i + batch_size]
+                
+                # Option 1: Delete (recommended for most cases)
+                batch.unlink()
+                
+                # Option 2: Archive to separate table (uncomment if needed)
+                # self._archive_to_table(batch)
+                
+                archived_count += len(batch)
+                
+                # Log progress for large datasets
+                if archived_count % 5000 == 0:
+                    _logger.info(f"GPS Position Archival: Processed {archived_count}/{total_count} positions")
+            
+            _logger.info(f"GPS Position Archival: Successfully archived {archived_count} positions older than {cutoff_date}")
+            
+            return {
+                'success': True,
+                'archived': archived_count,
+                'cutoff_date': cutoff_date.isoformat(),
+                'message': f'Archived {archived_count} GPS positions'
+            }
+            
+        except Exception as e:
+            _logger.error(f"GPS Position Archival failed: {e}")
+            return {
+                'success': False,
+                'error': str(e)
+            }
+
+    @api.model
+    def _archive_to_table(self, positions):
+        """
+        Optional: Archive positions to a separate archive table instead of deleting.
+        Uncomment and use if you need to preserve historical data.
+        
+        Args:
+            positions: recordset of GPS positions to archive
+        """
+        # This is a placeholder for archive table implementation
+        # You would need to create a separate model: messob.fms.gps.position.archive
+        # with similar structure but without real-time indexes
+        
+        # Example implementation:
+        # archive_vals = []
+        # for position in positions:
+        #     archive_vals.append({
+        #         'device_id': position.device_id.id,
+        #         'vehicle_id': position.vehicle_id.id,
+        #         'trip_id': position.trip_id.id,
+        #         'timestamp': position.timestamp,
+        #         'latitude': position.latitude,
+        #         'longitude': position.longitude,
+        #         'speed': position.speed,
+        #         # ... other fields
+        #     })
+        # 
+        # self.env['messob.fms.gps.position.archive'].create(archive_vals)
+        # positions.unlink()
+        
+        pass
+
+    @api.model
+    def get_retention_statistics(self):
+        """
+        Get statistics about GPS data storage and retention.
+        Useful for monitoring database growth and archival effectiveness.
+        """
+        from datetime import timedelta
+        
+        now = fields.Datetime.now()
+        
+        # Count positions by age
+        positions_last_7_days = self.search_count([
+            ('timestamp', '>=', now - timedelta(days=7))
+        ])
+        
+        positions_last_30_days = self.search_count([
+            ('timestamp', '>=', now - timedelta(days=30))
+        ])
+        
+        positions_last_90_days = self.search_count([
+            ('timestamp', '>=', now - timedelta(days=90))
+        ])
+        
+        total_positions = self.search_count([])
+        
+        positions_older_90_days = total_positions - positions_last_90_days
+        
+        # Estimate database size (rough estimate)
+        # Each position record is approximately 500 bytes
+        estimated_size_mb = (total_positions * 500) / (1024 * 1024)
+        
+        return {
+            'success': True,
+            'statistics': {
+                'total_positions': total_positions,
+                'last_7_days': positions_last_7_days,
+                'last_30_days': positions_last_30_days,
+                'last_90_days': positions_last_90_days,
+                'older_than_90_days': positions_older_90_days,
+                'estimated_size_mb': round(estimated_size_mb, 2),
+                'retention_policy_days': 90,
+            },
+            'recommendations': {
+                'should_archive': positions_older_90_days > 10000,
+                'archive_candidate_count': positions_older_90_days,
+            }
+        }
