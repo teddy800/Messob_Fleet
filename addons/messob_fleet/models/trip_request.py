@@ -51,6 +51,13 @@ class MessobFmsTrip(models.Model):
         index=True,  # NFR-1: Performance - Index for fast lookup
         help='Auto-generated sequence: REQ/YYYY/NNNN',
     )
+    
+    # =========================================================================
+    # SQL CONSTRAINTS & INDEXES (NFR-1: Performance Optimization)
+    # =========================================================================
+    _sql_constraints = [
+        ('name_unique', 'UNIQUE(name)', 'Trip request ID must be unique!'),
+    ]
 
     requester_id = fields.Many2one(
         comodel_name='res.partner',
@@ -282,7 +289,7 @@ class MessobFmsTrip(models.Model):
         trips that overlap with this trip's time window.
         Result is used as exclusion domain on the assignment dropdowns.
         
-        NFR-1: Performance - Optimized with single query for all records.
+        NFR-1: Performance - Optimized with single query and prefetching to avoid N+1 queries.
         """
         active_states = ['approved', 'in_progress']
         
@@ -296,26 +303,81 @@ class MessobFmsTrip(models.Model):
             return
         
         # Single query to get all overlapping trips
-        all_overlapping = self.search([
+        # Use search_read for better performance - only fetch needed fields
+        all_overlapping_data = self.search_read([
             ('state', 'in', active_states),
             ('id', 'not in', records_to_process.ids),
             ('start_dt', '!=', False),
             ('end_dt', '!=', False),
-        ])
+        ], ['start_dt', 'end_dt', 'assigned_vehicle_id', 'assigned_driver_id'])
         
         for rec in records_to_process:
-            # Filter overlapping trips for this specific record
-            overlapping = all_overlapping.filtered(
-                lambda t: t.start_dt < rec.end_dt and t.end_dt > rec.start_dt
-            )
+            # Filter overlapping trips for this specific record using search_read results
+            unavailable_vehicles = set()
+            unavailable_drivers = set()
             
-            rec.unavailable_vehicle_ids = overlapping.mapped('assigned_vehicle_id')
-            rec.unavailable_driver_ids = overlapping.mapped('assigned_driver_id')
+            for trip_data in all_overlapping_data:
+                # Check time overlap
+                trip_start = fields.Datetime.from_string(trip_data['start_dt'])
+                trip_end = fields.Datetime.from_string(trip_data['end_dt'])
+                
+                if trip_start < rec.end_dt and trip_end > rec.start_dt:
+                    # Add vehicle if assigned
+                    if trip_data.get('assigned_vehicle_id'):
+                        unavailable_vehicles.add(trip_data['assigned_vehicle_id'][0])
+                    # Add driver if assigned
+                    if trip_data.get('assigned_driver_id'):
+                        unavailable_drivers.add(trip_data['assigned_driver_id'][0])
+            
+            # Convert sets to Many2many command format
+            rec.unavailable_vehicle_ids = [(6, 0, list(unavailable_vehicles))]
+            rec.unavailable_driver_ids = [(6, 0, list(unavailable_drivers))]
         
         # Handle records without dates
         for rec in (self - records_to_process):
             rec.unavailable_vehicle_ids = []
             rec.unavailable_driver_ids = []
+    
+    def _auto_init(self):
+        """
+        Create composite indexes for frequently queried field combinations.
+        This improves query performance for common operations like:
+        - Filtering by requester and state
+        - Date range queries with state filtering
+        - Vehicle/driver conflict detection
+        
+        NFR-1.2: System must handle 1,000+ concurrent users without performance degradation.
+        """
+        res = super()._auto_init()
+        
+        # Composite index for requester dashboard queries (most common user query)
+        self.env.cr.execute("""
+            CREATE INDEX IF NOT EXISTS messob_fms_trip_requester_state_idx 
+            ON messob_fms_trip (requester_id, state, create_date DESC)
+        """)
+        
+        # Composite index for dispatcher date-based queries
+        self.env.cr.execute("""
+            CREATE INDEX IF NOT EXISTS messob_fms_trip_state_start_dt_idx 
+            ON messob_fms_trip (state, start_dt, end_dt)
+        """)
+        
+        # Composite index for vehicle conflict detection
+        self.env.cr.execute("""
+            CREATE INDEX IF NOT EXISTS messob_fms_trip_vehicle_dates_idx 
+            ON messob_fms_trip (assigned_vehicle_id, state, start_dt, end_dt)
+            WHERE assigned_vehicle_id IS NOT NULL
+        """)
+        
+        # Composite index for driver conflict detection
+        self.env.cr.execute("""
+            CREATE INDEX IF NOT EXISTS messob_fms_trip_driver_dates_idx 
+            ON messob_fms_trip (assigned_driver_id, state, start_dt, end_dt)
+            WHERE assigned_driver_id IS NOT NULL
+        """)
+        
+        _logger.info("Trip Request: Composite indexes created for performance optimization (NFR-1)")
+        return res
 
     # =========================================================================
     # COMPUTED / DISPLAY FIELDS

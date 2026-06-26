@@ -50,28 +50,34 @@ class AnalyticsAPIController(http.Controller):
             else:
                 end_date = datetime.fromisoformat(end_date)
             
-            # Get all active vehicles
+            # Get all active vehicles with prefetch for better performance
             vehicles = Vehicle.search([('state_id.name', '=', 'Active')])
             total_vehicles = len(vehicles)
             
-            # Get active trips in time range
-            active_trips = Trip.search([
+            # Get active trips in time range - use search_read to avoid N+1 queries
+            active_trips_data = Trip.search_read([
                 ('state', 'in', ['approved', 'in_progress']),
                 ('start_dt', '<=', end_date),
                 ('end_dt', '>=', start_date)
-            ])
+            ], ['assigned_vehicle_id'])
             
-            # Calculate utilization
-            vehicles_in_use = len(set(active_trips.mapped('assigned_vehicle_id.id')))
+            # Extract vehicle IDs efficiently
+            vehicles_in_use_ids = set(
+                trip['assigned_vehicle_id'][0] 
+                for trip in active_trips_data 
+                if trip.get('assigned_vehicle_id')
+            )
+            vehicles_in_use = len(vehicles_in_use_ids)
             utilization_rate = (vehicles_in_use / total_vehicles * 100) if total_vehicles > 0 else 0
             
-            # Category breakdown
+            # Category breakdown - prefetch category_id to avoid N+1
+            vehicles_with_category = vehicles.read(['category_id'])
             category_stats = defaultdict(lambda: {'total': 0, 'in_use': 0})
-            for vehicle in vehicles:
-                category = vehicle.category_id.name if vehicle.category_id else 'Unknown'
+            for vehicle_data in vehicles_with_category:
+                category = vehicle_data['category_id'][1] if vehicle_data.get('category_id') else 'Unknown'
                 category_stats[category]['total'] += 1
                 
-                if vehicle.id in active_trips.mapped('assigned_vehicle_id.id'):
+                if vehicle_data['id'] in vehicles_in_use_ids:
                     category_stats[category]['in_use'] += 1
             
             return {
@@ -81,7 +87,7 @@ class AnalyticsAPIController(http.Controller):
                     'vehicles_in_use': vehicles_in_use,
                     'idle_vehicles': total_vehicles - vehicles_in_use,
                     'utilization_rate': round(utilization_rate, 2),
-                    'active_trips': len(active_trips),
+                    'active_trips': len(active_trips_data),
                     'category_breakdown': dict(category_stats),
                 },
                 'period': {
@@ -255,28 +261,38 @@ class AnalyticsAPIController(http.Controller):
                 fuel_domain.append(('vehicle_id', '=', vehicle_id))
                 maint_domain.append(('vehicle_id', '=', vehicle_id))
             
-            # Get fuel costs
-            fuel_logs = FuelLog.search(fuel_domain)
-            total_fuel_cost = sum(fuel_logs.mapped('price'))
-            total_fuel_liters = sum(fuel_logs.mapped('liters'))
+            # Get fuel costs - use search_read to avoid N+1 queries
+            fuel_logs_data = FuelLog.search_read(
+                fuel_domain,
+                ['vehicle_id', 'price', 'liters']
+            )
+            total_fuel_cost = sum(log['price'] for log in fuel_logs_data if log.get('price'))
+            total_fuel_liters = sum(log['liters'] for log in fuel_logs_data if log.get('liters'))
             
-            # Get maintenance costs
-            maint_logs = MaintenanceLog.search(maint_domain)
-            total_maint_cost = sum(maint_logs.mapped('cost'))
+            # Get maintenance costs - use search_read to avoid N+1 queries
+            maint_logs_data = MaintenanceLog.search_read(
+                maint_domain,
+                ['vehicle_id', 'cost']
+            )
+            total_maint_cost = sum(log['cost'] for log in maint_logs_data if log.get('cost'))
             
             # Calculate per-vehicle breakdown
-            vehicle_costs = defaultdict(lambda: {'fuel': 0, 'maintenance': 0, 'total': 0})
+            vehicle_costs = defaultdict(lambda: {'fuel': 0, 'maintenance': 0, 'total': 0, 'plate': None})
             
-            for log in fuel_logs:
-                vid = log.vehicle_id.id
-                vehicle_costs[vid]['fuel'] += log.price
-                vehicle_costs[vid]['plate'] = log.vehicle_id.license_plate
+            # Process fuel logs
+            for log in fuel_logs_data:
+                if log.get('vehicle_id'):
+                    vid = log['vehicle_id'][0]
+                    vehicle_costs[vid]['fuel'] += log.get('price', 0)
+                    vehicle_costs[vid]['plate'] = log['vehicle_id'][1]
             
-            for log in maint_logs:
-                vid = log.vehicle_id.id
-                vehicle_costs[vid]['maintenance'] += log.cost
-                if 'plate' not in vehicle_costs[vid]:
-                    vehicle_costs[vid]['plate'] = log.vehicle_id.license_plate
+            # Process maintenance logs
+            for log in maint_logs_data:
+                if log.get('vehicle_id'):
+                    vid = log['vehicle_id'][0]
+                    vehicle_costs[vid]['maintenance'] += log.get('cost', 0)
+                    if not vehicle_costs[vid]['plate']:
+                        vehicle_costs[vid]['plate'] = log['vehicle_id'][1]
             
             for vid in vehicle_costs:
                 vehicle_costs[vid]['total'] = vehicle_costs[vid]['fuel'] + vehicle_costs[vid]['maintenance']
@@ -302,8 +318,8 @@ class AnalyticsAPIController(http.Controller):
                     'total_cost': round(total_fuel_cost + total_maint_cost, 2),
                     'total_fuel_liters': round(total_fuel_liters, 2),
                     'avg_cost_per_liter': round(total_fuel_cost / total_fuel_liters, 2) if total_fuel_liters > 0 else 0,
-                    'fuel_transactions': len(fuel_logs),
-                    'maintenance_events': len(maint_logs),
+                    'fuel_transactions': len(fuel_logs_data),
+                    'maintenance_events': len(maint_logs_data),
                 },
                 'vehicle_breakdown': vehicle_breakdown,
                 'period': {
@@ -349,8 +365,8 @@ class AnalyticsAPIController(http.Controller):
             if driver_id:
                 trip_domain.append(('assigned_driver_id', '=', driver_id))
             
-            # Get trips
-            trips = Trip.search(trip_domain)
+            # Get trips - use search_read to avoid N+1 queries
+            trips_data = Trip.search_read(trip_domain, ['assigned_driver_id', 'start_dt', 'end_dt'])
             
             # Group by driver
             driver_stats = defaultdict(lambda: {
@@ -358,39 +374,38 @@ class AnalyticsAPIController(http.Controller):
                 'on_time': 0,
                 'delayed': 0,
                 'total_distance': 0,
-                'total_fuel': 0
+                'total_fuel': 0,
+                'name': None
             })
             
-            for trip in trips:
-                if not trip.assigned_driver_id:
+            # Process trip data
+            trip_ids_by_driver = defaultdict(list)
+            for trip_data in trips_data:
+                if not trip_data.get('assigned_driver_id'):
                     continue
                 
-                did = trip.assigned_driver_id.id
-                driver_stats[did]['name'] = trip.assigned_driver_id.name
+                did = trip_data['assigned_driver_id'][0]
+                driver_stats[did]['name'] = trip_data['assigned_driver_id'][1]
                 driver_stats[did]['trips'] += 1
-                
-                # Check on-time performance (simplified)
-                # In production, compare actual start time with scheduled
-                driver_stats[did]['on_time'] += 1
+                driver_stats[did]['on_time'] += 1  # Simplified - in production, compare actual vs scheduled
+                trip_ids_by_driver[did].append(trip_data['id'])
             
-            # Get fuel efficiency per driver
-            for did in driver_stats:
-                driver_trips = trips.filtered(lambda t: t.assigned_driver_id.id == did)
-                trip_ids = driver_trips.ids
-                
-                fuel_logs = FuelLog.search([
+            # Get fuel efficiency per driver - use search_read to avoid N+1 queries
+            for did, trip_ids in trip_ids_by_driver.items():
+                fuel_logs_data = FuelLog.search_read([
                     ('trip_id', 'in', trip_ids)
-                ])
+                ], ['liters', 'odometer'], order='odometer asc')
                 
-                total_fuel = sum(fuel_logs.mapped('liters'))
+                total_fuel = sum(log['liters'] for log in fuel_logs_data if log.get('liters'))
                 driver_stats[did]['total_fuel'] = total_fuel
                 
-                if len(fuel_logs) >= 2:
+                if len(fuel_logs_data) >= 2:
                     # Calculate distance and efficiency
-                    sorted_logs = fuel_logs.sorted(key=lambda l: l.odometer)
-                    distance = sorted_logs[-1].odometer - sorted_logs[0].odometer
-                    driver_stats[did]['total_distance'] = distance
-                    driver_stats[did]['fuel_efficiency'] = distance / total_fuel if total_fuel > 0 else 0
+                    odometers = [log['odometer'] for log in fuel_logs_data if log.get('odometer')]
+                    if odometers:
+                        distance = max(odometers) - min(odometers)
+                        driver_stats[did]['total_distance'] = distance
+                        driver_stats[did]['fuel_efficiency'] = distance / total_fuel if total_fuel > 0 else 0
             
             # Format output
             performance = [
