@@ -22,9 +22,7 @@
             <field name="code">model._cron_archive_old_gps_positions()</field>
             <field name="interval_number">1</field>
             <field name="interval_type">days</field>
-            <field name="numbercall">-1</field>
             <field name="active" eval="True"/>
-            <field name="doall" eval="False"/>
             <field name="priority">20</field>
         </record>
 
