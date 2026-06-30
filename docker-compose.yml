@@ -10,14 +10,52 @@ services:
       - db_data_19:/var/lib/postgresql/data
 
   # Database for Odoo 18
+  # NFR-DB-2: Point-in-Time Recovery (PITR) Enabled for Production Compliance
+  # PostgreSQL 16 with Write-Ahead Logging (WAL) archiving for disaster recovery
   db18:
     image: postgres:16
     environment:
       - POSTGRES_USER=odoo
       - POSTGRES_PASSWORD=odoo
       - POSTGRES_DB=postgres
+    # PITR Configuration: Enable WAL archiving for point-in-time recovery
+    command: >
+      postgres
+      -c wal_level=replica
+      -c archive_mode=on
+      -c archive_command='test ! -f /var/lib/postgresql/wal_archive/%f && cp %p /var/lib/postgresql/wal_archive/%f'
+      -c archive_timeout=300
+      -c max_wal_senders=3
+      -c wal_keep_size=1GB
+      -c checkpoint_timeout=15min
+      -c max_wal_size=2GB
+      -c shared_buffers=256MB
+      -c effective_cache_size=1GB
+      -c maintenance_work_mem=128MB
+      -c log_destination=stderr
+      -c logging_collector=on
+      -c log_directory=/var/log/postgresql
+      -c log_filename=postgresql-%Y-%m-%d_%H%M%S.log
+      -c log_rotation_age=1d
+      -c log_rotation_size=100MB
+      -c log_min_duration_statement=1000
+      -c log_checkpoints=on
+      -c log_connections=on
+      -c log_disconnections=on
+      -c log_lock_waits=on
+      -c log_statement=ddl
+      -c log_timezone=UTC
     volumes:
       - db_data_18:/var/lib/postgresql/data
+      - db_wal_archive_18:/var/lib/postgresql/wal_archive
+      - db_logs_18:/var/log/postgresql
+    # Health check to ensure database is ready
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U odoo -d postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
 
   # Database for Odoo 17
   db17:
@@ -76,3 +114,6 @@ volumes:
   db_data_19:
   db_data_18:
   db_data_17:
+  # PITR Support: WAL archive and logs volumes for disaster recovery
+  db_wal_archive_18:
+  db_logs_18:
