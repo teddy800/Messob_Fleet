@@ -8,7 +8,8 @@
 version: '3.8'
 
 services:
-  # ── Database (PostgreSQL with replication support) ──
+  # ── Database (PostgreSQL with replication support + PITR) ──
+  # NFR-DB-2: Point-in-Time Recovery (PITR) Enabled for Production Compliance
   db:
     image: postgres:16
     container_name: fleet_db
@@ -22,8 +23,41 @@ services:
       POSTGRES_SHARED_BUFFERS: 256MB
       POSTGRES_EFFECTIVE_CACHE_SIZE: 1GB
       POSTGRES_WORK_MEM: 16MB
+    # PITR Configuration: Enable WAL archiving for point-in-time recovery
+    command: >
+      postgres
+      -c wal_level=replica
+      -c archive_mode=on
+      -c archive_command='test ! -f /var/lib/postgresql/wal_archive/%f && cp %p /var/lib/postgresql/wal_archive/%f'
+      -c archive_timeout=300
+      -c max_wal_senders=3
+      -c wal_keep_size=1GB
+      -c checkpoint_timeout=15min
+      -c max_wal_size=2GB
+      -c max_connections=200
+      -c shared_buffers=256MB
+      -c effective_cache_size=1GB
+      -c maintenance_work_mem=128MB
+      -c work_mem=16MB
+      -c log_destination=stderr
+      -c logging_collector=on
+      -c log_directory=/var/log/postgresql
+      -c log_filename=postgresql-%Y-%m-%d_%H%M%S.log
+      -c log_rotation_age=1d
+      -c log_rotation_size=100MB
+      -c log_min_duration_statement=1000
+      -c log_checkpoints=on
+      -c log_connections=on
+      -c log_disconnections=on
+      -c log_lock_waits=on
+      -c log_statement=ddl
+      -c log_timezone=UTC
+      -c hot_standby=on
+      -c wal_sender_timeout=60s
     volumes:
       - fleet_db_data:/var/lib/postgresql/data
+      - fleet_db_wal_archive:/var/lib/postgresql/wal_archive
+      - fleet_db_logs:/var/log/postgresql
       - ./config/postgresql.conf:/etc/postgresql/postgresql.conf:ro
     ports:
       - "5432:5432"
@@ -238,6 +272,11 @@ services:
 
 volumes:
   fleet_db_data:
+    driver: local
+  # PITR Support: WAL archive and logs volumes for disaster recovery
+  fleet_db_wal_archive:
+    driver: local
+  fleet_db_logs:
     driver: local
   fleet_redis_data:
     driver: local
