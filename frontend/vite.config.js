@@ -96,15 +96,33 @@ export default defineConfig({
   build: {
     rollupOptions: {
       output: {
-        manualChunks: {
+        manualChunks(id) {
           // Vendor chunks for better caching
-          'vendor-react': ['react', 'react-dom', 'react-router-dom'],
-          'vendor-ui': ['@radix-ui/react-collapsible', '@radix-ui/react-tabs', '@radix-ui/react-tooltip'],
-          'vendor-maps': ['leaflet', 'react-leaflet', 'google-map-react'],
-          'vendor-table': ['@tanstack/react-table'],
-          'vendor-calendar': ['react-big-calendar', 'date-fns'],
-          'vendor-forms': ['react-hook-form', '@hookform/resolvers', 'zod'],
-          'vendor-utils': ['axios', 'zustand', 'sonner', 'clsx', 'tailwind-merge']
+          if (id.includes('node_modules')) {
+            if (id.includes('react') || id.includes('react-dom') || id.includes('react-router-dom')) {
+              return 'vendor-react';
+            }
+            if (id.includes('@radix-ui')) {
+              return 'vendor-ui';
+            }
+            if (id.includes('leaflet') || id.includes('react-leaflet') || id.includes('google-map-react')) {
+              return 'vendor-maps';
+            }
+            if (id.includes('@tanstack/react-table')) {
+              return 'vendor-table';
+            }
+            if (id.includes('react-big-calendar') || id.includes('date-fns')) {
+              return 'vendor-calendar';
+            }
+            if (id.includes('react-hook-form') || id.includes('@hookform') || id.includes('zod')) {
+              return 'vendor-forms';
+            }
+            if (id.includes('axios') || id.includes('zustand') || id.includes('sonner') || id.includes('clsx') || id.includes('tailwind-merge')) {
+              return 'vendor-utils';
+            }
+            // All other node_modules go into vendor chunk
+            return 'vendor';
+          }
         }
       }
     },
