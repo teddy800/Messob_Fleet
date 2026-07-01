@@ -13,13 +13,15 @@ import {
   Pause,
   Eye,
   Edit3,
-  MapPinned
+  MapPinned,
+  Users
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useRouteTracking } from '../hooks/useRouteTracking';
 import { format } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
+import { callMethod } from '@/lib/odooApi';
 
 // Fix Leaflet default marker icons
 delete L.Icon.Default.prototype._getIconUrl;
@@ -63,6 +65,36 @@ const pickupIcon = createCustomIcon("#10b981"); // Green
 const destinationIcon = createCustomIcon("#ef4444"); // Red
 const vehicleIcon = createCustomIcon("#3b82f6", "car"); // Blue
 
+// FR-3.3: Service user pickup marker (other passengers sharing vehicle)
+const serviceUserPickupIcon = L.divIcon({
+  className: 'service-user-pickup-marker',
+  html: `
+    <div style="
+      background-color: #3b82f6;
+      width: 28px;
+      height: 28px;
+      border-radius: 50% 50% 50% 0;
+      transform: rotate(-45deg);
+      border: 2px solid white;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    ">
+      <div style="
+        width: 10px;
+        height: 10px;
+        background-color: white;
+        border-radius: 50%;
+        transform: rotate(45deg);
+      "></div>
+    </div>
+  `,
+  iconSize: [28, 28],
+  iconAnchor: [14, 28],
+  popupAnchor: [0, -28],
+});
+
 export default function RouteDisplay({ tripId, className = "", onEditPickup }) {
   const navigate = useNavigate();
   const { 
@@ -79,6 +111,11 @@ export default function RouteDisplay({ tripId, className = "", onEditPickup }) {
   const mapRef = useRef(null);
   const [mapCenter, setMapCenter] = useState([9.0320, 38.7469]); // Default to Addis Ababa
   const [showEditPickupTooltip, setShowEditPickupTooltip] = useState(false);
+  
+  // FR-3.3: Collaborative pickup state
+  const [serviceUsers, setServiceUsers] = useState([]);
+  const [showServiceUsers, setShowServiceUsers] = useState(true);
+  const [loadingServiceUsers, setLoadingServiceUsers] = useState(false);
 
   // Update map center when route data loads
   useEffect(() => {
@@ -87,6 +124,42 @@ export default function RouteDisplay({ tripId, className = "", onEditPickup }) {
       setMapCenter([lat, lng]);
     }
   }, [routeData]);
+
+  // FR-3.3: Fetch collaborative service users when route loads
+  useEffect(() => {
+    const fetchServiceUsers = async () => {
+      if (!tripId || !routeData) return;
+      
+      try {
+        setLoadingServiceUsers(true);
+        
+        const response = await callMethod(
+          'messob.fms.trip',
+          'get_collaborative_users',
+          [tripId]
+        );
+        
+        if (response && response.success && response.service_users) {
+          // Filter service users with valid coordinates
+          const validServiceUsers = response.service_users.filter(user => 
+            user.pickup_coordinates && 
+            user.pickup_coordinates.lat && 
+            user.pickup_coordinates.lng
+          );
+          setServiceUsers(validServiceUsers);
+        }
+      } catch (err) {
+        console.error('Failed to fetch service users:', err);
+        // Silent fail - this is an enhancement feature
+      } finally {
+        setLoadingServiceUsers(false);
+      }
+    };
+    
+    if (routeData) {
+      fetchServiceUsers();
+    }
+  }, [tripId, routeData]);
 
   // Auto-fit map bounds when route loads
   useEffect(() => {
@@ -105,10 +178,19 @@ export default function RouteDisplay({ tripId, className = "", onEditPickup }) {
           bounds.extend([gpsPosition.gps.latitude, gpsPosition.gps.longitude]);
         }
         
-        map.fitBounds(bounds, { padding: [20, 20] });
+        // FR-3.3: Add service user pickups to bounds
+        if (showServiceUsers && serviceUsers.length > 0) {
+          serviceUsers.forEach(user => {
+            if (user.pickup_coordinates?.lat && user.pickup_coordinates?.lng) {
+              bounds.extend([user.pickup_coordinates.lat, user.pickup_coordinates.lng]);
+            }
+          });
+        }
+        
+        map.fitBounds(bounds, { padding: [50, 50] });
       }
     }
-  }, [routeData, gpsPosition]);
+  }, [routeData, gpsPosition, serviceUsers, showServiceUsers]);
 
   if (loading) {
     return (
@@ -175,6 +257,16 @@ export default function RouteDisplay({ tripId, className = "", onEditPickup }) {
               <h3 className="text-white font-bold text-lg">{trip.request_id}</h3>
               <p className="text-blue-100 dark:text-blue-200 text-sm">{trip.requester}</p>
             </div>
+            {/* FR-3.3: Show passenger count badge */}
+            {serviceUsers.length > 0 && (
+              <Badge 
+                variant="secondary" 
+                className="ml-2 bg-white/20 text-white border-white/30 flex items-center gap-1"
+              >
+                <Users className="h-3 w-3" />
+                {serviceUsers.length + 1} Passengers
+              </Badge>
+            )}
           </div>
           
           <div className="flex items-center gap-2">
@@ -345,12 +437,60 @@ export default function RouteDisplay({ tripId, className = "", onEditPickup }) {
             >
               <Popup>
                 <div className="text-center">
-                  <div className="font-bold text-green-600">Pickup Point</div>
+                  <div className="font-bold text-green-600">Your Pickup Point</div>
                   <div className="text-sm text-gray-600">{route.pickup.address}</div>
+                  <div className="text-xs text-gray-500 mt-1">Primary pickup location</div>
                 </div>
               </Popup>
             </Marker>
           )}
+
+          {/* FR-3.3: Service user pickup markers (other passengers sharing vehicle) */}
+          {showServiceUsers && serviceUsers.map((user, index) => (
+            <Marker
+              key={`service-user-${user.trip_id}-${index}`}
+              position={[user.pickup_coordinates.lat, user.pickup_coordinates.lng]}
+              icon={serviceUserPickupIcon}
+            >
+              <Popup>
+                <div className="p-2 min-w-[200px]">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Users className="h-4 w-4 text-blue-600" />
+                    <strong className="text-sm">Co-Passenger Pickup</strong>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-xs">
+                      <strong>Name:</strong> {user.requester || 'Unknown'}
+                    </p>
+                    {user.department && (
+                      <p className="text-xs">
+                        <strong>Dept:</strong> {user.department}
+                      </p>
+                    )}
+                    <p className="text-xs">
+                      <strong>Request ID:</strong> {user.request_id}
+                    </p>
+                    <p className="text-xs text-gray-600">
+                      {user.pickup_address || 'Pickup Point'}
+                    </p>
+                    {user.start_time && (
+                      <p className="text-xs text-gray-500 mt-1">
+                        Time: {user.start_time}
+                      </p>
+                    )}
+                    {user.status && (
+                      <Badge 
+                        variant={user.status === 'in_progress' ? 'default' : 'secondary'}
+                        className="mt-2 text-xs"
+                      >
+                        {user.status.replace('_', ' ').toUpperCase()}
+                      </Badge>
+                    )}
+                  </div>
+                </div>
+              </Popup>
+            </Marker>
+          ))}
 
           {/* Destination Marker */}
           {route.destination.coordinates && (
@@ -400,18 +540,48 @@ export default function RouteDisplay({ tripId, className = "", onEditPickup }) {
 
       {/* View Progress Button */}
       {trip.state === 'in_progress' && (
-        <div className="p-4 bg-gray-50">
-          <Button 
-            onClick={() => {
-              if (mapRef.current && gpsPosition?.gps) {
-                mapRef.current.flyTo([gpsPosition.gps.latitude, gpsPosition.gps.longitude], 15);
-              }
-            }}
-            className="w-full bg-brand-blue hover:bg-blue-700"
-            disabled={!gpsPosition}
+        <div className="p-4 bg-gray-50 dark:bg-gray-900 border-t dark:border-gray-700">
+          <div className="flex gap-2">
+            <Button 
+              onClick={() => {
+                if (mapRef.current && gpsPosition?.gps) {
+                  mapRef.current.flyTo([gpsPosition.gps.latitude, gpsPosition.gps.longitude], 15);
+                }
+              }}
+              className="flex-1 bg-brand-blue hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-700"
+              disabled={!gpsPosition}
+            >
+              <Eye className="h-4 w-4 mr-2" />
+              View Current Progress
+            </Button>
+            
+            {/* FR-3.3: Toggle service users visibility */}
+            {serviceUsers.length > 0 && (
+              <Button
+                onClick={() => setShowServiceUsers(!showServiceUsers)}
+                variant={showServiceUsers ? 'default' : 'outline'}
+                className="bg-blue-500 hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700"
+                size="sm"
+              >
+                <Users className="h-4 w-4 mr-2" />
+                {showServiceUsers ? 'Hide' : 'Show'} Co-Passengers
+              </Button>
+            )}
+          </div>
+        </div>
+      )}
+      
+      {/* FR-3.3: Show service users toggle for approved trips too */}
+      {trip.state === 'approved' && serviceUsers.length > 0 && (
+        <div className="p-4 bg-gray-50 dark:bg-gray-900 border-t dark:border-gray-700">
+          <Button
+            onClick={() => setShowServiceUsers(!showServiceUsers)}
+            variant={showServiceUsers ? 'default' : 'outline'}
+            className="w-full"
+            size="sm"
           >
-            <Eye className="h-4 w-4 mr-2" />
-            View Current Progress
+            <Users className="h-4 w-4 mr-2" />
+            {showServiceUsers ? 'Hide' : 'Show'} Co-Passengers ({serviceUsers.length})
           </Button>
         </div>
       )}
