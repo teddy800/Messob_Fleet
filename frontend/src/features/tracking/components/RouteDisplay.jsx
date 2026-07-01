@@ -31,11 +31,33 @@ L.Icon.Default.mergeOptions({
   shadowUrl: "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png",
 });
 
-// Custom marker icons
-const createCustomIcon = (color, iconType = 'circle') => {
-  const iconHtml = iconType === 'car' 
-    ? `<div style="color: white; font-size: 16px;">🚗</div>`
-    : `<div style="width: 12px; height: 12px; background-color: white; border-radius: 50%;"></div>`;
+// Custom marker icons with vehicle category support (UI-5)
+const getVehicleCategoryIcon = (category) => {
+  // Vehicle category emoji/icons
+  const categoryIcons = {
+    sedan: '🚗',
+    suv: '🚙',
+    bus: '🚌',
+    minibus: '🚐',
+    pickup: '🛻',
+    default: '🚗'
+  };
+  
+  return categoryIcons[category?.toLowerCase()] || categoryIcons.default;
+};
+
+const createCustomIcon = (color, iconType = 'circle', vehicleCategory = null) => {
+  let iconHtml;
+  
+  if (iconType === 'car' && vehicleCategory) {
+    // UI-5: Vehicle category-specific icon
+    const categoryIcon = getVehicleCategoryIcon(vehicleCategory);
+    iconHtml = `<div style="font-size: 18px; transform: rotate(45deg);">${categoryIcon}</div>`;
+  } else if (iconType === 'car') {
+    iconHtml = `<div style="color: white; font-size: 16px;">🚗</div>`;
+  } else {
+    iconHtml = `<div style="width: 12px; height: 12px; background-color: white; border-radius: 50%;"></div>`;
+  }
 
   return L.divIcon({
     className: 'custom-marker',
@@ -63,7 +85,7 @@ const createCustomIcon = (color, iconType = 'circle') => {
 
 const pickupIcon = createCustomIcon("#10b981"); // Green
 const destinationIcon = createCustomIcon("#ef4444"); // Red
-const vehicleIcon = createCustomIcon("#3b82f6", "car"); // Blue
+// Vehicle icon is now dynamic based on category - see below
 
 // FR-3.3: Service user pickup marker (other passengers sharing vehicle)
 const serviceUserPickupIcon = L.divIcon({
@@ -233,6 +255,10 @@ export default function RouteDisplay({ tripId, className = "", onEditPickup }) {
 
   const { trip, route } = routeData;
   const routeLineCoords = route.route_line?.map(point => [point.lat, point.lng]) || [];
+  
+  // UI-5: Create vehicle icon with category-specific emoji
+  const vehicleCategory = trip?.vehicle?.category || trip?.vehicle_category || 'sedan';
+  const vehicleIcon = createCustomIcon("#3b82f6", "car", vehicleCategory); // Blue with category icon
   
   // Check if pickup can be edited (only for approved trips)
   const canEditPickup = trip.state === 'approved';
@@ -517,7 +543,7 @@ export default function RouteDisplay({ tripId, className = "", onEditPickup }) {
             />
           )}
 
-          {/* Vehicle GPS Position */}
+          {/* Vehicle GPS Position with Category Icon (UI-5) */}
           {gpsPosition?.gps && (
             <Marker 
               position={[gpsPosition.gps.latitude, gpsPosition.gps.longitude]} 
@@ -525,7 +551,10 @@ export default function RouteDisplay({ tripId, className = "", onEditPickup }) {
             >
               <Popup>
                 <div className="text-center">
-                  <div className="font-bold text-blue-600">Vehicle Position</div>
+                  <div className="font-bold text-blue-600 flex items-center justify-center gap-2">
+                    <span>{getVehicleCategoryIcon(vehicleCategory)}</span>
+                    Vehicle Position
+                  </div>
                   <div className="text-sm text-gray-600">{trip.vehicle?.plate_no}</div>
                   <div className="text-xs text-gray-500 mt-1">
                     Speed: {gpsPosition.gps.speed_kmh} km/h<br/>

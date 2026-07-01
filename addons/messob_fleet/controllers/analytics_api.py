@@ -100,6 +100,366 @@ class AnalyticsAPIController(http.Controller):
             _logger.error(f"Fleet utilization error: {e}")
             return {'success': False, 'error': str(e)}
 
+    @http.route('/api/analytics/compliance-package', type='http', auth='user', methods=['GET'], csrf=False)
+    def generate_compliance_package(self, start_date=None, end_date=None, format='excel'):
+        """
+        REG-2: Government Audit Retrieval - One-Click Compliance Package Export
+        
+        Generates comprehensive compliance package with:
+        - Audit logs (all critical actions)
+        - Trip records (complete history)
+        - Fuel data (consumption & efficiency)
+        - Maintenance records
+        - Vehicle utilization
+        
+        Args:
+            start_date: Start date for report (YYYY-MM-DD)
+            end_date: End date for report (YYYY-MM-DD)
+            format: 'excel' or 'csv' (default: excel)
+            
+        Returns:
+            File download (Excel workbook or ZIP of CSV files)
+        """
+        try:
+            import io
+            from datetime import datetime, timedelta
+            import zipfile
+            
+            # Check admin/dispatcher permission
+            if not request.env.user.has_group('messob_fleet.group_fms_admin') and \
+               not request.env.user.has_group('messob_fleet.group_fms_dispatcher'):
+                return request.make_response(
+                    json.dumps({'error': 'Access denied. Admin or Dispatcher role required.'}),
+                    headers=[('Content-Type', 'application/json')]
+                )
+            
+            # Parse dates
+            if not end_date:
+                end_dt = datetime.now()
+            else:
+                end_dt = datetime.strptime(end_date, '%Y-%m-%d')
+            
+            if not start_date:
+                start_dt = end_dt - timedelta(days=365)  # Default: 1 year
+            else:
+                start_dt = datetime.strptime(start_date, '%Y-%m-%d')
+            
+            # Gather data
+            AuditLog = request.env['messob.fms.audit.log'].sudo()
+            Trip = request.env['messob.fms.trip'].sudo()
+            FuelLog = request.env['messob.fms.fuel.log'].sudo()
+            MaintenanceLog = request.env['messob.fms.maintenance.log'].sudo()
+            Vehicle = request.env['fleet.vehicle'].sudo()
+            
+            # 1. Audit Logs (critical and high severity)
+            audit_logs = AuditLog.search([
+                ('timestamp', '>=', start_dt),
+                ('timestamp', '<=', end_dt),
+                ('severity', 'in', ['critical', 'high', 'medium'])
+            ], order='timestamp desc')
+            
+            # 2. Trip Records
+            trips = Trip.search([
+                ('create_date', '>=', start_dt),
+                ('create_date', '<=', end_dt)
+            ], order='create_date desc')
+            
+            # 3. Fuel Logs
+            fuel_logs = FuelLog.search([
+                ('date', '>=', start_dt.date()),
+                ('date', '<=', end_dt.date())
+            ], order='date desc')
+            
+            # 4. Maintenance Records
+            maintenance_logs = MaintenanceLog.search([
+                ('date', '>=', start_dt.date()),
+                ('date', '<=', end_dt.date())
+            ], order='date desc')
+            
+            # 5. Vehicle Inventory
+            vehicles = Vehicle.search([])
+            
+            if format == 'excel':
+                # Generate Excel workbook
+                import xlsxwriter
+                
+                output = io.BytesIO()
+                workbook = xlsxwriter.Workbook(output, {'in_memory': True})
+                
+                # Define formats
+                header_format = workbook.add_format({
+                    'bold': True,
+                    'bg_color': '#1E40AF',
+                    'font_color': 'white',
+                    'border': 1
+                })
+                cell_format = workbook.add_format({'border': 1, 'valign': 'top'})
+                date_format = workbook.add_format({'border': 1, 'num_format': 'yyyy-mm-dd hh:mm'})
+                
+                # Sheet 1: Cover Page
+                cover = workbook.add_worksheet('Cover')
+                cover.set_column('A:A', 40)
+                cover.write('A1', 'MESSOB FLEET MANAGEMENT SYSTEM', workbook.add_format({'bold': True, 'font_size': 16, 'font_color': '#1E40AF'}))
+                cover.write('A2', 'Government Compliance Audit Package', workbook.add_format({'bold': True, 'font_size': 14}))
+                cover.write('A4', 'Report Period:', workbook.add_format({'bold': True}))
+                cover.write('B4', f'{start_dt.strftime("%Y-%m-%d")} to {end_dt.strftime("%Y-%m-%d")}')
+                cover.write('A5', 'Generated:', workbook.add_format({'bold': True}))
+                cover.write('B5', datetime.now().strftime('%Y-%m-%d %H:%M:%S'))
+                cover.write('A6', 'Generated By:', workbook.add_format({'bold': True}))
+                cover.write('B6', request.env.user.name)
+                cover.write('A8', 'Contents:', workbook.add_format({'bold': True, 'font_size': 12}))
+                cover.write('A9', f'• Audit Logs: {len(audit_logs)} records')
+                cover.write('A10', f'• Trip Records: {len(trips)} records')
+                cover.write('A11', f'• Fuel Logs: {len(fuel_logs)} records')
+                cover.write('A12', f'• Maintenance Records: {len(maintenance_logs)} records')
+                cover.write('A13', f'• Vehicle Inventory: {len(vehicles)} vehicles')
+                
+                # Sheet 2: Audit Logs
+                audit_sheet = workbook.add_worksheet('Audit Logs')
+                audit_headers = ['Timestamp', 'User', 'Action', 'Category', 'Resource', 'Description', 'Severity', 'Success', 'IP Address']
+                for col, header in enumerate(audit_headers):
+                    audit_sheet.write(0, col, header, header_format)
+                
+                for row, log in enumerate(audit_logs, start=1):
+                    audit_sheet.write(row, 0, log.timestamp, date_format)
+                    audit_sheet.write(row, 1, log.user_id.name if log.user_id else 'System', cell_format)
+                    audit_sheet.write(row, 2, dict(log._fields['action'].selection).get(log.action, log.action), cell_format)
+                    audit_sheet.write(row, 3, log.action_category or '', cell_format)
+                    audit_sheet.write(row, 4, log.resource_display_name or '', cell_format)
+                    audit_sheet.write(row, 5, log.description or '', cell_format)
+                    audit_sheet.write(row, 6, log.severity.upper(), cell_format)
+                    audit_sheet.write(row, 7, 'Yes' if log.success else 'No', cell_format)
+                    audit_sheet.write(row, 8, log.ip_address or '', cell_format)
+                
+                audit_sheet.autofit()
+                
+                # Sheet 3: Trip Records
+                trip_sheet = workbook.add_worksheet('Trip Records')
+                trip_headers = ['Request ID', 'Requester', 'Purpose', 'Vehicle Category', 'Start Date', 'End Date', 
+                               'Pickup', 'Destination', 'Status', 'Vehicle', 'Driver', 'Created Date']
+                for col, header in enumerate(trip_headers):
+                    trip_sheet.write(0, col, header, header_format)
+                
+                for row, trip in enumerate(trips, start=1):
+                    trip_sheet.write(row, 0, trip.name, cell_format)
+                    trip_sheet.write(row, 1, trip.requester_id.name if trip.requester_id else '', cell_format)
+                    trip_sheet.write(row, 2, trip.purpose or '', cell_format)
+                    trip_sheet.write(row, 3, trip.vehicle_category or '', cell_format)
+                    trip_sheet.write(row, 4, trip.start_dt, date_format)
+                    trip_sheet.write(row, 5, trip.end_dt, date_format)
+                    trip_sheet.write(row, 6, trip.pickup or '', cell_format)
+                    trip_sheet.write(row, 7, trip.destination or '', cell_format)
+                    trip_sheet.write(row, 8, trip.state.upper(), cell_format)
+                    trip_sheet.write(row, 9, trip.assigned_vehicle_id.license_plate if trip.assigned_vehicle_id else '', cell_format)
+                    trip_sheet.write(row, 10, trip.assigned_driver_id.name if trip.assigned_driver_id else '', cell_format)
+                    trip_sheet.write(row, 11, trip.create_date, date_format)
+                
+                trip_sheet.autofit()
+                
+                # Sheet 4: Fuel Logs
+                fuel_sheet = workbook.add_worksheet('Fuel Logs')
+                fuel_headers = ['Date', 'Vehicle', 'Driver', 'Station', 'Liters', 'Price', 'Price/Liter', 
+                               'Odometer', 'Source', 'Transaction ID']
+                for col, header in enumerate(fuel_headers):
+                    fuel_sheet.write(0, col, header, header_format)
+                
+                for row, fuel in enumerate(fuel_logs, start=1):
+                    fuel_sheet.write(row, 0, fuel.date.strftime('%Y-%m-%d') if fuel.date else '', cell_format)
+                    fuel_sheet.write(row, 1, fuel.vehicle_id.license_plate if fuel.vehicle_id else '', cell_format)
+                    fuel_sheet.write(row, 2, fuel.driver_id.name if fuel.driver_id else '', cell_format)
+                    fuel_sheet.write(row, 3, fuel.station_name or '', cell_format)
+                    fuel_sheet.write(row, 4, fuel.liters, cell_format)
+                    fuel_sheet.write(row, 5, fuel.price, cell_format)
+                    fuel_sheet.write(row, 6, fuel.price_per_liter, cell_format)
+                    fuel_sheet.write(row, 7, fuel.odometer, cell_format)
+                    fuel_sheet.write(row, 8, dict(fuel._fields['source'].selection).get(fuel.source, fuel.source), cell_format)
+                    fuel_sheet.write(row, 9, fuel.pump_transaction_id or '', cell_format)
+                
+                fuel_sheet.autofit()
+                
+                # Sheet 5: Maintenance Records
+                maint_sheet = workbook.add_worksheet('Maintenance Records')
+                maint_headers = ['Date', 'Vehicle', 'Service Type', 'Description', 'Cost', 'Parts Cost', 
+                                'Labor Cost', 'Service Provider', 'Odometer', 'Next Service (Date)', 'Next Service (KM)']
+                for col, header in enumerate(maint_headers):
+                    maint_sheet.write(0, col, header, header_format)
+                
+                for row, maint in enumerate(maintenance_logs, start=1):
+                    maint_sheet.write(row, 0, maint.date.strftime('%Y-%m-%d') if maint.date else '', cell_format)
+                    maint_sheet.write(row, 1, maint.vehicle_id.license_plate if maint.vehicle_id else '', cell_format)
+                    maint_sheet.write(row, 2, dict(maint._fields['service_type'].selection).get(maint.service_type, maint.service_type) if maint.service_type else '', cell_format)
+                    maint_sheet.write(row, 3, maint.description or '', cell_format)
+                    maint_sheet.write(row, 4, maint.total_cost, cell_format)
+                    maint_sheet.write(row, 5, maint.parts_cost, cell_format)
+                    maint_sheet.write(row, 6, maint.labor_cost, cell_format)
+                    maint_sheet.write(row, 7, maint.service_provider or '', cell_format)
+                    maint_sheet.write(row, 8, maint.odometer_at_service, cell_format)
+                    maint_sheet.write(row, 9, maint.next_service_date.strftime('%Y-%m-%d') if maint.next_service_date else '', cell_format)
+                    maint_sheet.write(row, 10, maint.next_service_odometer or '', cell_format)
+                
+                maint_sheet.autofit()
+                
+                # Sheet 6: Vehicle Inventory
+                vehicle_sheet = workbook.add_worksheet('Vehicle Inventory')
+                vehicle_headers = ['License Plate', 'VIN', 'Make/Model', 'Category', 'Year', 'Fuel Type', 
+                                  'Current Odometer', 'Acquisition Date', 'Status']
+                for col, header in enumerate(vehicle_headers):
+                    vehicle_sheet.write(0, col, header, header_format)
+                
+                for row, vehicle in enumerate(vehicles, start=1):
+                    vehicle_sheet.write(row, 0, vehicle.license_plate or '', cell_format)
+                    vehicle_sheet.write(row, 1, vehicle.vin_sn or '', cell_format)
+                    vehicle_sheet.write(row, 2, f"{vehicle.model_id.brand_id.name if vehicle.model_id and vehicle.model_id.brand_id else ''} {vehicle.model_id.name if vehicle.model_id else ''}", cell_format)
+                    vehicle_sheet.write(row, 3, vehicle.category_id.name if vehicle.category_id else '', cell_format)
+                    vehicle_sheet.write(row, 4, vehicle.model_year or '', cell_format)
+                    vehicle_sheet.write(row, 5, vehicle.fuel_type or '', cell_format)
+                    vehicle_sheet.write(row, 6, vehicle.odometer, cell_format)
+                    vehicle_sheet.write(row, 7, vehicle.acquisition_date.strftime('%Y-%m-%d') if vehicle.acquisition_date else '', cell_format)
+                    vehicle_sheet.write(row, 8, vehicle.state_id.name if vehicle.state_id else '', cell_format)
+                
+                vehicle_sheet.autofit()
+                
+                workbook.close()
+                output.seek(0)
+                
+                filename = f'MESSOB_Compliance_Package_{start_dt.strftime("%Y%m%d")}_{end_dt.strftime("%Y%m%d")}.xlsx'
+                
+                return request.make_response(
+                    output.read(),
+                    headers=[
+                        ('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'),
+                        ('Content-Disposition', f'attachment; filename="{filename}"'),
+                        ('Content-Length', len(output.getvalue()))
+                    ]
+                )
+            
+            else:  # CSV format - return ZIP of multiple CSV files
+                import csv
+                
+                zip_buffer = io.BytesIO()
+                with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zip_file:
+                    
+                    # 1. Audit Logs CSV
+                    audit_csv = io.StringIO()
+                    audit_writer = csv.writer(audit_csv)
+                    audit_writer.writerow(['Timestamp', 'User', 'Action', 'Category', 'Resource', 'Description', 'Severity', 'Success', 'IP Address'])
+                    for log in audit_logs:
+                        audit_writer.writerow([
+                            log.timestamp,
+                            log.user_id.name if log.user_id else 'System',
+                            dict(log._fields['action'].selection).get(log.action, log.action),
+                            log.action_category or '',
+                            log.resource_display_name or '',
+                            log.description or '',
+                            log.severity.upper(),
+                            'Yes' if log.success else 'No',
+                            log.ip_address or ''
+                        ])
+                    zip_file.writestr('audit_logs.csv', audit_csv.getvalue())
+                    
+                    # 2. Trip Records CSV
+                    trip_csv = io.StringIO()
+                    trip_writer = csv.writer(trip_csv)
+                    trip_writer.writerow(['Request ID', 'Requester', 'Purpose', 'Vehicle Category', 'Start Date', 'End Date', 
+                                         'Pickup', 'Destination', 'Status', 'Vehicle', 'Driver', 'Created Date'])
+                    for trip in trips:
+                        trip_writer.writerow([
+                            trip.name,
+                            trip.requester_id.name if trip.requester_id else '',
+                            trip.purpose or '',
+                            trip.vehicle_category or '',
+                            trip.start_dt,
+                            trip.end_dt,
+                            trip.pickup or '',
+                            trip.destination or '',
+                            trip.state.upper(),
+                            trip.assigned_vehicle_id.license_plate if trip.assigned_vehicle_id else '',
+                            trip.assigned_driver_id.name if trip.assigned_driver_id else '',
+                            trip.create_date
+                        ])
+                    zip_file.writestr('trip_records.csv', trip_csv.getvalue())
+                    
+                    # 3. Fuel Logs CSV
+                    fuel_csv = io.StringIO()
+                    fuel_writer = csv.writer(fuel_csv)
+                    fuel_writer.writerow(['Date', 'Vehicle', 'Driver', 'Station', 'Liters', 'Price', 'Price/Liter', 
+                                         'Odometer', 'Source', 'Transaction ID'])
+                    for fuel in fuel_logs:
+                        fuel_writer.writerow([
+                            fuel.date.strftime('%Y-%m-%d') if fuel.date else '',
+                            fuel.vehicle_id.license_plate if fuel.vehicle_id else '',
+                            fuel.driver_id.name if fuel.driver_id else '',
+                            fuel.station_name or '',
+                            fuel.liters,
+                            fuel.price,
+                            fuel.price_per_liter,
+                            fuel.odometer,
+                            dict(fuel._fields['source'].selection).get(fuel.source, fuel.source),
+                            fuel.pump_transaction_id or ''
+                        ])
+                    zip_file.writestr('fuel_logs.csv', fuel_csv.getvalue())
+                    
+                    # 4. Maintenance Records CSV
+                    maint_csv = io.StringIO()
+                    maint_writer = csv.writer(maint_csv)
+                    maint_writer.writerow(['Date', 'Vehicle', 'Service Type', 'Description', 'Cost', 'Parts Cost', 
+                                          'Labor Cost', 'Service Provider', 'Odometer', 'Next Service (Date)', 'Next Service (KM)'])
+                    for maint in maintenance_logs:
+                        maint_writer.writerow([
+                            maint.date.strftime('%Y-%m-%d') if maint.date else '',
+                            maint.vehicle_id.license_plate if maint.vehicle_id else '',
+                            dict(maint._fields['service_type'].selection).get(maint.service_type, maint.service_type) if maint.service_type else '',
+                            maint.description or '',
+                            maint.total_cost,
+                            maint.parts_cost,
+                            maint.labor_cost,
+                            maint.service_provider or '',
+                            maint.odometer_at_service,
+                            maint.next_service_date.strftime('%Y-%m-%d') if maint.next_service_date else '',
+                            maint.next_service_odometer or ''
+                        ])
+                    zip_file.writestr('maintenance_records.csv', maint_csv.getvalue())
+                    
+                    # 5. Vehicle Inventory CSV
+                    vehicle_csv = io.StringIO()
+                    vehicle_writer = csv.writer(vehicle_csv)
+                    vehicle_writer.writerow(['License Plate', 'VIN', 'Make/Model', 'Category', 'Year', 'Fuel Type', 
+                                            'Current Odometer', 'Acquisition Date', 'Status'])
+                    for vehicle in vehicles:
+                        vehicle_writer.writerow([
+                            vehicle.license_plate or '',
+                            vehicle.vin_sn or '',
+                            f"{vehicle.model_id.brand_id.name if vehicle.model_id and vehicle.model_id.brand_id else ''} {vehicle.model_id.name if vehicle.model_id else ''}",
+                            vehicle.category_id.name if vehicle.category_id else '',
+                            vehicle.model_year or '',
+                            vehicle.fuel_type or '',
+                            vehicle.odometer,
+                            vehicle.acquisition_date.strftime('%Y-%m-%d') if vehicle.acquisition_date else '',
+                            vehicle.state_id.name if vehicle.state_id else ''
+                        ])
+                    zip_file.writestr('vehicle_inventory.csv', vehicle_csv.getvalue())
+                
+                zip_buffer.seek(0)
+                filename = f'MESSOB_Compliance_Package_{start_dt.strftime("%Y%m%d")}_{end_dt.strftime("%Y%m%d")}.zip'
+                
+                return request.make_response(
+                    zip_buffer.read(),
+                    headers=[
+                        ('Content-Type', 'application/zip'),
+                        ('Content-Disposition', f'attachment; filename="{filename}"'),
+                        ('Content-Length', len(zip_buffer.getvalue()))
+                    ]
+                )
+                
+        except Exception as e:
+            _logger.error(f"Compliance package generation error: {e}", exc_info=True)
+            return request.make_response(
+                json.dumps({'error': f'Failed to generate compliance package: {str(e)}'}),
+                headers=[('Content-Type', 'application/json')],
+                status=500
+            )
+            return {'success': False, 'error': str(e)}
+
     @http.route('/api/analytics/performance/realtime', type='json', auth='user', methods=['POST'])
     def get_realtime_performance(self):
         """
