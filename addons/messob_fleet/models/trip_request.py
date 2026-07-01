@@ -736,6 +736,153 @@ class MessobFmsTrip(models.Model):
         grace_period = timedelta(minutes=30)
         return current_time > (self.start_dt + grace_period)
     
+    # =========================================================================
+    # FR-3.3: COLLABORATIVE PICKUP - SERVICE USERS
+    # =========================================================================
+    
+    def get_collaborative_users(self):
+        """
+        FR-3.3: Get list of other service users (passengers) sharing the same vehicle
+        for the same trip time window. This allows users to see pickup points of
+        other passengers on their route for coordination.
+        
+        Returns:
+            dict: {
+                'success': bool,
+                'service_users': list of dicts with user info,
+                'error': str (if failed)
+            }
+        """
+        self.ensure_one()
+        
+        try:
+            # Only show for approved or in-progress trips
+            if self.state not in ['approved', 'in_progress']:
+                return {
+                    'success': False,
+                    'error': 'Collaborative pickup only available for approved/in-progress trips'
+                }
+            
+            # Must have assigned vehicle
+            if not self.assigned_vehicle_id:
+                return {
+                    'success': False,
+                    'error': 'No vehicle assigned to this trip'
+                }
+            
+            # Find other trips using the same vehicle in overlapping time window
+            # NFR-1: Performance optimized with single query and field filtering
+            domain = [
+                ('id', '!=', self.id),  # Exclude current trip
+                ('assigned_vehicle_id', '=', self.assigned_vehicle_id.id),
+                ('state', 'in', ['approved', 'in_progress']),
+                ('start_dt', '<', self.end_dt),  # Time overlap check
+                ('end_dt', '>', self.start_dt),
+            ]
+            
+            # Use search_read for better performance (NFR-1.1: <500ms)
+            service_user_trips = self.env['messob.fms.trip'].search_read(
+                domain,
+                [
+                    'id', 'name', 'requester_id', 'pickup', 
+                    'pickup_latitude', 'pickup_longitude',
+                    'start_dt', 'state', 'purpose'
+                ],
+                limit=20,  # Reasonable limit for shared vehicle
+                order='start_dt asc'
+            )
+            
+            # Format service users data for frontend
+            service_users = []
+            for trip in service_user_trips:
+                # Only include trips with valid pickup coordinates
+                if trip.get('pickup_latitude') and trip.get('pickup_longitude'):
+                    service_users.append({
+                        'trip_id': trip['id'],
+                        'request_id': trip['name'],
+                        'requester': trip['requester_id'][1] if trip.get('requester_id') else 'Unknown',
+                        'pickup_address': trip.get('pickup', 'Unknown Location'),
+                        'pickup_coordinates': {
+                            'lat': trip['pickup_latitude'],
+                            'lng': trip['pickup_longitude']
+                        },
+                        'start_time': trip['start_dt'].strftime('%H:%M') if trip.get('start_dt') else 'N/A',
+                        'status': trip.get('state', 'unknown'),
+                        'purpose': trip.get('purpose', ''),
+                        'contact_allowed': True,  # Privacy setting - can be enhanced later
+                    })
+            
+            return {
+                'success': True,
+                'service_users': service_users,
+                'total_passengers': len(service_users) + 1,  # Include current user
+            }
+            
+        except Exception as e:
+            _logger.error(f"Error fetching collaborative users for trip {self.id}: {e}")
+            return {
+                'success': False,
+                'error': str(e)
+            }
+    
+    def get_collaborative_pickup(self):
+        """
+        FR-3.3: Get complete collaborative pickup data including current trip,
+        service users, and vehicle information for the collaborative pickup UI.
+        
+        This method provides all data needed for the CollaborativePickup component.
+        
+        Returns:
+            dict: Complete collaborative pickup data with current trip, service users,
+                  and vehicle details
+        """
+        self.ensure_one()
+        
+        try:
+            # Get service users
+            collaborative_data = self.get_collaborative_users()
+            
+            if not collaborative_data['success']:
+                return collaborative_data
+            
+            # Add current trip data
+            current_trip_data = {
+                'trip_id': self.id,
+                'request_id': self.name,
+                'requester': self.requester_id.name if self.requester_id else 'Unknown',
+                'pickup_address': self.pickup,
+                'pickup_coordinates': {
+                    'lat': self.pickup_latitude or 0.0,
+                    'lng': self.pickup_longitude or 0.0
+                },
+                'start_time': self.start_dt.strftime('%H:%M') if self.start_dt else 'N/A',
+                'status': self.state,
+            }
+            
+            # Add vehicle data
+            vehicle_data = {
+                'id': self.assigned_vehicle_id.id if self.assigned_vehicle_id else None,
+                'plate_no': self.assigned_vehicle_id.license_plate if self.assigned_vehicle_id else 'Unknown',
+                'category': self.vehicle_category or 'Unknown',
+                'model': self.assigned_vehicle_id.model_id.name if self.assigned_vehicle_id and self.assigned_vehicle_id.model_id else 'Unknown'
+            }
+            
+            # Combine all data
+            return {
+                'success': True,
+                'current_trip': current_trip_data,
+                'service_users': collaborative_data.get('service_users', []),
+                'vehicle': vehicle_data,
+                'total_passengers': collaborative_data.get('total_passengers', 1),
+            }
+            
+        except Exception as e:
+            _logger.error(f"Error fetching collaborative pickup data for trip {self.id}: {e}")
+            return {
+                'success': False,
+                'error': str(e)
+            }
+    
     def action_report_incident(self, incident_type, description, location=None, photo=None):
         """
         Driver action: Report an incident during trip.
