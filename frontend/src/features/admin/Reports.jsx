@@ -219,28 +219,6 @@ export default function Reports() {
     XLSX.writeFile(wb, `MESSOB-Fleet-Report-${new Date().toISOString().split('T')[0]}.xlsx`);
   };
 
-  const exportCompliancePackage = async (format = 'excel') => {
-    try {
-      const now = new Date();
-      const oneYearAgo = new Date();
-      oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
-      
-      const startDate = oneYearAgo.toISOString().split('T')[0];
-      const endDate = now.toISOString().split('T')[0];
-      
-      // Use same pattern as odooApi.js - proxied via vite
-      const url = `/odoo/api/analytics/compliance-package?start_date=${startDate}&end_date=${endDate}&format=${format}`;
-      
-      // Open in new window to trigger download
-      window.open(url, '_blank');
-      
-      toast.success(`Generating ${format.toUpperCase()} compliance package...`);
-    } catch (error) {
-      console.error('Failed to export compliance package:', error);
-      toast.error('Failed to generate compliance package');
-    }
-  };
-
   const exportToPDF = () => {
     const doc = new jsPDF();
     
@@ -381,15 +359,6 @@ export default function Reports() {
             <option value="365">Last Year</option>
           </select>
           <div className="flex gap-2">
-            <Button 
-              onClick={() => exportCompliancePackage('excel')} 
-              className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white shadow-lg"
-              size="sm"
-            >
-              <BadgeCheck className="h-4 w-4 mr-2" />
-              Gov. Compliance Package
-            </Button>
-            <div className="h-6 w-px bg-gray-300" />
             <Button onClick={exportToCSV} variant="outline" size="sm">
               <Download className="h-4 w-4 mr-2" />
               CSV
