@@ -1,8 +1,9 @@
 // lib/odooApi.js
-// Handles all communication with the Odoo 18 backend at http://localhost:8018
+// Handles all communication with the Odoo 18 backend
 // NFR-1: Performance optimizations with caching and request deduplication
 
-const BASE_URL = "/odoo"; // proxied via vite to avoid CORS
+// Use environment variable for production, fallback to proxy for development
+const BASE_URL = import.meta.env.VITE_API_BASE_URL || "/odoo";
 
 let sessionId = null;
 
