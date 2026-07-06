@@ -27,8 +27,8 @@ EXPOSE 8069
 # Start Odoo with explicit database connection parameters
 # Using shell form to allow environment variable substitution  
 # Odoo will start and show database manager interface on first access
-# Using db_sslmode=require with PGSSLMODE to bypass cert verification for Render
-CMD PGSSLMODE=require odoo \
+# Disable SSL certificate verification for Render PostgreSQL
+CMD PGSSLMODE=require PGSSLROOTCERT=/dev/null PGSSLCERT=/dev/null PGSSLKEY=/dev/null odoo \
     --db_host=${HOST:-localhost} \
     --db_port=${DB_PORT:-5432} \
     --db_user=${USER:-odoo} \
