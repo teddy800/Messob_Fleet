@@ -27,14 +27,16 @@ EXPOSE 8069
 # Start Odoo with explicit database connection parameters
 # Using shell form to allow environment variable substitution  
 # Odoo will start and show database manager interface on first access
+# Use db_maxconn_gevent to handle connection pooling properly
 CMD odoo \
     --db_host=${HOST:-localhost} \
     --db_port=${DB_PORT:-5432} \
     --db_user=${USER:-odoo} \
     --db_password=${PASSWORD:-odoo} \
+    --db_sslmode=prefer \
     --http-port=${PORT:-8069} \
     --addons-path=/mnt/extra-addons \
     --without-demo=all \
     --log-level=info \
     --db-template=template0 \
-    --db_sslmode=require
+    --db_maxconn=64
