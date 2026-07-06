@@ -25,15 +25,19 @@ RUN chown -R odoo:odoo /mnt/extra-addons && \
 
 USER odoo
 
+# Set SSL mode as environment variable that psycopg2 will read
+# Using 'require' enforces SSL without certificate verification
+ENV PGSSLMODE=require
+
 # Expose Odoo port
 EXPOSE 8069
 
-# Start Odoo with config file and environment variable overrides
-# Pass PGSSLMODE inline to ensure psycopg2 uses it
-CMD sh -c "PGSSLMODE=allow odoo \
-    --config=/etc/odoo/odoo.conf \
-    --db_host=\${HOST:-localhost} \
-    --db_port=\${DB_PORT:-5432} \
-    --db_user=\${USER:-odoo} \
-    --db_password=\${PASSWORD:-odoo} \
-    --http-port=\${PORT:-8069}"
+# Start Odoo with config file
+# If DATABASE_URL is set in Render, Odoo will use it automatically
+# Otherwise it falls back to individual db_* parameters
+CMD odoo --config=/etc/odoo/odoo.conf \
+    --db_host=${HOST:-localhost} \
+    --db_port=${DB_PORT:-5432} \
+    --db_user=${USER:-odoo} \
+    --db_password=${PASSWORD:-odoo} \
+    --http-port=${PORT:-8069}
