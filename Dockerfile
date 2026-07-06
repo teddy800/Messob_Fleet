@@ -32,6 +32,7 @@ CMD odoo \
     --db_user=${USER:-odoo} \
     --db_password=${PASSWORD:-odoo} \
     --database=${DB_NAME:-postgres} \
+    --db_sslmode=require \
     --http-port=${PORT:-8069} \
     --addons-path=/mnt/extra-addons \
     --without-demo=all \
