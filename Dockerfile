@@ -32,7 +32,7 @@ CMD odoo \
     --db_port=${DB_PORT:-5432} \
     --db_user=${USER:-odoo} \
     --db_password=${PASSWORD:-odoo} \
-    --db_sslmode=prefer \
+    --db_sslmode=allow \
     --http-port=${PORT:-8069} \
     --addons-path=/mnt/extra-addons \
     --without-demo=all \
