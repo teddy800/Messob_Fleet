@@ -26,14 +26,16 @@ EXPOSE 8069
 
 # Start Odoo with explicit database connection parameters
 # Using shell form to allow environment variable substitution
+# Note: Removed --database flag to let Odoo run without forcing DB creation
+# Database will be created through the web interface on first access
 CMD odoo \
     --db_host=${HOST:-localhost} \
     --db_port=${DB_PORT:-5432} \
     --db_user=${USER:-odoo} \
     --db_password=${PASSWORD:-odoo} \
-    --database=${DB_NAME:-postgres} \
-    --db_sslmode=require \
+    --db_sslmode=prefer \
     --http-port=${PORT:-8069} \
     --addons-path=/mnt/extra-addons \
     --without-demo=all \
-    --log-level=info
+    --log-level=info \
+    --db_name=${DB_NAME:-messob_fleet}
