@@ -25,14 +25,14 @@ USER odoo
 EXPOSE 8069
 
 # Start Odoo with explicit database connection parameters
-# Using shell form to allow environment variable substitution
+# Using shell form to allow environment variable substitution  
 # Odoo will start and show database manager interface on first access
-CMD odoo \
+# Using db_sslmode=require with PGSSLMODE to bypass cert verification for Render
+CMD PGSSLMODE=require odoo \
     --db_host=${HOST:-localhost} \
     --db_port=${DB_PORT:-5432} \
     --db_user=${USER:-odoo} \
     --db_password=${PASSWORD:-odoo} \
-    --db_sslmode=allow \
     --http-port=${PORT:-8069} \
     --addons-path=/mnt/extra-addons \
     --without-demo=all \
