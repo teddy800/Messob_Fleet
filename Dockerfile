@@ -35,9 +35,11 @@ EXPOSE 8069
 # Start Odoo with config file
 # If DATABASE_URL is set in Render, Odoo will use it automatically
 # Otherwise it falls back to individual db_* parameters
+# ADMIN_PASSWORD is passed as --admin-passwd for database operations
 CMD odoo --config=/etc/odoo/odoo.conf \
     --db_host=${HOST:-localhost} \
     --db_port=${DB_PORT:-5432} \
     --db_user=${USER:-odoo} \
     --db_password=${PASSWORD:-odoo} \
-    --http-port=${PORT:-8069}
+    --http-port=${PORT:-8069} \
+    --admin-passwd=${ADMIN_PASSWORD:-admin}
