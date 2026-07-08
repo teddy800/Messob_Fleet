@@ -1,0 +1,36 @@
+# Git
+.git
+.gitignore
+
+# Documentation
+*.md
+docs/
+RENDER_DEPLOYMENT_GUIDE.md
+
+# Frontend (not needed in backend container)
+frontend/
+
+# Development files
+.vscode/
+.idea/
+*.pyc
+__pycache__/
+
+# Docker
+docker-compose*.yml
+.dockerignore
+
+# Environment files
+.env
+.env.*
+
+# Backup files
+*.backup
+backups/
+
+# Load testing
+load_testing/
+
+# Deployment configs
+deploy/
+render.yaml

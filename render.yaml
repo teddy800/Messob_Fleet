@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: messob-fleet-backend
+    env: docker
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    plan: free
+    envVars:
+      - key: HOST
+        sync: false
+      - key: DB_PORT
+        value: 5432
+      - key: USER
+        sync: false
+      - key: PASSWORD
+        sync: false
+      - key: DB_NAME
+        value: messob_fleet
+      - key: PORT
+        value: 8069
