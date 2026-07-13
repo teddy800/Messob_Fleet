@@ -83,7 +83,10 @@ services:
 
   # Odoo 18 Instance
   odoo18:
-    image: odoo:18.0
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: messob_fleet_odoo:18.0
     depends_on:
       - db18
     ports:
@@ -95,6 +98,7 @@ services:
       - HOST=db18
       - USER=odoo
       - PASSWORD=odoo
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-admin}
 
   # Odoo 17 Instance
   odoo17:
